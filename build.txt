@@ -1,0 +1,3 @@
+displayName = Sunk's Boss Challenges
+author = 6168218c
+version = 0.1
