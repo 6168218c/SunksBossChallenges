@@ -23,9 +23,13 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
         {
             get
             {
-                double Speed = Math.PI * 2f / 60;
+                double Speed = Math.PI * 2f / 150;
                 return Speed;
             }
         }
+
+        public static float R => (float)(SpinSpeed / SpinRadiusSpeed);
+
+        public static float Scale => 1.8f;
     }
 }

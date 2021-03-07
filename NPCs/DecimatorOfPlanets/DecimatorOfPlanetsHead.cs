@@ -12,7 +12,8 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
     [AutoloadBossHead]
     public class DecimatorOfPlanetsHead:ModNPC
     {
-        int Length => 60;
+        int Length => 80;
+        private float spinTimer = 0;
         public override void SetStaticDefaults()
         {
             DisplayName.SetDefault("The Decimator of Planets");
@@ -24,20 +25,19 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             npc.aiStyle = -1;
             npc.boss = true;
             npc.npcSlots = 1f;
-            npc.width = npc.height = 38;
+            npc.width = npc.height = 44;
             npc.defense = 0;
             npc.damage = 120;
-            npc.lifeMax = 120000;
+            npc.lifeMax = 200000;
             npc.HitSound = SoundID.NPCHit4;
             npc.DeathSound = SoundID.NPCDeath14;
             npc.noGravity = npc.noTileCollide = true;
             npc.knockBackResist = 0f;
             npc.behindTiles = true;
             npc.value = 0f;
-            npc.scale = 1f;
             npc.netAlways = true;
             npc.alpha = 255;
-            npc.scale = 1.2f;
+            npc.scale = DecimatorOfPlanetsArguments.Scale * 1.2f;
             for (int i = 0; i < npc.buffImmune.Length; i++)
                 npc.buffImmune[i] = true;
             //music = mod.GetSoundSlot(SoundType.Music, "");
@@ -57,12 +57,12 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             ///  ai[1]:previous segment
             ///  ai[2]:mode/state
             ///     0 - normal,11 - spin setup, 12 - spinning
-            ///  ai[3]:head
+            ///  ai[3]:head,but for head it self,it is a counter
             ///  localAI:for spinning attacks
-            ///    [0]:
+            ///    [0]:timer for spinning
             ///    [1]:posx
             ///    [2]:posy
-            ///    [3]:direction(0,1)
+            ///    [3]:direction
             ///
             Vector2 scaleLength(Vector2 source,float desiredLength)
             {
@@ -139,22 +139,22 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 
             if (npc.ai[0] == 0f)
             {
-                int PreviousSeg = npc.whoAmI;
+                int previous = npc.whoAmI;
                 for (int j = 1; j <= Length; j++)
                 {
-                    int type = ModContent.NPCType<DecimatorOfPlanetsBody>();
+                    int npcType = ModContent.NPCType<DecimatorOfPlanetsBody>();
                     if (j == Length)
                     {
-                        type = ModContent.NPCType<DecimatorOfPlanetsTail>();
+                        npcType = ModContent.NPCType<DecimatorOfPlanetsTail>();
                     }
-                    int CurrentSeg = NPC.NewNPC((int)npc.Center.X, (int)npc.Center.Y, type, npc.whoAmI, 0f, 0f, 0f, 0f, 255);
-                    Main.npc[CurrentSeg].ai[3] = npc.whoAmI;
-                    Main.npc[CurrentSeg].realLife = npc.whoAmI;
-                    Main.npc[CurrentSeg].ai[1] = PreviousSeg;
-                    Main.npc[PreviousSeg].ai[0] = CurrentSeg;
-                    NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, CurrentSeg);
+                    int current = NPC.NewNPC((int)npc.Center.X, (int)npc.Center.Y, npcType, npc.whoAmI);
+                    Main.npc[current].ai[3] = npc.whoAmI;
+                    Main.npc[current].realLife = npc.whoAmI;
+                    Main.npc[current].ai[1] = previous;
+                    Main.npc[previous].ai[0] = current;
+                    NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, current);
 
-                    PreviousSeg = CurrentSeg;
+                    previous = current;
                 }
 
                 if (!NPC.AnyNPCs(ModContent.NPCType<DecimatorOfPlanetsTail>()))
@@ -162,53 +162,178 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                     npc.active = false;
                     return;
                 }
-            }         //生成身体
+            }         
 
 
-            var accleration = 1f;
+            var accleration = 0.25f;
             var rotationSpeed = Math.PI * 2f / 60 * 0.8f;
             var minSpeed = 5f;
-            var maxSpeed = 15f;
+            var maxSpeed = 24f;
             if (Main.expertMode)
                 maxSpeed *= 1.35f;
             //if (Main.getGoodWorld)
             //    maxSpeed *= 1.25f;
+            bool allowSpin = npc.realLife < npc.lifeMax * 0.75;
 
-            //for testing use,the ai now only charges at the player
-            var distToPlayer = player.Center - npc.Center;
-            if (Vector2.Dot(distToPlayer, npc.velocity) < 0 && npc.Distance(player.Center) <= 200f) 
-            {
-                var normVelocity = Vector2.Normalize(npc.velocity) + new Vector2(0, -0.1f);
-                var speedNow = npc.velocity.Length() - accleration;
-                if (speedNow < minSpeed) speedNow = minSpeed;
-                npc.velocity = normVelocity * speedNow;
+            if (allowSpin && npc.ai[2] != 12)
+                spinTimer++;
+
+            //movement control
+            if (spinTimer <= 1000)
+            {//ground movement code
+                WormMovement(player.Center, maxSpeed * 0.8f, 0.15f);
             }
-            if (distToPlayer.Length() > 600f)
+            else if (spinTimer > 1000 && spinTimer < 1200) //preparing to spin,this ai tends to wrap around the player
             {
-                var directionVect = player.Center - npc.Center;
-                var npcSpeed = npc.velocity.Length();
-                if (npcSpeed != 0) 
-                    directionVect += directionVect.Length() / npc.velocity.Length() * player.velocity;
-                directionVect.Normalize();
-                if (Math.Cos(npc.velocity.ToRotation() - directionVect.ToRotation()) > Math.Cos(Math.PI / 12))
+                maxSpeed /= 2;
+                var distToPlayer = player.Center - npc.Center;
+                if (Math.Cos(npc.velocity.ToRotation() - distToPlayer.ToRotation()) < Math.Cos(Math.PI / 3) && npc.Distance(player.Center) <= 800f)
                 {
-                    npc.velocity.RotatedBy(rotationSpeed);
-                    var speedNow = npc.velocity.Length() + accleration;
-                    if (speedNow > maxSpeed) speedNow = maxSpeed;
-                    npc.velocity = scaleLength(npc.velocity, speedNow);
+                    var normVelocity = (Vector2.Normalize(npc.velocity).HasNaNs() ? Vector2.Zero : Vector2.Normalize(npc.velocity))
+                        + new Vector2(0.025f * Math.Sign(distToPlayer.X), 0.025f * Math.Sign(distToPlayer.Y));
+                    var speedNow = npc.velocity.Length() - accleration;
+                    if (speedNow < minSpeed) speedNow = minSpeed;
+                    npc.velocity = normVelocity * speedNow;
                 }
-                npc.velocity += directionVect * accleration;
-                if (npc.velocity.Length() > maxSpeed)
-                    npc.velocity = scaleLength(npc.velocity, maxSpeed);
+                if (distToPlayer.Length() > 900)
+                {
+                    npc.ai[2] = 1;
+                }
+                else if(npc.ai[2]==0)
+                {
+                    var directionVect = player.Center - npc.Center;
+                    if (npc.velocity.HasNaNs() || npc.velocity == Vector2.Zero)
+                        npc.velocity = scaleLength(player.Center - npc.Center, Math.Min(npc.velocity.Length()+accleration, maxSpeed));
+                    else
+                        npc.velocity = scaleLength(npc.velocity, Math.Min(npc.velocity.Length()+accleration, maxSpeed));
+                    if (Math.Cos(npc.velocity.ToRotation() - directionVect.ToRotation()) > Math.Cos(Math.PI / 36))
+                    {
+                        npc.velocity = npc.velocity.RotatedBy(rotationSpeed * -Math.Sign(npc.Center.X - player.Center.X) / 3);
+                        var speedNow = npc.velocity.Length() + accleration;
+                        if (speedNow > maxSpeed) speedNow = maxSpeed;
+                        npc.velocity = scaleLength(npc.velocity, speedNow);
+                    }
+
+                }
+
+                if (npc.ai[2] == 1)
+                {
+                    var directionVect = player.Center - npc.Center;
+                    var npcSpeed = npc.velocity.Length();
+                    if (npcSpeed != 0)
+                        directionVect += directionVect.Length() / npc.velocity.Length() * player.velocity / 2;
+                    directionVect.Normalize();
+                    if (Math.Cos(npc.velocity.ToRotation() - directionVect.ToRotation()) > Math.Cos(Math.PI / 12))
+                    {
+                        npc.velocity = npc.velocity.RotatedBy(rotationSpeed * -Math.Sign(npc.Center.X - player.Center.X));
+                        var speedNow = npc.velocity.Length() + accleration;
+                        if (speedNow > maxSpeed) speedNow = maxSpeed;
+                        npc.velocity = scaleLength(npc.velocity, speedNow);
+                    }
+                    else npc.ai[2] = 0;
+                    npc.velocity += directionVect * accleration;
+                    if (npc.velocity.Length() > maxSpeed)
+                        npc.velocity = scaleLength(npc.velocity, maxSpeed);
+                }
+            }
+            else //do spin attack
+            {
+                float r = (float)(DecimatorOfPlanetsArguments.SpinSpeed / DecimatorOfPlanetsArguments.SpinRadiusSpeed);
+                if (npc.ai[2]<11)//not even have set up
+                {
+                    npc.ai[2] = 11;
+                    npc.localAI[1] = player.Center.X;
+                    npc.localAI[2] = player.Center.Y;
+                    var center = new Vector2(npc.localAI[1], npc.localAI[2]);
+                    Vector2 destination = Vector2.Normalize(npc.Center - center) * r;
+                    if (destination == Vector2.Zero || destination.HasNaNs())
+                        destination = center + new Vector2(0, r);
+                    npc.velocity = (destination-npc.Center) / 2;//arrive in two ticks,leaving time for other segments to react
+                }
+                if (npc.ai[2] == 11)
+                {
+                    var center = new Vector2(npc.localAI[1], npc.localAI[2]);
+                    if(Vector2.Distance(npc.Center,center)>=r)//has moved to the desired position
+                    {
+                        if(npc.Distance(center)>r)//modify it to retain accuracy
+                            npc.position = center + Vector2.Normalize(npc.Center - center) * r;
+                        int direction = Main.rand.NextBool() ? 1 : -1;
+                        npc.velocity = Vector2.Normalize(npc.Center - center)
+                            .RotatedBy(-Math.PI / 2 * direction) * DecimatorOfPlanetsArguments.SpinSpeed;
+                        npc.rotation = npc.velocity.ToRotation() + (float)(Math.PI / 2) * npc.direction;
+                        npc.localAI[3] = direction;
+                        npc.ai[2] = 12;
+                    }
+                }
+                else if (npc.ai[2] == 12)
+                {
+                    int direction = (int)npc.localAI[3];
+                    var center = new Vector2(npc.localAI[1], npc.localAI[2]);
+                    if (npc.Distance(center) < DecimatorOfPlanetsArguments.R)
+                    {
+                        npc.Center = center + npc.DirectionFrom(center) * DecimatorOfPlanetsArguments.R;
+                    }
+                    //player.wingTime = 100;
+                    npc.velocity = npc.velocity.RotatedBy(-DecimatorOfPlanetsArguments.SpinRadiusSpeed * direction);
+                    npc.rotation -= (float)(DecimatorOfPlanetsArguments.SpinRadiusSpeed * direction);
+                }
+                var pivot = new Vector2(npc.localAI[1], npc.localAI[2]);
+                for(int i = 0; i < 20; i++)
+                {
+                    Vector2 offset = new Vector2();
+                    double angle = Main.rand.NextDouble() * 2 * Math.PI;
+                    offset.X += (float)(Math.Cos(angle) * r);
+                    offset.Y += (float)(Math.Sin(angle) * r);
+                    Dust dust = Main.dust[Dust.NewDust(pivot + offset,0,0,112,0,0,100,Color.White)];
+                    dust.velocity = Vector2.Zero;
+                    if (Main.rand.Next(3) == 0)
+                        dust.velocity += Vector2.Normalize(offset) * 5f;
+                    dust.noGravity = true;
+                }
+            }
+            npc.rotation = npc.velocity.ToRotation() + (float)(Math.PI / 2) * npc.direction;
+        }
+
+        protected void WormMovement(Vector2 position,float maxSpeed,float turnAccle=0.1f,float ramAccle=0.15f)
+        {
+            Vector2 targetVector = position - npc.Center;
+            targetVector = Vector2.Normalize(targetVector) * maxSpeed;
+            if ((targetVector.X * npc.velocity.X > 0f) && (targetVector.Y * npc.velocity.Y > 0f)) //acclerate
+            {
+                npc.velocity.X += Math.Sign(targetVector.X - npc.velocity.X) * ramAccle;
+                npc.velocity.Y += Math.Sign(targetVector.Y - npc.velocity.Y) * ramAccle;
+            }
+            if ((targetVector.X * npc.velocity.X > 0f) || (targetVector.Y * npc.velocity.Y > 0f)) //turn
+            {
+                npc.velocity.X += Math.Sign(targetVector.X - npc.velocity.X) * turnAccle;
+                npc.velocity.Y += Math.Sign(targetVector.Y - npc.velocity.Y) * turnAccle;
+
+                if (Math.Abs(targetVector.Y) < maxSpeed * 0.2 && targetVector.X * npc.velocity.X < 0)
+                {
+                    npc.velocity.Y += Math.Sign(npc.velocity.Y) * turnAccle * 2f;
+                }
+
+                if (Math.Abs(targetVector.X) < maxSpeed * 0.2 && targetVector.Y * npc.velocity.Y < 0)
+                {
+                    npc.velocity.X += Math.Sign(npc.velocity.X) * turnAccle * 2f;
+                }
+            }
+            else if (Math.Abs(targetVector.X) > Math.Abs(targetVector.Y)) 
+            {
+                npc.velocity.X += Math.Sign(targetVector.X - npc.velocity.X) * turnAccle * 1.1f;
+                if (Math.Abs(npc.velocity.X) + Math.Abs(npc.velocity.Y) < maxSpeed * 0.5)
+                {
+                    npc.velocity.Y += Math.Sign(npc.velocity.Y) * turnAccle;
+                }
             }
             else
             {
-                if (npc.velocity.HasNaNs() || npc.velocity == Vector2.Zero)
-                    npc.velocity = scaleLength(player.Center - npc.Center, maxSpeed);
-                else
-                    npc.velocity = scaleLength(npc.velocity, maxSpeed);
+                npc.velocity.Y += Math.Sign(targetVector.Y - npc.velocity.Y) * turnAccle * 1.1f;
+                if (Math.Abs(npc.velocity.X) + Math.Abs(npc.velocity.Y) < maxSpeed * 0.5)
+                {
+                    npc.velocity.X += Math.Sign(npc.velocity.X) * turnAccle;
+                }
             }
-            npc.rotation = npc.velocity.ToRotation() + (float)(Math.PI / 2);
         }
 
         public override void SendExtraAI(BinaryWriter writer)
@@ -217,6 +342,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             writer.Write(npc.localAI[1]);
             writer.Write(npc.localAI[2]);
             writer.Write(npc.localAI[3]);
+            writer.Write(spinTimer);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
@@ -225,6 +351,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             npc.localAI[1] = reader.ReadSingle();
             npc.localAI[2] = reader.ReadSingle();
             npc.localAI[3] = reader.ReadSingle();
+            spinTimer = reader.ReadSingle();
         }
 
         public override bool? CanBeHitByProjectile(Projectile projectile)
@@ -232,6 +359,22 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             if (npc.alpha > 0)
                 return false;
             return null;
+        }
+
+        public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
+        {
+            if (npc.alpha > 0)
+                damage *= (1 - 0.99);
+            return false;
+        }
+
+        public override bool CheckActive()
+        {
+            return false;
+        }
+        public override void BossLoot(ref string name, ref int potionType)
+        {
+            potionType = 4;
         }
     }
 }

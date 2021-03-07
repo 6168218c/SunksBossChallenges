@@ -28,7 +28,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             npc.width = npc.height = 38;
             npc.defense = 0;
             npc.damage = 80;
-            npc.lifeMax = 120000;
+            npc.lifeMax = 200000;
             npc.HitSound = SoundID.NPCHit4;
             npc.DeathSound = SoundID.NPCDeath14;
             npc.noGravity = npc.noTileCollide = true;
@@ -39,7 +39,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             npc.netAlways = true;
             npc.dontCountMe = true;
             npc.alpha = 255;
-            npc.scale = 1.2f;
+            npc.scale = DecimatorOfPlanetsArguments.Scale;
             for (int i = 0; i < npc.buffImmune.Length; i++)
                 npc.buffImmune[i] = true;
         }
@@ -81,6 +81,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             }
 
             NPC previousSegment = Main.npc[PreviousIndex];
+            NPC head = Main.npc[npc.realLife];
 
             if (previousSegment.alpha < 128)
             {
@@ -103,60 +104,29 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 
             if (npc.ai[1] > 0f && npc.ai[1] < Main.npc.Length)
             {
-                if (npc.ai[2] == 12)//spinning
+                if(head.ai[2]>10)//spinning or preparing spinning
                 {
-                    npc.velocity.RotatedBy(DecimatorOfPlanetsArguments.SpinRadiusSpeed);
+                    Vector2 pivot = new Vector2(head.localAI[1], head.localAI[2]);
+                    if (npc.Distance(pivot) < DecimatorOfPlanetsArguments.R)
+                    {
+                        npc.Center = pivot + npc.DirectionFrom(pivot) * DecimatorOfPlanetsArguments.R;
+                    }
                 }
-                else
+
+                if (npc.Distance(previousSegment.Center) > 6)
                 {
-
-                    //previous segment has completed setting up,time to setup itself
-                    if (npc.ai[2] == 11 && previousSegment.ai[2] == 12)
+                    Vector2 offset = new Vector2(0, 1f);
+                    try//default behavior
                     {
-                        npc.ai[2] = 12;
-                        var posx = npc.localAI[2] = previousSegment.localAI[2];
-                        var posy = npc.localAI[3] = previousSegment.localAI[3];
-                        int direction = (int)previousSegment.localAI[4];
-                        npc.localAI[4] = previousSegment.localAI[4];
-
-                        Vector2 spinCenter = new Vector2(posx, posy);
-                        Vector2 center2Prev = previousSegment.Center - spinCenter;
-                        var len = center2Prev.Length();
-                        var dist = segDistance * npc.scale;
-                        var angle = Math.Acos((2 * len * len - dist * dist) / (2 * len * len));
-                        Vector2 center2Cur = center2Prev.RotatedBy(angle * direction);
-                        npc.position = center2Cur + spinCenter;
-                        npc.rotation = (center2Prev - center2Cur).ToRotation();
-                        npc.velocity = Vector2.Normalize(center2Prev - center2Cur) * DecimatorOfPlanetsArguments.SpinSpeed;
+                        offset = previousSegment.Center - npc.Center;
                     }
-                    else//not preparing spinning,meaning everything is in control
-                    {
-                        if (previousSegment.ai[2] > 10)//not in normal state
-                        {
-                            npc.ai[2] = 11;//start to setup,wait for previous segment to complete
-                        }
-                        else
-                        {
-                            npc.ai[2] = 0f;
-                        }
-
-                        if (npc.Distance(previousSegment.Center) > 6) 
-                        {
-                            try//default behavior
-                            {
-                                Vector2 offset = previousSegment.Center - npc.Center;
-                                if (offset == Vector2.Zero || offset.HasNaNs()) offset = new Vector2(0, 1f);
-                                var dist = segDistance * npc.scale;
-                                npc.rotation = offset.ToRotation() - (float)(Math.PI / 2) * npc.direction;
-                                offset -= Vector2.Normalize(offset) * dist;
-                                npc.velocity = Vector2.Zero;
-                                npc.position += offset;
-                            }
-                            catch { }
-                        }
-                    }
-
-
+                    catch { }
+                    if (offset == Vector2.Zero || offset.HasNaNs()) offset = new Vector2(0, 1f);
+                    var dist = segDistance * npc.scale;
+                    npc.rotation = offset.ToRotation() + (float)(Math.PI / 2) * npc.direction;
+                    offset -= Vector2.Normalize(offset) * dist;
+                    npc.velocity = Vector2.Zero;
+                    npc.position += offset;
                 }
             }   
 
@@ -258,14 +228,31 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             return null;
         }
 
-        public override void ModifyHitByItem(Player player, Item item, ref int damage, ref float knockback, ref bool crit)
+        /*public override void ModifyHitByItem(Player player, Item item, ref int damage, ref float knockback, ref bool crit)
         {
             damage = (int)(damage * (1 - 0.60));
+            if (npc.alpha > 0)
+                damage = (int)(damage * (1 - 0.80));
         }
 
         public override void ModifyHitByProjectile(Projectile projectile, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
         {
             damage = (int)(damage * (1 - 0.60));
+            if (npc.alpha > 0)
+                damage = (int)(damage * (1 - 0.80));
+        }*/
+
+        public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
+        {
+            if (npc.alpha > 0)
+                damage *= (1 - 0.99);
+            else
+                damage *= (1 - 0.80);
+            return false;
+        }
+        public override bool CheckActive()
+        {
+            return false;
         }
     }
 }
