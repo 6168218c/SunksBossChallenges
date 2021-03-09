@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
+using SunksBossChallenges.Projectiles.DecimatorOfPlanets;
 
 namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 {
@@ -14,6 +15,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
     {
         int Length => 80;
         private float spinTimer = 0;
+        private int[] chaosPlanets = new int[3];
         public override void SetStaticDefaults()
         {
             DisplayName.SetDefault("The Decimator of Planets");
@@ -173,19 +175,38 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                 maxSpeed *= 1.35f;
             //if (Main.getGoodWorld)
             //    maxSpeed *= 1.25f;
-            bool allowSpin = npc.realLife < npc.lifeMax * 0.75;
+            bool allowSpin = npc.life < npc.lifeMax * 0.75;
 
-            if (allowSpin && npc.ai[2] != 12)
+            if (allowSpin)
                 spinTimer++;
 
+            if (npc.ai[2] == 12&&spinTimer==1800)
+            {//spawn chaos system
+                var center = new Vector2(npc.localAI[1], npc.localAI[2]);
+                Vector2 offset = new Vector2(600, 0);
+                for(int i = 0; i < 3; i++)
+                {
+                    chaosPlanets[i] = Projectile.NewProjectile(center + offset, Vector2.Normalize(offset.RotatedBy(MathHelper.TwoPi / 3.6f)) * 3f,
+                        ModContent.ProjectileType<ChaosPlanet>(), npc.damage / 2, 0f, Main.myPlayer);
+                    offset = offset.RotatedBy(MathHelper.TwoPi / 3);
+                    Main.projectile[chaosPlanets[i]].localAI[1] = Main.rand.NextFloat(1, 12);
+                }
+                Main.projectile[chaosPlanets[0]].ai[0] = chaosPlanets[1];
+                Main.projectile[chaosPlanets[0]].ai[1] = chaosPlanets[2];
+                Main.projectile[chaosPlanets[1]].ai[0] = chaosPlanets[0];
+                Main.projectile[chaosPlanets[1]].ai[1] = chaosPlanets[2];
+                Main.projectile[chaosPlanets[2]].ai[0] = chaosPlanets[0];
+                Main.projectile[chaosPlanets[2]].ai[1] = chaosPlanets[1];//...
+            }
+
+
             //movement control
-            if (spinTimer <= 1000)
+            if (spinTimer <= 1200)
             {//ground movement code
                 WormMovement(player.Center, maxSpeed * 0.8f, 0.15f);
             }
-            else if (spinTimer > 1000 && spinTimer < 1200) //preparing to spin,this ai tends to wrap around the player
+            else if (spinTimer > 1200 && spinTimer < 1600) //preparing to spin,this ai tends to wrap around the player
             {
-                maxSpeed /= 2;
                 var distToPlayer = player.Center - npc.Center;
                 if (Math.Cos(npc.velocity.ToRotation() - distToPlayer.ToRotation()) < Math.Cos(Math.PI / 3) && npc.Distance(player.Center) <= 800f)
                 {
@@ -262,6 +283,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                             .RotatedBy(-Math.PI / 2 * direction) * DecimatorOfPlanetsArguments.SpinSpeed;
                         npc.rotation = npc.velocity.ToRotation() + (float)(Math.PI / 2) * npc.direction;
                         npc.localAI[3] = direction;
+                        chaosPlanets[0] = chaosPlanets[1] = chaosPlanets[2] = -1;
                         npc.ai[2] = 12;
                     }
                 }
@@ -276,6 +298,11 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                     //player.wingTime = 100;
                     npc.velocity = npc.velocity.RotatedBy(-DecimatorOfPlanetsArguments.SpinRadiusSpeed * direction);
                     npc.rotation -= (float)(DecimatorOfPlanetsArguments.SpinRadiusSpeed * direction);
+                    if (chaosPlanets.All(item => item != -1 && (Main.projectile[item].type!=ModContent.ProjectileType<ChaosPlanet>() || (Main.projectile[item].localAI[0] == 1 || Main.projectile[item].active == false))))
+                    {
+                        spinTimer = 0;
+                        npc.ai[2] = 0;//reset to normal
+                    }
                 }
                 var pivot = new Vector2(npc.localAI[1], npc.localAI[2]);
                 for(int i = 0; i < 20; i++)
