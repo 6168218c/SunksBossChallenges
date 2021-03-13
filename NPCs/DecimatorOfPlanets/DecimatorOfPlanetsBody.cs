@@ -35,13 +35,14 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             npc.knockBackResist = 0f;
             npc.behindTiles = true;
             npc.value = 0f;
-            npc.scale = 1f;
             npc.netAlways = true;
             npc.dontCountMe = true;
             npc.alpha = 255;
             npc.scale = DecimatorOfPlanetsArguments.Scale;
             for (int i = 0; i < npc.buffImmune.Length; i++)
                 npc.buffImmune[i] = true;
+            music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/LastBattleBallosMix.mp3");
+            musicPriority = MusicPriority.BossMedium;
         }
 
         public override void ScaleExpertStats(int numPlayers, float bossLifeScale)
@@ -69,7 +70,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             {
                 dead = true;
             }
-            else if (Main.npc[(int)npc.ai[1]].life <= 0 && !Main.npc[(int)npc.ai[1]].active)
+            else if (Main.npc[(int)npc.ai[1]].life <= 0 || !Main.npc[(int)npc.ai[1]].active)
             {
                 dead = true;
             }
@@ -106,11 +107,16 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             {
                 if(head.ai[2]>10)//spinning or preparing spinning
                 {
+                    npc.chaseable = false;
                     Vector2 pivot = new Vector2(head.localAI[1], head.localAI[2]);
                     if (npc.Distance(pivot) < DecimatorOfPlanetsArguments.R)
                     {
                         npc.Center = pivot + npc.DirectionFrom(pivot) * DecimatorOfPlanetsArguments.R;
                     }
+                }
+                else
+                {
+                    npc.chaseable = true;
                 }
 
                 if (npc.Distance(previousSegment.Center) > 6)
@@ -128,8 +134,8 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                     npc.velocity = Vector2.Zero;
                     npc.position += offset;
                 }
-            }   
-
+            }
+            Lighting.AddLight(npc.Center, 0.3f, 0.3f, 0.5f);
             /*if (npc.ai[3] > 0f)
             {
                 npc.realLife = (int)npc.ai[3];
@@ -244,8 +250,8 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 
         public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
         {
-            if (npc.alpha > 0)
-                damage *= (1 - 0.99);
+            if (npc.alpha > 0 || Main.npc[npc.realLife].ai[2] == 12)
+                    damage *= (1 - 0.99);
             else
                 damage *= (1 - 0.80);
             return false;

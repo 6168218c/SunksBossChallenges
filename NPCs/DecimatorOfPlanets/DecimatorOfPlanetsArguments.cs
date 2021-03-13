@@ -30,6 +30,6 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 
         public static float R => (float)(SpinSpeed / SpinRadiusSpeed);
 
-        public static float Scale => 1.8f;
+        public static float Scale => 1.2f;
     }
 }

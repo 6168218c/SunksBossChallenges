@@ -13,11 +13,11 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
     {
         float planetDistance = 24;
         readonly float GFactor = 3000;
-
+        float maxSpeed = 20f;
         public override void SetStaticDefaults()
         {
             DisplayName.SetDefault("Chaos Planet");
-            ProjectileID.Sets.TrailCacheLength[projectile.type] = 7;
+            ProjectileID.Sets.TrailCacheLength[projectile.type] = 15;
             ProjectileID.Sets.TrailingMode[projectile.type] = 2;
         }
 
@@ -41,26 +41,12 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
         public override void AI()
         {
             /// AI Contents:
-            ///     localAI[0]:should die
-            ///     localAI[1]:weight
-            ///     ai[0]:another planet
-            ///     ai[1]:yet another planet
-            Projectile second = Main.projectile[(int)projectile.ai[0]];
-            Projectile third = Main.projectile[(int)projectile.ai[1]];
+            ///     ai[0]:should die
+            ///     ai[1]:weight
 
-            if (projectile.localAI[0] == 1) projectile.Kill();
+            if (projectile.ai[0] == 1) projectile.Kill();
 
-            //if() //TODO
-            if (Vector2.Distance(projectile.Center, second.Center) < planetDistance)
-            {
-                projectile.localAI[0] = second.localAI[0] = 1;
-                return;
-            }
-            if (Vector2.Distance(projectile.Center, third.Center) < planetDistance)
-            {
-                projectile.localAI[0] = third.localAI[0] = 1;
-                return;
-            }
+            bool othersLeft = false;
 
             int index = NPC.FindFirstNPC(ModContent.NPCType<DecimatorOfPlanetsHead>());
             if (index != -1) 
@@ -69,22 +55,41 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
                 Vector2 center = new Vector2(head.localAI[1], head.localAI[2]);
                 if (Vector2.Distance(projectile.Center, center) > DecimatorOfPlanetsArguments.R)
                 {
-                    projectile.localAI[0] = 1;
+                    projectile.ai[0] = 1;
                     return;
+                }
+                foreach(int item in (head.modNPC as DecimatorOfPlanetsHead).chaosPlanets)
+                {
+                    if (item != -1 && Main.projectile[item].whoAmI != projectile.whoAmI)
+                    {
+                        if((Main.projectile[item].type==projectile.type)&& (Main.projectile[item].ai[0] != 1 || Main.projectile[item].active))
+                        {
+                            if (Vector2.Distance(projectile.Center, Main.projectile[item].Center) < planetDistance)
+                            {
+                                projectile.ai[0] = Main.projectile[item].ai[0] = 1;
+                                return;
+                            }
+                            if (Main.projectile[item].ai[0] != 1)
+                            {
+                                othersLeft = true;
+                                var force= Vector2.Normalize(Main.projectile[item].Center - projectile.Center) * GFactor * projectile.ai[1] * Main.projectile[item].ai[1]
+                                        / ((Main.projectile[item].Center - projectile.Center).LengthSquared());
+#if DEBUG
+                                if (force.HasNaNs())
+                                    System.Diagnostics.Debugger.Break();
+#endif
+                                projectile.velocity += (force / projectile.ai[1]);
+                            }
+                        }
+                    }
                 }
             }
 
-            Vector2 forceSecond = Vector2.Zero;
-            Vector2 forceThird = Vector2.Zero;
-            if (second.localAI[0] != 1) forceSecond= Vector2.Normalize(second.Center - projectile.Center) * GFactor * projectile.localAI[1] * second.localAI[1]
-                / ((second.Center - projectile.Center).LengthSquared());
-            if (third.localAI[0] != 1) forceThird = Vector2.Normalize(third.Center - projectile.Center) * GFactor * projectile.localAI[1] * second.localAI[1]
-                / ((third.Center - projectile.Center).LengthSquared());
+            if (!othersLeft)
+                projectile.velocity = Vector2.Normalize(projectile.velocity) * maxSpeed;
 
-            if (forceSecond.HasNaNs() || forceThird.HasNaNs() || projectile.Center.HasNaNs() || projectile.velocity.HasNaNs())
+            if (projectile.Center.HasNaNs() || projectile.velocity.HasNaNs())
                 System.Diagnostics.Debugger.Break();
-
-            projectile.velocity += (forceSecond / projectile.localAI[1] + forceThird / projectile.localAI[1]);
         }
 
         public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
@@ -120,19 +125,19 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
 
         public override void SendExtraAI(BinaryWriter writer)
         {
-            writer.Write(projectile.localAI[0]);
+            //writer.Write(projectile.localAI[0]);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
         {
-            projectile.localAI[0] = reader.ReadSingle();
+            //projectile.localAI[0] = reader.ReadSingle();
         }
 
         public override void Kill(int timeLeft)
         {
             Main.PlaySound(SoundID.Item89, projectile.position);
 
-            Vector2 size = new Vector2(500, 500);
+            Vector2 size = new Vector2(40, 40);
             Vector2 spawnPos = projectile.Center;
             spawnPos.X -= size.X / 2;
             spawnPos.Y -= size.Y / 2;
@@ -159,27 +164,27 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
                 int num620 = Gore.NewGore(projectile.Center, default(Vector2), Main.rand.Next(61, 64));
                 Main.gore[num620].velocity *= scaleFactor9;
                 Gore gore97 = Main.gore[num620];
-                gore97.velocity.X = gore97.velocity.X + 1f;
+                gore97.velocity.X++;
                 Gore gore98 = Main.gore[num620];
-                gore98.velocity.Y = gore98.velocity.Y + 1f;
+                gore98.velocity.Y++;
                 num620 = Gore.NewGore(projectile.Center, default(Vector2), Main.rand.Next(61, 64));
                 Main.gore[num620].velocity *= scaleFactor9;
                 Gore gore99 = Main.gore[num620];
-                gore99.velocity.X = gore99.velocity.X - 1f;
+                gore99.velocity.X--;
                 Gore gore100 = Main.gore[num620];
-                gore100.velocity.Y = gore100.velocity.Y + 1f;
+                gore100.velocity.Y++;
                 num620 = Gore.NewGore(projectile.Center, default(Vector2), Main.rand.Next(61, 64));
                 Main.gore[num620].velocity *= scaleFactor9;
                 Gore gore101 = Main.gore[num620];
-                gore101.velocity.X = gore101.velocity.X + 1f;
+                gore101.velocity.X++;
                 Gore gore102 = Main.gore[num620];
-                gore102.velocity.Y = gore102.velocity.Y - 1f;
+                gore102.velocity.Y--;
                 num620 = Gore.NewGore(projectile.Center, default(Vector2), Main.rand.Next(61, 64));
                 Main.gore[num620].velocity *= scaleFactor9;
                 Gore gore103 = Main.gore[num620];
-                gore103.velocity.X = gore103.velocity.X - 1f;
+                gore103.velocity.X--;
                 Gore gore104 = Main.gore[num620];
-                gore104.velocity.Y = gore104.velocity.Y - 1f;
+                gore104.velocity.Y--;
             }
 
 
@@ -226,6 +231,17 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
                 Main.dust[num228].velocity = vector7;
             }
             base.Kill(timeLeft);
+
+
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                const int max = 22;
+                const float rotationInterval = 2f * (float)Math.PI / max;
+                Vector2 speed = new Vector2(0f, 8f + 4f).RotatedBy(projectile.rotation);
+                for (int i = 0; i < max; i++)
+                    Projectile.NewProjectile(projectile.Center, speed.RotatedBy(rotationInterval * i),
+                        ModContent.ProjectileType<ChaosStar>(), projectile.damage / 3, 0f, Main.myPlayer);
+            }
         }
     }
 }

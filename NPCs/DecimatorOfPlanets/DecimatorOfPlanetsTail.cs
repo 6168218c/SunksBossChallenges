@@ -32,11 +32,13 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             npc.scale = DecimatorOfPlanetsArguments.Scale;
             for (int i = 0; i < npc.buffImmune.Length; i++)
                 npc.buffImmune[i] = true;
+            music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/LastBattleBallosMix.mp3");
+            musicPriority = MusicPriority.BossMedium;
         }
 
         public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
         {
-            if (npc.alpha > 0)
+            if (npc.alpha > 0 || Main.npc[npc.realLife].ai[2] == 12)
                 damage *= (1 - 0.99);
             return false;
         }
