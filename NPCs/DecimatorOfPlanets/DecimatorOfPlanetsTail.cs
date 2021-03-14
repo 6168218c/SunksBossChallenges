@@ -20,7 +20,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             npc.width = npc.height = 38;
             npc.defense = 0;
             npc.damage = 60;
-            npc.lifeMax = 200000;
+            npc.lifeMax = 450000;
             npc.HitSound = SoundID.NPCHit4;
             npc.DeathSound = SoundID.NPCDeath14;
             npc.noGravity = npc.noTileCollide = true;
@@ -41,6 +41,11 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             if (npc.alpha > 0 || Main.npc[npc.realLife].ai[2] == 12)
                 damage *= (1 - 0.99);
             return false;
+        }
+
+        public override void OnHitPlayer(Player target, int damage, bool crit)
+        {
+            base.OnHitPlayer(target, damage, crit);
         }
     }
 }

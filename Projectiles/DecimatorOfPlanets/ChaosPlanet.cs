@@ -235,12 +235,12 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
 
             if (Main.netMode != NetmodeID.MultiplayerClient)
             {
-                const int max = 22;
+                const int max = 18;
                 const float rotationInterval = 2f * (float)Math.PI / max;
                 Vector2 speed = new Vector2(0f, 8f + 4f).RotatedBy(projectile.rotation);
                 for (int i = 0; i < max; i++)
                     Projectile.NewProjectile(projectile.Center, speed.RotatedBy(rotationInterval * i),
-                        ModContent.ProjectileType<ChaosStar>(), projectile.damage / 3, 0f, Main.myPlayer);
+                        ModContent.ProjectileType<DarkStar>(), projectile.damage / 3, 0f, Main.myPlayer);
             }
         }
     }

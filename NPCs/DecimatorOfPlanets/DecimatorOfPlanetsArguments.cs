@@ -13,7 +13,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             get{
                 float Speed = 30f;
                 if (Main.expertMode)
-                    Speed *= 1.25f;
+                    Speed *= 1.125f;
                 //if (Main.getGoodWorld)
                 //    Speed *= 1.25f;
                 return Speed;
@@ -31,5 +31,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
         public static float R => (float)(SpinSpeed / SpinRadiusSpeed);
 
         public static float Scale => 1.2f;
+
+        public static Microsoft.Xna.Framework.Color TextColor => Microsoft.Xna.Framework.Color.Cyan;
     }
 }

@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 {
-    public class StellarDestroyerTail:ModNPC
+    public class StellarDestroyerTail:StellarDestroyerBody
     {
         public override void SetStaticDefaults()
         {

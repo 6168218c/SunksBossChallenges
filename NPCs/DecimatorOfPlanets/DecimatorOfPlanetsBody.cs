@@ -28,7 +28,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             npc.width = npc.height = 38;
             npc.defense = 0;
             npc.damage = 80;
-            npc.lifeMax = 200000;
+            npc.lifeMax = 450000;
             npc.HitSound = SoundID.NPCHit4;
             npc.DeathSound = SoundID.NPCDeath14;
             npc.noGravity = npc.noTileCollide = true;
@@ -129,7 +129,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                     catch { }
                     if (offset == Vector2.Zero || offset.HasNaNs()) offset = new Vector2(0, 1f);
                     var dist = segDistance * npc.scale;
-                    npc.rotation = offset.ToRotation() + (float)(Math.PI / 2) * npc.direction;
+                    npc.rotation = offset.ToRotation();// + (float)(Math.PI / 2) * npc.direction;
                     offset -= Vector2.Normalize(offset) * dist;
                     npc.velocity = Vector2.Zero;
                     npc.position += offset;
@@ -247,6 +247,16 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             if (npc.alpha > 0)
                 damage = (int)(damage * (1 - 0.80));
         }*/
+
+        public override bool PreDraw(SpriteBatch spriteBatch, Color drawColor)
+        {
+            Texture2D texture2D = Main.npcTexture[npc.type];
+            //Color color = npc.localAI[2] < 0 ? Color.White : Color.Lerp(Color.White, Color.Red, (float)Math.Sin(MathHelper.Pi / 14 * npc.localAI[2]));
+            SpriteEffects effects = (npc.direction == -1) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+            spriteBatch.Draw(texture2D, npc.Center - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), drawColor, npc.rotation + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
+            //spriteBatch.Draw(DestTexture, npc.Center - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), color * 0.75f * npc.Opacity, npc.rotation + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
+            return false;
+        }
 
         public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
         {

@@ -7,8 +7,11 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
 using SunksBossChallenges.Projectiles.DecimatorOfPlanets;
+
+
 namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 {
+    [AutoloadBossHead]
     public class StellarDestroyerHead:ModNPC
     {
         int Length => 80;
@@ -94,6 +97,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 
             if (npc.ai[0] == 0f)
             {
+                npc.direction = 1;
                 int previous = npc.whoAmI;
                 for (int j = 1; j <= Length; j++)
                 {
@@ -119,7 +123,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                 }
             }
 
-            var maxSpeed = 18f;
+            var maxSpeed = 13.5f;
             if (Main.expertMode)
                 maxSpeed *= 1.25f;
 
@@ -191,11 +195,16 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 
         public override bool CheckDead()
         {
-            if (npc.target < 0 || npc.target == 255 || Main.player[npc.target].dead)
+            if (Main.netMode != NetmodeID.MultiplayerClient)
             {
-                npc.TargetClosest(true);
+                if (npc.target < 0 || npc.target == 255 || Main.player[npc.target].dead)
+                {
+                    npc.TargetClosest(true);
+                }
+                Projectile.NewProjectile(Main.player[npc.target].Center, Vector2.Zero, ModContent.ProjectileType<FinalPhaseSummoner>(),
+                    0, 0f, Main.myPlayer, 0f, npc.target);
             }
-            NPC.NewNPC((int)npc.Center.X, (int)npc.Center.Y, ModContent.NPCType<FinalPhaseSummoner>());
+            
             return true;
         }
     }

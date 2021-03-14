@@ -135,7 +135,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                     {
                         num9 = 18;
                     }
-                    int num10 = ModContent.ProjectileType<Projectiles.DecimatorOfPlanets.ChaosStar>();
+                    int num10 = ModContent.ProjectileType<DarkStar>();
                     vector.X += num6 * 5f;
                     vector.Y += num7 * 5f;
                     int num11 = Projectile.NewProjectile(vector.X, vector.Y, num6, num7, num10, num9, 0f, Main.myPlayer);
