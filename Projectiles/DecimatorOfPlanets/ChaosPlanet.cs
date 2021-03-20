@@ -47,7 +47,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
             if (projectile.ai[0] == 1) projectile.Kill();
 
             bool othersLeft = false;
-            projectile.rotation += 0.075f;
+            projectile.rotation += 0.015f * projectile.velocity.Length();
 
             int index = NPC.FindFirstNPC(ModContent.NPCType<DecimatorOfPlanetsHead>());
             if (index != -1) 

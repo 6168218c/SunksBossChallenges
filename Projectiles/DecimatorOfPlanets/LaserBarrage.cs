@@ -66,7 +66,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
         public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
         {
             Texture2D aimTexture = mod.GetTexture("Projectiles/DecimatorOfPlanets/LaserBarrageAim");
-            if (projectile.localAI[0] >= 15 && projectile.localAI[0] <= 60)
+            if (projectile.localAI[0] >= 10 && projectile.localAI[0] <= 50)
             {
                 Vector2 endpoint = new Vector2(projectile.ai[0], projectile.ai[1]);
                 endpoint += endpoint - projectile.Center;
@@ -76,7 +76,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
                 for (int k = 0; k <= length; k += 4)
                 {
                     Vector2 drawPos = projectile.Center + unit * k - Main.screenPosition;
-                    Color alphaCenter = (((int)projectile.localAI[0] / 5) % 2 == 0) ? Color.CornflowerBlue : Color.BlueViolet;
+                    Color alphaCenter = (((int)projectile.localAI[0] / 15) % 2 == 0) ? Color.CornflowerBlue : Color.BlueViolet;
                     spriteBatch.Draw(aimTexture, drawPos, null, alphaCenter, k, new Vector2(2, 2), 1f, SpriteEffects.None, 0f);
                 }
             }

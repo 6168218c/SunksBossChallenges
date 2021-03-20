@@ -12,6 +12,11 @@ namespace SunksBossChallenges.Sky
 		protected abstract int NPCType { get; }
 
 		protected abstract Color SkyColor { get; }
+		/// <summary>
+		/// Gets the minimal intensity of color.
+		/// This has the highest priority.
+		/// </summary>
+		protected virtual float MinIntensity=>0f;
 
 		private UnifiedRandom _random = new UnifiedRandom();
 
@@ -96,6 +101,7 @@ namespace SunksBossChallenges.Sky
 			{
 				float intensity = this.GetIntensity();
 				intensity = MathHelper.Min(intensity, 0.375f);
+				intensity = MathHelper.Max(intensity, MinIntensity);
 				spriteBatch.Draw(Main.blackTileTexture, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), SkyColor * intensity * _opacity);
 			}
 		}

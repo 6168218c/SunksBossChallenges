@@ -128,7 +128,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                 maxSpeed *= 1.25f;
 
             WormMovement(Main.player[npc.target].Center, maxSpeed);
-            npc.rotation = npc.velocity.ToRotation() + (float)(Math.PI / 2) * npc.direction;
+            npc.rotation = npc.velocity.ToRotation();
             Lighting.AddLight(npc.Center, 0.3f, 0.3f, 0.5f);
         }
 
@@ -206,6 +206,23 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             }
             
             return true;
+        }
+
+        public override bool PreDraw(SpriteBatch spriteBatch, Color drawColor)
+        {
+            Texture2D texture2D = Main.npcTexture[npc.type];
+            //Color color = npc.localAI[2] < 0 ? Color.White : Color.Lerp(Color.White, Color.Red, (float)Math.Sin(MathHelper.Pi / 14 * npc.localAI[2]));
+            SpriteEffects effects = (npc.direction < 0) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+
+            /*for (int i = 0; i < NPCID.Sets.TrailCacheLength[npc.type]; i++)
+            {
+                float k = 1 - (float)i / NPCID.Sets.TrailCacheLength[npc.type];
+                spriteBatch.Draw(texture2D, npc.oldPos[i] + npc.Size / 2 - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), drawColor * k, npc.oldRot[i] + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
+                //spriteBatch.Draw(DestTexture, npc.oldPos[i] + npc.Size / 2 - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), color * 0.75f * npc.Opacity * k, npc.oldRot[i] + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
+            }*/
+            spriteBatch.Draw(texture2D, npc.Center - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), drawColor, npc.rotation + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
+            //spriteBatch.Draw(DestTexture, npc.Center - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), color * 0.75f * npc.Opacity, npc.rotation + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
+            return false;
         }
     }
 }

@@ -10,13 +10,19 @@ namespace SunksBossChallenges.Sky.DecimatorOfPlanets
 {
     public class AggressiveSky:BasicColoredSky
     {
-        protected override Color SkyColor => Color.MediumVioletRed;
+        protected override Color SkyColor => Color.Purple;
         protected override int NPCType => ModContent.NPCType<DecimatorOfPlanetsHead>();
     }
 
     public class PassiveSky : BasicColoredSky
     {
         protected override Color SkyColor => Color.Cyan;
+        protected override int NPCType => ModContent.NPCType<DecimatorOfPlanetsHead>();
+    }
+    public class LastPhaseSky : BasicColoredSky
+    {
+        protected override Color SkyColor => Color.Black;
+        protected override float MinIntensity => 0.96f;
         protected override int NPCType => ModContent.NPCType<DecimatorOfPlanetsHead>();
     }
 }

@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
 using SunksBossChallenges.NPCs.DecimatorOfPlanets;
+using Terraria.Localization;
 
 namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
 {
@@ -28,13 +29,26 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
             if (target < 0 || target == 255 || Main.player[target].dead)
                 projectile.Kill();
 
-            if (projectile.ai[0] == 120)
-                Main.NewText("Don't you think it so easy to defeat me?", DecimatorOfPlanetsArguments.TextColor);
-            if (projectile.ai[0] == 300)
-                Main.NewText("Well,good news for you.", DecimatorOfPlanetsArguments.TextColor);
+            if (Main.netMode == NetmodeID.SinglePlayer)
+            {
+                if (projectile.ai[0] == 120)
+                    Main.NewText("Don't you think it so easy to defeat me?", DecimatorOfPlanetsArguments.TextColor);
+                if (projectile.ai[0] == 300)
+                    Main.NewText("Well,good news for you.", DecimatorOfPlanetsArguments.TextColor);
+            }
+            if (Main.netMode == NetmodeID.Server)
+            {
+                if (projectile.ai[0] == 120)
+                    NetMessage.BroadcastChatMessage(NetworkText.FromLiteral("Don't you think it so easy to defeat me?"), DecimatorOfPlanetsArguments.TextColor);
+                if (projectile.ai[0] == 300)
+                    NetMessage.BroadcastChatMessage(NetworkText.FromLiteral("Well,good news for you."), DecimatorOfPlanetsArguments.TextColor);
+            }
             if (projectile.ai[0] == 600)
             {
-                Main.NewText("IT'S NOT OVER YET!", DecimatorOfPlanetsArguments.TextColor);
+                if(Main.netMode==NetmodeID.SinglePlayer)
+                    Main.NewText("IT'S NOT OVER YET!", DecimatorOfPlanetsArguments.TextColor);
+                if(Main.netMode==NetmodeID.Server)
+                    NetMessage.BroadcastChatMessage(NetworkText.FromLiteral("IT'S NOT OVER YET!"), DecimatorOfPlanetsArguments.TextColor);
                 NPC.SpawnOnPlayer(target, ModContent.NPCType<DecimatorOfPlanetsHead>());
                 //NPC.NewNPC((int)npc.Center.X, (int)npc.Center.Y, ModContent.NPCType<DecimatorOfPlanetsHead>());
                 //Main.NewText(Terraria.Localization.Language.GetTextValue("Announcement.HasAwoken", "The Decimator Of Planets"), 175, 75);

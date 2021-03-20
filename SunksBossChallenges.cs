@@ -10,6 +10,7 @@ namespace SunksBossChallenges
         {
             SkyManager.Instance["SunksBossChallenges:DecimatorOfPlanetsAggressive"] = new Sky.DecimatorOfPlanets.AggressiveSky();
             SkyManager.Instance["SunksBossChallenges:DecimatorOfPlanetsPassive"] = new Sky.DecimatorOfPlanets.PassiveSky();
+            SkyManager.Instance["SunksBossChallenges:DecimatorOfPlanetsLastPhase"] = new Sky.DecimatorOfPlanets.LastPhaseSky();
             base.Load();
         }
     }

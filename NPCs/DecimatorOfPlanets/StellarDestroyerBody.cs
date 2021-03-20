@@ -107,7 +107,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                     catch { }
                     if (offset == Vector2.Zero || offset.HasNaNs()) offset = new Vector2(0, 1f);
                     var dist = segDistance * npc.scale;
-                    npc.rotation = offset.ToRotation() + (float)(Math.PI / 2) * npc.direction;
+                    npc.rotation = offset.ToRotation();
                     offset -= Vector2.Normalize(offset) * dist;
                     npc.velocity = Vector2.Zero;
                     npc.position += offset;
@@ -147,6 +147,23 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
         }
         public override bool? DrawHealthBar(byte hbPosition, ref float scale, ref Vector2 position)
         {
+            return false;
+        }
+
+        public override bool PreDraw(SpriteBatch spriteBatch, Color drawColor)
+        {
+            Texture2D texture2D = Main.npcTexture[npc.type];
+            //Color color = npc.localAI[2] < 0 ? Color.White : Color.Lerp(Color.White, Color.Red, (float)Math.Sin(MathHelper.Pi / 14 * npc.localAI[2]));
+            SpriteEffects effects = (npc.direction < 0) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+
+            /*for (int i = 0; i < NPCID.Sets.TrailCacheLength[npc.type]; i++)
+            {
+                float k = 1 - (float)i / NPCID.Sets.TrailCacheLength[npc.type];
+                spriteBatch.Draw(texture2D, npc.oldPos[i] + npc.Size / 2 - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), drawColor * k, npc.oldRot[i] + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
+                //spriteBatch.Draw(DestTexture, npc.oldPos[i] + npc.Size / 2 - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), color * 0.75f * npc.Opacity * k, npc.oldRot[i] + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
+            }*/
+            spriteBatch.Draw(texture2D, npc.Center - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), drawColor, npc.rotation + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
+            //spriteBatch.Draw(DestTexture, npc.Center - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), color * 0.75f * npc.Opacity, npc.rotation + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
             return false;
         }
 
