@@ -28,7 +28,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             npc.width = npc.height = 38;
             npc.defense = 0;
             npc.damage = 80;
-            npc.lifeMax = 450000;
+            npc.lifeMax = 320000;
             npc.HitSound = SoundID.NPCHit4;
             npc.DeathSound = SoundID.NPCDeath14;
             npc.noGravity = npc.noTileCollide = true;
@@ -48,6 +48,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
         public override void ScaleExpertStats(int numPlayers, float bossLifeScale)
         {
             npc.damage = (int)(npc.damage * 0.8f);
+            npc.lifeMax = (int)(npc.lifeMax / 2 * bossLifeScale);
         }
 
         public override void AI()
@@ -263,8 +264,8 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             if (npc.alpha > 0 || Main.npc[npc.realLife].ai[2] == 12)
                     damage *= (1 - 0.99);
             else
-                damage *= (1 - 0.80);
-            return false;
+                damage *= (1 - 0.875);
+            return true;
         }
         public override bool CheckActive()
         {

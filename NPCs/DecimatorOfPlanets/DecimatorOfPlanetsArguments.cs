@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Terraria;
 using Terraria.ModLoader;
+using Microsoft.Xna.Framework;
 
 namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 {
@@ -32,6 +33,6 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 
         public static float Scale => 1.2f;
 
-        public static Microsoft.Xna.Framework.Color TextColor => Microsoft.Xna.Framework.Color.Cyan;
+        public static Color TextColor => Color.Cyan;
     }
 }

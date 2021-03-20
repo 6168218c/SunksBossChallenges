@@ -29,7 +29,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
                 projectile.Kill();
 
             if (projectile.ai[0] == 120)
-                Main.NewText("Don't you think I'm so easy a boss to defeat.", DecimatorOfPlanetsArguments.TextColor);
+                Main.NewText("Don't you think it so easy to defeat me?", DecimatorOfPlanetsArguments.TextColor);
             if (projectile.ai[0] == 300)
                 Main.NewText("Well,good news for you.", DecimatorOfPlanetsArguments.TextColor);
             if (projectile.ai[0] == 600)

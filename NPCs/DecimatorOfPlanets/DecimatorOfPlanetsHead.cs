@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
 using SunksBossChallenges.Projectiles.DecimatorOfPlanets;
+using Terraria.Graphics.Effects;
 
 namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 {
@@ -31,7 +32,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             npc.width = npc.height = 50;
             npc.defense = 0;
             npc.damage = 120;
-            npc.lifeMax = 450000;
+            npc.lifeMax = 320000;
             npc.HitSound = SoundID.NPCHit4;
             npc.DeathSound = SoundID.NPCDeath14;
             npc.noGravity = npc.noTileCollide = true;
@@ -120,7 +121,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                 if (npc.target < 0 || npc.target == 255 || Main.player[npc.target].dead|| !Main.player[npc.target].active)
                 {
                     npc.velocity = new Vector2(0, -18f);
-                    npc.rotation = npc.velocity.ToRotation() + (float)(Math.PI / 2) * npc.direction;
+                    npc.rotation = npc.velocity.ToRotation();
                     if (npc.target>=0 && npc.target<255)
                         if(npc.Distance(Main.player[npc.target].position)>3000f)
                         {
@@ -184,18 +185,21 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                     npc.active = false;
                     return;
                 }
-            }         
+            }
 
 
             /*var accleration = 0.25f;
             var rotationSpeed = Math.PI * 2f / 60 * 0.8f;
             var minSpeed = 5f;*/
+            int spinMaxTime = 1800;
+            int passiveTime = 1200 - (int)((npc.lifeMax - npc.life) / (float)npc.lifeMax * 600);
+            int aggressiveTime = 1200 + (int)((npc.lifeMax - npc.life) / (float)npc.lifeMax * 600);
             var maxSpeed = 20f;
             if (Main.expertMode)
-                maxSpeed *= 1.25f;
+                maxSpeed *= 1.125f;
             //if (Main.getGoodWorld)
             //    maxSpeed *= 1.25f;
-            maxSpeed = maxSpeed * 0.85f + maxSpeed * ((npc.lifeMax - npc.life) / (float)npc.lifeMax) * 0.35f;
+            maxSpeed = maxSpeed * 0.9f + maxSpeed * ((npc.lifeMax - npc.life) / (float)npc.lifeMax) * 0.2f;
             bool allowSpin = npc.life < npc.lifeMax * 0.75f;
 
             if (allowSpin)
@@ -206,9 +210,9 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             chaosPlanetsCount += (int)((npc.lifeMax - npc.life) / (float)npc.lifeMax / 0.22f);
             chaosPlanetsCount = Math.Min(6, chaosPlanetsCount);
 
-            if (spinTimer > 0 && spinTimer < 1800 && spinTimer % 450 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+            if (spinTimer > 0 && spinTimer < spinMaxTime && spinTimer % 450 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
             {
-                double baseRotation = Main.rand.NextBool() ? Math.PI / 2 : 0;
+                double baseRotation = Math.PI / 2;
                 const float length = 1200f;
                 var target = player.Center + player.velocity * 67.5f;
                 for (int i = 0; i < 5; i++)
@@ -224,9 +228,26 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                     pos = pos.RotatedBy(baseRotation);
                     Projectile.NewProjectile(target+pos, Vector2.Zero, ModContent.ProjectileType<LaserBarrage>(), 60, 0f, Main.myPlayer, target.X, target.Y);
                 }
+                if (Main.rand.Next(5) == 3)
+                {
+                    baseRotation = 0;
+                    for (int i = 0; i < 5; i++)
+                    {
+                        Vector2 pos = Main.rand.NextVector2Unit(MathHelper.Pi / 3, MathHelper.Pi / 3) * length;
+                        pos = pos.RotatedBy(baseRotation);
+                        Projectile.NewProjectile(target + pos, Vector2.Zero, ModContent.ProjectileType<LaserBarrage>(), 60, 0f, Main.myPlayer, target.X, target.Y);
+                    }
+                    for (int i = 0; i < 5; i++)
+                    {
+                        target += Main.rand.NextVector2Unit() * 100f;
+                        Vector2 pos = Main.rand.NextVector2Unit(MathHelper.Pi / 3, MathHelper.Pi / 3) * length;
+                        pos = pos.RotatedBy(baseRotation);
+                        Projectile.NewProjectile(target + pos, Vector2.Zero, ModContent.ProjectileType<LaserBarrage>(), 60, 0f, Main.myPlayer, target.X, target.Y);
+                    }
+                }
             }
 
-            if (npc.ai[2] == 12 && spinTimer == 2000 && Main.netMode != NetmodeID.MultiplayerClient)
+            if (npc.ai[2] == 12 && spinTimer == spinMaxTime + 200 && Main.netMode != NetmodeID.MultiplayerClient)
             {//spawn chaos system
                 for (int i = 0; i < chaosPlanets.Length; i++) chaosPlanets[i] = -1;
                 var center = new Vector2(npc.localAI[1], npc.localAI[2]);
@@ -248,7 +269,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 
 
             //movement control
-            if (spinTimer < 1800)
+            if (spinTimer < spinMaxTime)
             {//ground movement code
                 //WormMovement(player.Center, maxSpeed * 0.75f, 0.135f);
                 if (Vector2.Distance(npc.Center, player.Center) >= 4800f)
@@ -257,8 +278,14 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                 }
                 else
                 {
-                    if (npc.ai[3] <= 900)//passive ai
+                    
+                    if (npc.ai[3] <= passiveTime)//passive ai
                     {
+                        if (!SkyManager.Instance["SunksBossChallenges:DecimatorOfPlanetsPassive"].IsActive())
+                        {
+                            SkyManager.Instance.Deactivate("SunksBossChallenges:DecimatorOfPlanetsAggressive");
+                            SkyManager.Instance.Activate("SunksBossChallenges:DecimatorOfPlanetsPassive");
+                        }
                         if (npc.velocity.Length() > maxSpeed * 1.25)
                             npc.velocity = scaleLength(npc.velocity, maxSpeed * 0.6f);
                         maxSpeed *= 0.75f;
@@ -285,7 +312,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                         if (OffgroundTile > 0)
                         {
                             OffgroundTile *= 16;
-                            float heightLimit = OffgroundTile - 800;
+                            float heightLimit = OffgroundTile - 600;
                             if (player.Center.Y > heightLimit)
                             {
                                 targetPos.Y = heightLimit;
@@ -293,6 +320,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                                 {
                                     targetPos.X = targetPos.X + Math.Sign(npc.velocity.X) * 600f;
                                 }
+                                maxSpeed = Math.Min(maxSpeed, 20f);
                             }
                         }
                         else
@@ -378,7 +406,12 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                         if (npc.velocity.Length() > maxSpeed)
                             npc.velocity = scaleLength(npc.velocity, maxSpeed);
                     }*/
-                        if (npc.Center.Y < player.Center.Y - 600)
+                        if (!SkyManager.Instance["SunksBossChallenges:DecimatorOfPlanetsAggressive"].IsActive())
+                        {
+                            SkyManager.Instance.Deactivate("SunksBossChallenges:DecimatorOfPlanetsPassive");
+                            SkyManager.Instance.Activate("SunksBossChallenges:DecimatorOfPlanetsAggressive");
+                        }
+                        if (npc.Center.Y < player.Center.Y - 216)
                         {
                             npc.ai[2] = 1;
                         }
@@ -404,11 +437,11 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                         {
                             if (npc.velocity.Length() > maxSpeed * 1.25)
                                 npc.velocity = scaleLength(npc.velocity, maxSpeed * 0.6f);
-                            WormMovement(player.Center + player.velocity, maxSpeed * 0.75f, 0.135f);
+                            WormMovement(player.Center + player.velocity / 2, maxSpeed * 0.75f, 0.09f, 0.2f);
                         }
                     }
                     npc.ai[3]++;
-                    if (npc.ai[3] > 2100)
+                    if (npc.ai[3] > passiveTime + aggressiveTime)
                     {
                         npc.ai[3] = 0;
                     }
@@ -473,21 +506,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                     }
                     else if(Vector2.Distance(player.Center,center)>DecimatorOfPlanetsArguments.R)
                     {
-                        //player.Center = new Vector2(npc.localAI[1], npc.localAI[2]);
-                        foreach (int item in chaosPlanets)
-                        {
-                            if (item != -1)
-                            {
-                                if (Main.projectile[item].type == ModContent.ProjectileType<ChaosPlanet>() && Main.projectile[item].ai[0] != 1 || Main.projectile[item].active)
-                                {
-                                    Main.projectile[item].ai[0] = 1;
-                                }
-                            }
-                        }
-                        npc.chaseable = true;
-                        spinTimer = 1350;
-                        npc.position += player.Center - npc.Center;
-                        npc.ai[2] = 0;//reset to normal
+                        player.Center = center + Vector2.Normalize(player.Center - center) * DecimatorOfPlanetsArguments.R;
                     }
                 }
                 var pivot = new Vector2(npc.localAI[1], npc.localAI[2]);
@@ -621,7 +640,13 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 
         public override void OnHitPlayer(Player target, int damage, bool crit)
         {
-            CombatText.NewText(npc.Hitbox, DecimatorOfPlanetsArguments.TextColor, "Tastes good", true);
+            string[] quotes =
+            {
+                "Tastes good.",
+                "Tell me if it hurts.",
+                "Good luck recovering."
+            };
+            CombatText.NewText(npc.Hitbox, DecimatorOfPlanetsArguments.TextColor, quotes[Main.rand.Next(0, 3)], true);
             base.OnHitPlayer(target, damage, crit);
         }
     }

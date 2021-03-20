@@ -20,7 +20,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             npc.width = npc.height = 38;
             npc.defense = 0;
             npc.damage = 60;
-            npc.lifeMax = 450000;
+            npc.lifeMax = 320000;
             npc.HitSound = SoundID.NPCHit4;
             npc.DeathSound = SoundID.NPCDeath14;
             npc.noGravity = npc.noTileCollide = true;
