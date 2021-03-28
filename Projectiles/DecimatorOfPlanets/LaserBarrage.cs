@@ -47,7 +47,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
             {
                 projectile.alpha = 0;
                 Vector2 target = new Vector2(projectile.ai[0], projectile.ai[1]) - projectile.Center;
-                projectile.velocity = Vector2.Normalize(target) * Speed * 1.6F;
+                projectile.velocity = Vector2.Normalize(target) * Speed * 2f;
                 projectile.rotation = projectile.velocity.ToRotation() + MathHelper.PiOver2;
             }
         }

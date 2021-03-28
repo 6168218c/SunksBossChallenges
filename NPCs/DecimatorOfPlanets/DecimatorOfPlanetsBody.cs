@@ -22,6 +22,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 
         public override void SetDefaults()
         {
+			npc.CloneDefaults(NPCID.TheDestroyerBody);
             npc.boss = true;
             npc.aiStyle = -1;
             npc.npcSlots = 1f;
@@ -34,15 +35,16 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             npc.noGravity = npc.noTileCollide = true;
             npc.knockBackResist = 0f;
             npc.behindTiles = true;
-            npc.value = 0f;
+            npc.value = 10000f;
             npc.netAlways = true;
             npc.dontCountMe = true;
             npc.alpha = 255;
             npc.scale = DecimatorOfPlanetsArguments.Scale;
             for (int i = 0; i < npc.buffImmune.Length; i++)
                 npc.buffImmune[i] = true;
-            music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/LastBattleBallosMix.mp3");
-            musicPriority = MusicPriority.BossMedium;
+			npc.timeLeft = NPC.activeTime * 30;
+            music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/LastBattleBallosMix");
+            musicPriority = MusicPriority.BossHigh;
         }
 
         public override void ScaleExpertStats(int numPlayers, float bossLifeScale)
