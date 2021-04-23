@@ -195,6 +195,9 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
 
         public override bool CheckDead()
         {
+            if (npc.life > 0)
+                return true;
+
             if (Main.netMode != NetmodeID.MultiplayerClient)
             {
                 if (npc.target < 0 || npc.target == 255 || Main.player[npc.target].dead)

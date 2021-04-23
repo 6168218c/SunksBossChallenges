@@ -54,10 +54,14 @@ namespace SunksBossChallenges.Items
 
         public override bool CanUseItem(Player player)
         {
-            int type = ModContent.NPCType<StellarDestroyerHead>();
-            if (Main.npc.Where(item => item.type == type && NPCLoader.CheckDead(item) == false).Any())
+            if (Main.npc.Count(item => item.type == ModContent.NPCType<StellarDestroyerHead>() && item.active == true)>0)
                 return false;
-            else return true;
+            if (Main.npc.Count(item => item.type == ModContent.NPCType<DecimatorOfPlanetsHead>() && item.active == true)>0)
+                return false;
+            if (Main.projectile.Count(item => item.type == ModContent.ProjectileType<Projectiles.DecimatorOfPlanets.FinalPhaseSummoner>()
+            && item.active == true) > 0)
+                return false;
+            return true;
         }
     }
 }
