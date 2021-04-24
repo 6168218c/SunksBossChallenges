@@ -12,9 +12,8 @@ using Terraria.Localization;
 
 namespace SunksBossChallenges.NPCs.LumiteTwins
 {
-	public class LumiteRetinazer : ModNPC
+	public class LumiteRetinazer : LumTwins
 	{
-		protected float Phase { get => npc.ai[0]; set => npc.ai[0] = value; }
         public override string Texture => "Terraria/NPC_" + NPCID.Retinazer;
         public override void SetStaticDefaults()
         {
@@ -37,7 +36,13 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 			/**/
 
 			string aiDump = $"ai:{string.Join(",", npc.ai.Select(fl => $"{fl}"))}";
-			Main.NewText($"{aiDump}");
+			//Main.NewText($"{aiDump}");
+
+			if (!CheckBrother<LumiteSpazmatism>())
+			{
+				UpdateBrother<LumiteSpazmatism>();
+			}
+
 			if (npc.target < 0 || npc.target == 255 || Main.player[npc.target].dead || !Main.player[npc.target].active)
 			{
 				npc.TargetClosest();
@@ -47,8 +52,13 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 
 			var vecToPlayer = player.Center - npc.Center;
 
-			float num379 = npc.position.X + (float)(npc.width / 2) - Main.player[npc.target].position.X - (float)(Main.player[npc.target].width / 2);
-			float num380 = npc.position.Y + (float)npc.height - 59f - Main.player[npc.target].position.Y - (float)(Main.player[npc.target].height / 2);
+			float num379 = npc.position.X + (float)(npc.width / 2) - Main.player[npc.target].Center.X;
+			float num380 = npc.position.Y + (float)npc.height - 59f - Main.player[npc.target].Center.Y;
+            if (CheckBrother<LumiteSpazmatism>() && this.Phase == 0 && npc.ai[1] == 3)
+            {
+				num379= npc.position.X + (float)(npc.width / 2) - Main.npc[brotherId].Center.X;
+				num380 = npc.position.Y + (float)npc.height - 59f - Main.npc[brotherId].Center.Y;
+			}
 			float distRotation = (float)Math.Atan2(num380, num379) + 1.57f;
 			if (distRotation < 0f)
 			{
@@ -124,7 +134,8 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 			}
 			if (this.Phase == 0f)//phase 1
 			{
-				if (npc.ai[1] == 0f)
+                #region Phase 1
+                if (npc.ai[1] == 0f)
 				{
 					float num385 = 7f;
 					float num386 = 0.1f;
@@ -292,18 +303,76 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 						}
 					}
 				}
-				if ((double)npc.life < (double)npc.lifeMax * 0.4)
+				else if (npc.ai[1] == 3f)
 				{
-					this.Phase = 1f;
-					npc.ai[1] = 0f;
+					npc.dontTakeDamage = true;
+					if (CheckBrother<LumiteSpazmatism>())
+					{
+						npc.velocity.X *= 0.98f;
+						npc.velocity.Y *= 0.98f;
+						if ((double)npc.velocity.X > -0.1 && (double)npc.velocity.X < 0.1)
+						{
+							npc.velocity.X = 0f;
+						}
+						if ((double)npc.velocity.Y > -0.1 && (double)npc.velocity.Y < 0.1)
+						{
+							npc.velocity.Y = 0f;
+						}
+						//npc.rotation = distRotation;
+						if (Main.npc[brotherId].ai[1] == 3f)
+						{
+							if (++npc.ai[2] >= 60)
+                            {
+								Main.npc[brotherId].ai[2] = 60;//should not be more than a tick
+								this.Phase = 1f;
+								npc.ai[1] = 0f;
+								npc.ai[2] = 0f;
+								npc.ai[3] = 0f;
+								NewOrBoardcastText($"Connection established", Color.Red);
+								npc.netUpdate = true;
+							}
+						}
+                        else
+                        {
+							Vector2 pivot = Main.npc[brotherId].Center;
+							if(npc.Distance(pivot)> 900f)
+								npc.Center = pivot + npc.DirectionFrom(pivot) * 900f;
+                        }
+					}
+					else
+					{
+						this.Phase = 1f;
+						npc.ai[1] = 0f;
+						npc.ai[2] = 0f;
+						npc.ai[3] = 0f;
+						npc.netUpdate = true;
+					}
+					return;
+				}
+				if ((double)npc.life < (double)npc.lifeMax * 0.75)
+				{
+					//this.Phase = 1f;
+					npc.ai[1] = 3f;
 					npc.ai[2] = 0f;
 					npc.ai[3] = 0f;
+					if(CheckBrother<LumiteSpazmatism>())
+                    {
+                        if (Main.npc[brotherId].ai[1] != 3f)
+                        {
+							NewOrBoardcastText($"Battle mode on.Sync server started at port 8{npc.whoAmI}", Color.Red);
+						}
+                    }
 					npc.netUpdate = true;
 				}
 				return;
-			}
-			if (this.Phase == 1f || this.Phase == 2f)
+                #endregion
+            }
+            if (this.Phase == 1f || this.Phase == 2f)
 			{
+				if (music != mod.GetSoundSlot(SoundType.Music, "Sounds/Music/HellMarch3"))
+				{
+					music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/HellMarch3");
+				}
 				if (this.Phase == 1f)
 				{
 					npc.ai[2] += 0.005f;
@@ -319,6 +388,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 					{
 						npc.ai[2] = 0f;
 					}
+					npc.dontTakeDamage = false;
 				}
 				npc.rotation += npc.ai[2];
 				npc.ai[1] += 1f;
@@ -572,11 +642,6 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 				npc.netUpdate = true;
 			}
 		}
-
-		protected void setRotation(Vector2 direction)
-		{
-			npc.rotation = direction.ToRotation() - MathHelper.PiOver2;
-		}
 		public override void ScaleExpertStats(int numPlayers, float bossLifeScale)
         {
             base.ScaleExpertStats(numPlayers, bossLifeScale);
@@ -616,6 +681,16 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
                 Main.spriteBatch.Draw(Main.npcTexture[npc.type], position23, frame4, npc.GetColor(drawColor), npc.rotation, vector10, npc.scale, spriteEffects, 0f);
             }
             return false;
+        }
+
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            base.SendExtraAI(writer);
+        }
+
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            base.ReceiveExtraAI(reader);
         }
     }
 }

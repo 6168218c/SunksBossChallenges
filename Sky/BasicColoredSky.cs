@@ -57,7 +57,7 @@ namespace SunksBossChallenges.Sky
 
 		private float GetIntensity()
 		{
-			if (this.UpdateNPCIndex())
+			if (this.CheckAlive())
 			{
 				float x = 0f;
 				if (this._npcIndex != -1)
@@ -75,7 +75,7 @@ namespace SunksBossChallenges.Sky
 			return new Color(Vector4.Lerp(new Vector4(0.5f, 0.8f, 1f, 1f), inColor.ToVector4(), 1f - intensity));
 		}
 
-		private bool UpdateNPCIndex()
+		private bool CheckAlive()
 		{
 			if (this._npcIndex >= 0 && Main.npc[this._npcIndex].active &&
 				Main.npc[this._npcIndex].type == NPCType)
@@ -97,7 +97,7 @@ namespace SunksBossChallenges.Sky
 
 		public override void Draw(SpriteBatch spriteBatch, float minDepth, float maxDepth)
 		{
-			if (maxDepth >= 0f && minDepth < 0f)
+			if (maxDepth >= 0f && minDepth < 0f && CheckAlive())
 			{
 				float intensity = this.GetIntensity();
 				intensity = MathHelper.Min(intensity, 0.375f);

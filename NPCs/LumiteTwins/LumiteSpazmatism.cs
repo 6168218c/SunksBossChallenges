@@ -12,9 +12,9 @@ using Terraria.Localization;
 
 namespace SunksBossChallenges.NPCs.LumiteTwins
 {
-    public class LumiteSpazmatism:ModNPC
+    public class LumiteSpazmatism:LumTwins
     {
-        public override string Texture => "Terraria/NPC_" + NPCID.Spazmatism;
+		public override string Texture => "Terraria/NPC_" + NPCID.Spazmatism;
         public override void SetStaticDefaults()
         {
             DisplayName.SetDefault(@"LS-005 ""Zeus""");
@@ -32,19 +32,30 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
             music = MusicID.Boss2;
         }
 
-        public override void AI()
-        {
+		public override void AI()
+		{
 			string aiDump = $"ai:{string.Join(",", npc.ai.Select(fl => $"{fl}"))}";
 			//Main.NewText($"{aiDump}");
+
+			if (!CheckBrother<LumiteRetinazer>())
+			{
+				UpdateBrother<LumiteRetinazer>();
+			}
+
 			if (npc.target < 0 || npc.target == 255 || Main.player[npc.target].dead || !Main.player[npc.target].active)
 			{
 				npc.TargetClosest();
 			}
 			var player = Main.player[npc.target];
 			bool targetDead = Main.player[npc.target].dead;
-
-			float num379 = npc.position.X + (float)(npc.width / 2) - Main.player[npc.target].position.X - (float)(Main.player[npc.target].width / 2);
+            #region RotationHandler
+            float num379 = npc.position.X + (float)(npc.width / 2) - Main.player[npc.target].position.X - (float)(Main.player[npc.target].width / 2);
 			float num380 = npc.position.Y + (float)npc.height - 59f - Main.player[npc.target].position.Y - (float)(Main.player[npc.target].height / 2);
+			if (CheckBrother<LumiteRetinazer>() && this.Phase == 0 && npc.ai[1] == 3)
+			{
+				num379 = npc.position.X + (float)(npc.width / 2) - Main.npc[brotherId].Center.X;
+				num380 = npc.position.Y + (float)npc.height - 59f - Main.npc[brotherId].Center.Y;
+			}
 			float distRotation = (float)Math.Atan2(num380, num379) + 1.57f;
 			if (distRotation < 0f)
 			{
@@ -93,7 +104,8 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 			{
 				npc.rotation = distRotation;
 			}
-			if (Main.rand.Next(5) == 0)
+            #endregion
+            if (Main.rand.Next(5) == 0)
 			{
 				int num425 = Dust.NewDust(new Vector2(npc.position.X, npc.position.Y + (float)npc.height * 0.25f), npc.width, (int)((float)npc.height * 0.5f), 5, npc.velocity.X, 2f);
 				Main.dust[num425].velocity.X *= 0.5f;
@@ -118,9 +130,10 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 				}
 				return;
 			}
-			if (npc.ai[0] == 0f)
+			if (this.Phase == 0f)
 			{
-				if (npc.ai[1] == 0f)
+                #region Phase 1
+                if (npc.ai[1] == 0f)
 				{
 					npc.TargetClosest();
 					float num427 = 12f;
@@ -291,19 +304,76 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 						}
 					}
 				}
-				if ((double)npc.life < (double)npc.lifeMax * 0.4)
+				else if (npc.ai[1] == 3f)
+                {
+					npc.dontTakeDamage = true;
+                    if (CheckBrother<LumiteRetinazer>())
+                    {
+						npc.velocity.X *= 0.98f;
+						npc.velocity.Y *= 0.98f;
+						if ((double)npc.velocity.X > -0.1 && (double)npc.velocity.X < 0.1)
+						{
+							npc.velocity.X = 0f;
+						}
+						if ((double)npc.velocity.Y > -0.1 && (double)npc.velocity.Y < 0.1)
+						{
+							npc.velocity.Y = 0f;
+						}
+						//npc.rotation = distRotation;
+						if (Main.npc[brotherId].ai[1] == 3f)
+                        {
+                            if (npc.ai[2] >= 60)
+                            {
+								this.Phase = 1f;
+								npc.ai[1] = 0f;
+								npc.ai[2] = 0f;
+								npc.ai[3] = 0f;
+								NewOrBoardcastText($"Connection established", Color.Green);
+								npc.netUpdate = true;
+							}
+						}
+						else
+						{
+							Vector2 pivot = Main.npc[brotherId].Center;
+							if (npc.Distance(pivot) > 900f)
+								npc.Center = pivot + npc.DirectionFrom(pivot) * 900f;
+						}
+					}
+                    else
+                    {
+						this.Phase = 1f;
+						npc.ai[1] = 0f;
+						npc.ai[2] = 0f;
+						npc.ai[3] = 0f;
+						npc.netUpdate = true;
+					}
+					return;
+                }
+				if ((double)npc.life < (double)npc.lifeMax * 0.75)
 				{
-					npc.ai[0] = 1f;
-					npc.ai[1] = 0f;
+					//this.Phase = 1f;
+					npc.ai[1] = 3f;
 					npc.ai[2] = 0f;
 					npc.ai[3] = 0f;
+					if (CheckBrother<LumiteRetinazer>())
+					{
+						if (Main.npc[brotherId].ai[1] != 3f)
+						{
+							NewOrBoardcastText($"Battle mode on.Sync server started at port 8{npc.whoAmI}", Color.Green);
+						}
+					}
 					npc.netUpdate = true;
 				}
 				return;
-			}
-			if (npc.ai[0] == 1f || npc.ai[0] == 2f)
+                #endregion
+            }
+            if (this.Phase == 1f || this.Phase == 2f)
 			{
-				if (npc.ai[0] == 1f)
+				if (music != mod.GetSoundSlot(SoundType.Music, "Sounds/Music/HellMarch3"))
+				{
+					music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/HellMarch3");
+				}
+				if (this.Phase == 1f)
 				{
 					npc.ai[2] += 0.005f;
 					if ((double)npc.ai[2] > 0.5)
@@ -318,14 +388,15 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 					{
 						npc.ai[2] = 0f;
 					}
+					npc.dontTakeDamage = false;
 				}
 				npc.rotation += npc.ai[2];
 				npc.ai[1] += 1f;
 				if (npc.ai[1] == 100f)
 				{
-					npc.ai[0] += 1f;
+					this.Phase += 1f;
 					npc.ai[1] = 0f;
-					if (npc.ai[0] == 3f)
+					if (this.Phase == 3f)
 					{
 						npc.ai[2] = 0f;
 					}
@@ -485,7 +556,6 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 					{
 						num451 = 27;
 					}
-					int num452 = 101;
 					vector43 = new Vector2(npc.position.X + (float)npc.width * 0.5f, npc.position.Y + (float)npc.height * 0.5f);
 					num447 = Main.player[npc.target].position.X + (float)(Main.player[npc.target].width / 2) - vector43.X;
 					num448 = Main.player[npc.target].position.Y + (float)(Main.player[npc.target].height / 2) - vector43.Y;
@@ -499,7 +569,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 					num447 += npc.velocity.X * 0.5f;
 					vector43.X -= num447 * 1f;
 					vector43.Y -= num448 * 1f;
-					int num453 = Projectile.NewProjectile(vector43.X, vector43.Y, num447, num448, num452, num451, 0f, Main.myPlayer);
+					int num453 = Projectile.NewProjectile(vector43.X, vector43.Y, num447, num448, ProjectileID.EyeFire, num451, 0f, Main.myPlayer);
 				}
 			}
 			else if (npc.ai[1] == 1f)
@@ -569,69 +639,76 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 
         public override bool PreDraw(SpriteBatch spriteBatch, Color drawColor)
         {
-            Microsoft.Xna.Framework.Rectangle frame4 = npc.frame;
+			for (int i = 0; i < 200; i++)
+			{
+				if (!Main.npc[i].active || npc.whoAmI == i || (Main.npc[i].type != ModContent.NPCType<LumiteRetinazer>()))
+				{
+					continue;
+				}
+				float num2 = Main.npc[i].position.X + (float)Main.npc[i].width * 0.5f;
+				float num3 = Main.npc[i].position.Y + (float)Main.npc[i].height * 0.5f;
+				Vector2 vector = new Vector2(npc.position.X + npc.width * 0.5f, npc.position.Y + npc.height * 0.5f);
+				float num4 = num2 - vector.X;
+				float num5 = num3 - vector.Y;
+				float rotation = (float)Math.Atan2(num5, num4) - 1.57f;
+				bool flag2 = true;
+				float num6 = (float)Math.Sqrt(num4 * num4 + num5 * num5);
+				if (num6 > 2000f)
+				{
+					flag2 = false;
+				}
+				while (flag2)
+				{
+					num6 = (float)Math.Sqrt(num4 * num4 + num5 * num5);
+					if (num6 < 40f)
+					{
+						flag2 = false;
+						continue;
+					}
+					num6 = (float)Main.chain12Texture.Height / num6;
+					num4 *= num6;
+					num5 *= num6;
+					vector.X += num4;
+					vector.Y += num5;
+					num4 = num2 - vector.X;
+					num5 = num3 - vector.Y;
+					Microsoft.Xna.Framework.Color color = Lighting.GetColor((int)vector.X / 16, (int)(vector.Y / 16f));
+					Main.spriteBatch.Draw(Main.chain12Texture, new Vector2(vector.X - Main.screenPosition.X, vector.Y - Main.screenPosition.Y), new Microsoft.Xna.Framework.Rectangle(0, 0, Main.chain12Texture.Width, Main.chain12Texture.Height), color, rotation, new Vector2((float)Main.chain12Texture.Width * 0.5f, (float)Main.chain12Texture.Height * 0.5f), 1f, SpriteEffects.None, 0f);
+				}
+			}
+
+			Microsoft.Xna.Framework.Rectangle frame4 = npc.frame;
             SpriteEffects spriteEffects = SpriteEffects.None;
-            float num64 = 0f;
-            float num65 = Main.NPCAddHeight(npc.whoAmI);
-            if (npc.spriteDirection == 1)
-            {
-                spriteEffects = SpriteEffects.FlipHorizontally;
-            }
-            var vector10 = new Vector2(55f, 107f);
-            for (int num90 = 9; num90 >= 0; num90 -= 2)
-            {
-                _ = ref npc.oldPos[num90];
-                Microsoft.Xna.Framework.Color alpha9 = npc.GetAlpha(drawColor);
-                alpha9.R = (byte)(alpha9.R * (10 - num90) / 20);
-                alpha9.G = (byte)(alpha9.G * (10 - num90) / 20);
-                alpha9.B = (byte)(alpha9.B * (10 - num90) / 20);
-                alpha9.A = (byte)(alpha9.A * (10 - num90) / 20);
-                Main.spriteBatch.Draw(Main.npcTexture[npc.type], new Vector2(npc.oldPos[num90].X - Main.screenPosition.X + (float)(npc.width / 2) - (float)Main.npcTexture[npc.type].Width * npc.scale / 2f + vector10.X * npc.scale, npc.oldPos[num90].Y - Main.screenPosition.Y + (float)npc.height - (float)Main.npcTexture[npc.type].Height * npc.scale / (float)Main.npcFrameCount[npc.type] + 4f + vector10.Y * npc.scale + num65), npc.frame, alpha9, npc.rotation, vector10, npc.scale, spriteEffects, 0f);
-            }
+			float num64 = 0f;
+			float num65 = Main.NPCAddHeight(NPCID.Retinazer);
+			if (npc.spriteDirection == 1)
+			{
+				spriteEffects = SpriteEffects.FlipHorizontally;
+			}
+			var vector10 = new Vector2(55f, 107f);
+			for (int num90 = 9; num90 >= 0; num90 -= 2)
+			{
+				_ = ref npc.oldPos[num90];
+				Microsoft.Xna.Framework.Color alpha9 = npc.GetAlpha(drawColor);
+				alpha9.R = (byte)(alpha9.R * (10 - num90) / 20);
+				alpha9.G = (byte)(alpha9.G * (10 - num90) / 20);
+				alpha9.B = (byte)(alpha9.B * (10 - num90) / 20);
+				alpha9.A = (byte)(alpha9.A * (10 - num90) / 20);
+				Vector2 position21 = npc.oldPos[num90] + new Vector2(npc.width, npc.height) / 2f - Main.screenPosition;
+				position21 -= new Vector2(Main.npcTexture[npc.type].Width, Main.npcTexture[npc.type].Height / Main.npcFrameCount[npc.type]) * npc.scale / 2f;
+				position21 += vector10 * npc.scale + new Vector2(0f, num64 - 8f + num65 + npc.gfxOffY);
+				Main.spriteBatch.Draw(Main.npcTexture[npc.type], position21, npc.frame, alpha9, npc.rotation, vector10, npc.scale, spriteEffects, 0f);
+			}
 
-            Main.spriteBatch.Draw(Main.npcTexture[npc.type], new Vector2(npc.position.X - Main.screenPosition.X + (float)(npc.width / 2) - (float)Main.npcTexture[npc.type].Width * npc.scale / 2f + vector10.X * npc.scale, npc.position.Y - Main.screenPosition.Y + (float)npc.height - (float)Main.npcTexture[npc.type].Height * npc.scale / (float)Main.npcFrameCount[npc.type] + 4f + vector10.Y * npc.scale + num65 + num64 + npc.gfxOffY), frame4, npc.GetAlpha(drawColor), npc.rotation, vector10, npc.scale, spriteEffects, 0f);
-            if (npc.color != default(Microsoft.Xna.Framework.Color))
-            {
-                Main.spriteBatch.Draw(Main.npcTexture[npc.type], new Vector2(npc.position.X - Main.screenPosition.X + (float)(npc.width / 2) - (float)Main.npcTexture[npc.type].Width * npc.scale / 2f + vector10.X * npc.scale, npc.position.Y - Main.screenPosition.Y + (float)npc.height - (float)Main.npcTexture[npc.type].Height * npc.scale / (float)Main.npcFrameCount[npc.type] + 4f + vector10.Y * npc.scale + num65 + num64 + npc.gfxOffY), frame4, npc.GetColor(drawColor), npc.rotation, vector10, npc.scale, spriteEffects, 0f);
-            }
+			Vector2 position23 = npc.Center - Main.screenPosition;
+			position23 -= new Vector2(Main.npcTexture[npc.type].Width, Main.npcTexture[npc.type].Height / Main.npcFrameCount[npc.type]) * npc.scale / 2f;
+			position23 += vector10 * npc.scale + new Vector2(0f, num64 - 8f + num65 + npc.gfxOffY);
+			Main.spriteBatch.Draw(Main.npcTexture[npc.type], position23, frame4, npc.GetAlpha(drawColor), npc.rotation, vector10, npc.scale, spriteEffects, 0f);
+			if (npc.color != default(Microsoft.Xna.Framework.Color))
+			{
+				Main.spriteBatch.Draw(Main.npcTexture[npc.type], position23, frame4, npc.GetColor(drawColor), npc.rotation, vector10, npc.scale, spriteEffects, 0f);
+			}
 
-            for (int i = 0; i < 200; i++)
-            {
-                if (!Main.npc[i].active || npc.whoAmI == i || (Main.npc[i].type != ModContent.NPCType<LumiteRetinazer>()))
-                {
-                    continue;
-                }
-                float num2 = Main.npc[i].position.X + (float)Main.npc[i].width * 0.5f;
-                float num3 = Main.npc[i].position.Y + (float)Main.npc[i].height * 0.5f;
-                Vector2 vector = new Vector2(npc.position.X + npc.width * 0.5f, npc.position.Y + npc.height * 0.5f);
-                float num4 = num2 - vector.X;
-                float num5 = num3 - vector.Y;
-                float rotation = (float)Math.Atan2(num5, num4) - 1.57f;
-                bool flag2 = true;
-                float num6 = (float)Math.Sqrt(num4 * num4 + num5 * num5);
-                if (num6 > 2000f)
-                {
-                    flag2 = false;
-                }
-                while (flag2)
-                {
-                    num6 = (float)Math.Sqrt(num4 * num4 + num5 * num5);
-                    if (num6 < 40f)
-                    {
-                        flag2 = false;
-                        continue;
-                    }
-                    num6 = (float)Main.chain12Texture.Height / num6;
-                    num4 *= num6;
-                    num5 *= num6;
-                    vector.X += num4;
-                    vector.Y += num5;
-                    num4 = num2 - vector.X;
-                    num5 = num3 - vector.Y;
-                    Microsoft.Xna.Framework.Color color = Lighting.GetColor((int)vector.X / 16, (int)(vector.Y / 16f));
-                    Main.spriteBatch.Draw(Main.chain12Texture, new Vector2(vector.X - Main.screenPosition.X, vector.Y - Main.screenPosition.Y), new Microsoft.Xna.Framework.Rectangle(0, 0, Main.chain12Texture.Width, Main.chain12Texture.Height), color, rotation, new Vector2((float)Main.chain12Texture.Width * 0.5f, (float)Main.chain12Texture.Height * 0.5f), 1f, SpriteEffects.None, 0f);
-                }
-            }
             return false;
         }
     }
