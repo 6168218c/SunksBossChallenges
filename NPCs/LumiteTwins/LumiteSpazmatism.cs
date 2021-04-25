@@ -6,14 +6,17 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
-using SunksBossChallenges.Projectiles.DecimatorOfPlanets;
 using Terraria.Graphics.Effects;
 using Terraria.Localization;
+using Terraria.Utilities;
+using SunksBossChallenges.Projectiles.LumiteTwins;
 
 namespace SunksBossChallenges.NPCs.LumiteTwins
 {
     public class LumiteSpazmatism:LumTwins
     {
+		public int CoAttackTimer = 0;
+		public int CoAttackPatternAI = 3;
 		public override string Texture => "Terraria/NPC_" + NPCID.Spazmatism;
         public override void SetStaticDefaults()
         {
@@ -28,6 +31,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
         {
             npc.CloneDefaults(NPCID.Spazmatism);
             npc.aiStyle = -1;
+			npc.lifeMax = 120000;
             animationType = NPCID.Spazmatism;
             music = MusicID.Boss2;
         }
@@ -48,70 +52,17 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 			}
 			var player = Main.player[npc.target];
 			bool targetDead = Main.player[npc.target].dead;
-            #region RotationHandler
-            float num379 = npc.position.X + (float)(npc.width / 2) - Main.player[npc.target].position.X - (float)(Main.player[npc.target].width / 2);
-			float num380 = npc.position.Y + (float)npc.height - 59f - Main.player[npc.target].position.Y - (float)(Main.player[npc.target].height / 2);
-			if (CheckBrother<LumiteRetinazer>() && this.Phase == 0 && npc.ai[1] == 3)
-			{
-				num379 = npc.position.X + (float)(npc.width / 2) - Main.npc[brotherId].Center.X;
-				num380 = npc.position.Y + (float)npc.height - 59f - Main.npc[brotherId].Center.Y;
-			}
-			float distRotation = (float)Math.Atan2(num380, num379) + 1.57f;
-			if (distRotation < 0f)
-			{
-				distRotation += 6.283f;
-			}
-			else if ((double)distRotation > 6.283)
-			{
-				distRotation -= 6.283f;
-			}
-			float num382 = 0.1f;
-			if (npc.rotation < distRotation)
-			{
-				if ((double)(distRotation - npc.rotation) > 3.1415)
-				{
-					npc.rotation -= num382;
-				}
-				else
-				{
-					npc.rotation += num382;
-				}
-			}
-			else if (npc.rotation > distRotation)
-			{
-				if ((double)(npc.rotation - distRotation) > 3.1415)
-				{
-					npc.rotation += num382;
-				}
-				else
-				{
-					npc.rotation -= num382;
-				}
-			}
-			if (npc.rotation > distRotation - num382 && npc.rotation < distRotation + num382)
-			{
-				npc.rotation = distRotation;
-			}
-			if (npc.rotation < 0f)
-			{
-				npc.rotation += 6.283f;
-			}
-			else if ((double)npc.rotation > 6.283)
-			{
-				npc.rotation -= 6.283f;
-			}
-			if (npc.rotation > distRotation - num382 && npc.rotation < distRotation + num382)
-			{
-				npc.rotation = distRotation;
-			}
-            #endregion
+			Vector2 vecToPlayer = player.Center - npc.Center;
+
+			float distRotation = vecToPlayer.ToRotation() - 1.57f;
             if (Main.rand.Next(5) == 0)
 			{
-				int num425 = Dust.NewDust(new Vector2(npc.position.X, npc.position.Y + (float)npc.height * 0.25f), npc.width, (int)((float)npc.height * 0.5f), 5, npc.velocity.X, 2f);
+				int num425 = Dust.NewDust(new Vector2(npc.position.X, npc.position.Y + (float)npc.height * 0.25f), npc.width, (int)((float)npc.height * 0.5f), DustID.Blood, npc.velocity.X, 2f);
 				Main.dust[num425].velocity.X *= 0.5f;
 				Main.dust[num425].velocity.Y *= 0.1f;
 			}
-			if (Main.netMode != NetmodeID.MultiplayerClient && !Main.dayTime && !targetDead && npc.timeLeft < 10)
+            #region Despawn
+            if (Main.netMode != NetmodeID.MultiplayerClient && !Main.dayTime && !targetDead && npc.timeLeft < 10)
 			{
 				for (int num426 = 0; num426 < 200; num426++)
 				{
@@ -128,11 +79,13 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 				{
 					npc.timeLeft = 10;
 				}
+				handleRotation(distRotation);
 				return;
 			}
-			if (this.Phase == 0f)
+            #endregion
+            #region Phase 1
+            if (this.Phase == 0f)
 			{
-                #region Phase 1
                 if (npc.ai[1] == 0f)
 				{
 					npc.TargetClosest();
@@ -309,17 +262,8 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 					npc.dontTakeDamage = true;
                     if (CheckBrother<LumiteRetinazer>())
                     {
-						npc.velocity.X *= 0.98f;
-						npc.velocity.Y *= 0.98f;
-						if ((double)npc.velocity.X > -0.1 && (double)npc.velocity.X < 0.1)
-						{
-							npc.velocity.X = 0f;
-						}
-						if ((double)npc.velocity.Y > -0.1 && (double)npc.velocity.Y < 0.1)
-						{
-							npc.velocity.Y = 0f;
-						}
-						//npc.rotation = distRotation;
+						SlowDown(0.98f);
+						distRotation = (Main.npc[brotherId].Center - npc.Center).ToRotation() - MathHelper.PiOver2;
 						if (Main.npc[brotherId].ai[1] == 3f)
                         {
                             if (npc.ai[2] >= 60)
@@ -347,6 +291,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 						npc.ai[3] = 0f;
 						npc.netUpdate = true;
 					}
+					handleRotation(distRotation);
 					return;
                 }
 				if ((double)npc.life < (double)npc.lifeMax * 0.75)
@@ -359,14 +304,16 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 					{
 						if (Main.npc[brotherId].ai[1] != 3f)
 						{
-							NewOrBoardcastText($"Battle mode on.Sync server started at port 8{npc.whoAmI}", Color.Green);
+							NewOrBoardcastText($"Battle mode on.Sync server started at port 8{npc.whoAmI.ToString("D3")}", Color.Green);
 						}
 					}
 					npc.netUpdate = true;
 				}
+				handleRotation(distRotation);
 				return;
-                #endregion
             }
+            #endregion
+            #region Transition
             if (this.Phase == 1f || this.Phase == 2f)
 			{
 				if (music != mod.GetSoundSlot(SoundType.Music, "Sounds/Music/HellMarch3"))
@@ -411,12 +358,12 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 						}
 						for (int num443 = 0; num443 < 20; num443++)
 						{
-							Dust.NewDust(npc.position, npc.width, npc.height, 5, (float)Main.rand.Next(-30, 31) * 0.2f, (float)Main.rand.Next(-30, 31) * 0.2f);
+							Dust.NewDust(npc.position, npc.width, npc.height, DustID.Blood, (float)Main.rand.Next(-30, 31) * 0.2f, (float)Main.rand.Next(-30, 31) * 0.2f);
 						}
 						Main.PlaySound(SoundID.Roar, (int)npc.position.X, (int)npc.position.Y, 0);
 					}
 				}
-				Dust.NewDust(npc.position, npc.width, npc.height, 5, (float)Main.rand.Next(-30, 31) * 0.2f, (float)Main.rand.Next(-30, 31) * 0.2f);
+				Dust.NewDust(npc.position, npc.width, npc.height, DustID.Blood, (float)Main.rand.Next(-30, 31) * 0.2f, (float)Main.rand.Next(-30, 31) * 0.2f);
 				npc.velocity.X *= 0.98f;
 				npc.velocity.Y *= 0.98f;
 				if ((double)npc.velocity.X > -0.1 && (double)npc.velocity.X < 0.1)
@@ -427,149 +374,139 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 				{
 					npc.velocity.Y = 0f;
 				}
+				handleRotation(distRotation);
 				return;
+			}
+			#endregion
+			#region Phase 2
+			void resetCoAttack()
+            {
+				npc.ai[1] = Main.rand.NextBool() ? 0 : 1;
+				npc.ai[2] = 0;
+				npc.localAI[1] = 0;
+				CoAttackTimer = 0;
+				Main.npc[brotherId].ai[1] = Main.rand.NextBool() ? 0 : 1;
+				Main.npc[brotherId].ai[2] = 0;
+				Main.npc[brotherId].localAI[1] = 0;
+				npc.netUpdate = true;
+				Main.npc[brotherId].netUpdate = true;
 			}
 			npc.HitSound = SoundID.NPCHit4;
 			npc.damage = (int)((double)npc.defDamage * 1.5);
 			npc.defense = npc.defDefense + 18;
+			if (!CheckBrother<LumiteRetinazer>() && !(npc.ai[1] == EnragedState) && !(npc.ai[1] == EnragedStateTrans))//this means brother has died
+			{
+				npc.dontTakeDamage = true;
+				CoAttackTimer = 0;
+				npc.ai[1] = EnragedStateTrans;
+				npc.ai[2] = 0;
+            }
 			if (npc.ai[1] == 0f)
 			{
 				float num444 = 4f;
-				float num445 = 0.1f;
-				int num446 = 1;
-				if (npc.position.X + (float)(npc.width / 2) < Main.player[npc.target].position.X + (float)Main.player[npc.target].width)
-				{
-					num446 = -1;
-				}
-				Vector2 vector43 = new Vector2(npc.position.X + (float)npc.width * 0.5f, npc.position.Y + (float)npc.height * 0.5f);
-				float num447 = Main.player[npc.target].position.X + (float)(Main.player[npc.target].width / 2) + (float)(num446 * 180) - vector43.X;
-				float num448 = Main.player[npc.target].position.Y + (float)(Main.player[npc.target].height / 2) - vector43.Y;
-				float num449 = (float)Math.Sqrt(num447 * num447 + num448 * num448);
+				float accle = 0.1f;
+				int direction = Math.Sign(npc.Center.X - player.Center.X);
+				/*Vector2 vector43 = new Vector2(npc.position.X + (float)npc.width * 0.5f, npc.position.Y + (float)npc.height * 0.5f);
+				float num447 = Main.player[npc.target].position.X + (float)(Main.player[npc.target].width / 2) + (float)(direction * 180) - vector43.X;
+				float num448 = Main.player[npc.target].position.Y + (float)(Main.player[npc.target].height / 2) - vector43.Y;*/
+				Vector2 distHoverSpeed = player.Center + new Vector2(direction * 180, 0) - npc.Center;
+				float scaleFactor = distHoverSpeed.Length();
+
 				if (Main.expertMode)
 				{
-					if (num449 > 300f)
+					if (scaleFactor > 300f)
 					{
 						num444 += 0.5f;
 					}
-					if (num449 > 400f)
+					if (scaleFactor > 400f)
 					{
 						num444 += 0.5f;
 					}
-					if (num449 > 500f)
+					if (scaleFactor > 500f)
 					{
 						num444 += 0.55f;
 					}
-					if (num449 > 600f)
+					if (scaleFactor > 600f)
 					{
 						num444 += 0.55f;
 					}
-					if (num449 > 700f)
+					if (scaleFactor > 700f)
 					{
 						num444 += 0.6f;
 					}
-					if (num449 > 800f)
+					if (scaleFactor > 800f)
 					{
 						num444 += 0.6f;
 					}
 				}
-				num449 = num444 / num449;
-				num447 *= num449;
-				num448 *= num449;
-				if (npc.velocity.X < num447)
-				{
-					npc.velocity.X += num445;
-					if (npc.velocity.X < 0f && num447 > 0f)
-					{
-						npc.velocity.X += num445;
-					}
-				}
-				else if (npc.velocity.X > num447)
-				{
-					npc.velocity.X -= num445;
-					if (npc.velocity.X > 0f && num447 < 0f)
-					{
-						npc.velocity.X -= num445;
-					}
-				}
-				if (npc.velocity.Y < num448)
-				{
-					npc.velocity.Y += num445;
-					if (npc.velocity.Y < 0f && num448 > 0f)
-					{
-						npc.velocity.Y += num445;
-					}
-				}
-				else if (npc.velocity.Y > num448)
-				{
-					npc.velocity.Y -= num445;
-					if (npc.velocity.Y > 0f && num448 < 0f)
-					{
-						npc.velocity.Y -= num445;
-					}
-				}
+				HoverMovement(distHoverSpeed + npc.Center, num444, accle);
 				npc.ai[2] += 1f;
 				if (npc.ai[2] >= 400f)
 				{
 					npc.ai[1] = 1f;
 					npc.ai[2] = 0f;
 					npc.ai[3] = 0f;
-					npc.target = 255;
+					npc.target = 255;//reset target
 					npc.netUpdate = true;
 				}
-				if (!Collision.CanHit(npc.position, npc.width, npc.height, Main.player[npc.target].position, Main.player[npc.target].width, Main.player[npc.target].height))
+				if (Collision.CanHit(npc.position, npc.width, npc.height, Main.player[npc.target].position, Main.player[npc.target].width, Main.player[npc.target].height))
 				{
-					return;
-				}
-				npc.localAI[2] += 1f;
-				if (npc.localAI[2] > 22f)
-				{
-					npc.localAI[2] = 0f;
-					Main.PlaySound(SoundID.Item34, npc.position);
-				}
-				if (Main.netMode == NetmodeID.MultiplayerClient)
-				{
-					return;
-				}
-				npc.localAI[1] += 1f;
-				if ((double)npc.life < (double)npc.lifeMax * 0.75)
-				{
-					npc.localAI[1] += 1f;
-				}
-				if ((double)npc.life < (double)npc.lifeMax * 0.5)
-				{
-					npc.localAI[1] += 1f;
-				}
-				if ((double)npc.life < (double)npc.lifeMax * 0.25)
-				{
-					npc.localAI[1] += 1f;
-				}
-				if ((double)npc.life < (double)npc.lifeMax * 0.1)
-				{
-					npc.localAI[1] += 2f;
-				}
-				if (npc.localAI[1] > 8f)
-				{
-					npc.localAI[1] = 0f;
-					float num450 = 6f;
-					int num451 = 30;
-					if (Main.expertMode)
+					npc.localAI[2] += 1f;
+					if (npc.localAI[2] > 22f)
 					{
-						num451 = 27;
+						npc.localAI[2] = 0f;
+						Main.PlaySound(SoundID.Item34, npc.position);
 					}
-					vector43 = new Vector2(npc.position.X + (float)npc.width * 0.5f, npc.position.Y + (float)npc.height * 0.5f);
-					num447 = Main.player[npc.target].position.X + (float)(Main.player[npc.target].width / 2) - vector43.X;
-					num448 = Main.player[npc.target].position.Y + (float)(Main.player[npc.target].height / 2) - vector43.Y;
-					num449 = (float)Math.Sqrt(num447 * num447 + num448 * num448);
-					num449 = num450 / num449;
-					num447 *= num449;
-					num448 *= num449;
-					num448 += (float)Main.rand.Next(-40, 41) * 0.01f;
-					num447 += (float)Main.rand.Next(-40, 41) * 0.01f;
-					num448 += npc.velocity.Y * 0.5f;
-					num447 += npc.velocity.X * 0.5f;
-					vector43.X -= num447 * 1f;
-					vector43.Y -= num448 * 1f;
-					int num453 = Projectile.NewProjectile(vector43.X, vector43.Y, num447, num448, ProjectileID.EyeFire, num451, 0f, Main.myPlayer);
+					if (Main.netMode != NetmodeID.MultiplayerClient)
+					{
+						npc.localAI[1] += 1f;
+						#region Attack Rate
+						if ((double)npc.life < (double)npc.lifeMax * 0.75)
+						{
+							npc.localAI[1] += 1f;
+						}
+						if ((double)npc.life < (double)npc.lifeMax * 0.5)
+						{
+							npc.localAI[1] += 1f;
+						}
+						if ((double)npc.life < (double)npc.lifeMax * 0.25)
+						{
+							npc.localAI[1] += 1f;
+						}
+						if ((double)npc.life < (double)npc.lifeMax * 0.1)
+						{
+							npc.localAI[1] += 2f;
+						}
+						#endregion
+						if (npc.localAI[1] > 8f)
+						{
+							npc.localAI[1] = 0f;
+							float num450 = 6f;
+							int num451 = 30;
+							if (Main.expertMode)
+							{
+								num451 = 27;
+							}
+							/*vector43 = new Vector2(npc.position.X + (float)npc.width * 0.5f, npc.position.Y + (float)npc.height * 0.5f);
+							num447 = Main.player[npc.target].position.X + (float)(Main.player[npc.target].width / 2) - vector43.X;
+							num448 = Main.player[npc.target].position.Y + (float)(Main.player[npc.target].height / 2) - vector43.Y;*/
+							Vector2 velocity = vecToPlayer;
+							scaleFactor = vecToPlayer.Length();
+							scaleFactor = num450 / scaleFactor;
+							/*num447 *= scaleFactor;
+							num448 *= scaleFactor;
+							num448 += (float)Main.rand.Next(-40, 41) * 0.01f;
+							num447 += (float)Main.rand.Next(-40, 41) * 0.01f;
+							num448 += npc.velocity.Y * 0.5f;
+							num447 += npc.velocity.X * 0.5f;
+							vector43.X -= num447 * 1f;
+							vector43.Y -= num448 * 1f;*/
+							velocity *= scaleFactor;
+							velocity += new Vector2(Main.rand.Next(-40, 41) * 0.01f, Main.rand.Next(-40, 41) * 0.01f);
+							velocity += npc.velocity * 0.5f;
+							int num453 = Projectile.NewProjectile(npc.Center - velocity * 1f, velocity, ProjectileID.EyeFire, num451, 0f, Main.myPlayer);
+						}
+					}
 				}
 			}
 			else if (npc.ai[1] == 1f)
@@ -590,12 +527,8 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 				npc.velocity.Y = num456 * num457;
 				npc.ai[1] = 2f;
 			}
-			else
+			else if (npc.ai[1] == 2f)
 			{
-				if (npc.ai[1] != 2f)
-				{
-					return;
-				}
 				npc.ai[2] += 1f;
 				if (Main.expertMode)
 				{
@@ -603,28 +536,37 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 				}
 				if (npc.ai[2] >= 50f)
 				{
-					npc.velocity.X *= 0.93f;
-					npc.velocity.Y *= 0.93f;
-					if ((double)npc.velocity.X > -0.1 && (double)npc.velocity.X < 0.1)
-					{
-						npc.velocity.X = 0f;
-					}
-					if ((double)npc.velocity.Y > -0.1 && (double)npc.velocity.Y < 0.1)
-					{
-						npc.velocity.Y = 0f;
-					}
+					SlowDown(0.93f);
 				}
 				else
 				{
 					npc.rotation = (float)Math.Atan2(npc.velocity.Y, npc.velocity.X) - 1.57f;
 				}
-				if (npc.ai[2] >= 80f)
+				if (npc.ai[2] >= 80f)//stop this charge,and we need to insert our coattack here
 				{
 					npc.ai[3] += 1f;
 					npc.ai[2] = 0f;
 					npc.target = 255;
 					npc.rotation = distRotation;
-					if (npc.ai[3] >= 6f)
+					if (CoAttackTimer >= 600)
+					{
+						if (CheckBrother<LumiteRetinazer>())
+						{
+							npc.target = Main.npc[brotherId].target;
+							if (npc.target != 255)//255 means to reset target,we need to wait another tick to let retinazer choose its target
+							{
+								CoAttackTimer = 0;
+								npc.ai[1] = CoAttackPatternAI;
+								npc.ai[3] = Main.npc[brotherId].ai[3] = 0f;
+								npc.localAI[0] = npc.localAI[1]
+									= npc.localAI[2] = npc.localAI[3] = 0;
+								Main.npc[brotherId].localAI[0] = Main.npc[brotherId].localAI[1]
+									= Main.npc[brotherId].localAI[2] = Main.npc[brotherId].localAI[3] = 0;
+								Main.npc[brotherId].ai[1] = CoAttackPatternAI;
+							}
+						}
+					}
+					else if (npc.ai[3] >= 6f)
 					{
 						npc.ai[1] = 0f;
 						npc.ai[3] = 0f;
@@ -635,48 +577,293 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 					}
 				}
 			}
-		}
+			#region CoAttack Pattern 1
+			else if (npc.ai[1] == 3f)
+			{
+				//some setup stuff
+				if (npc.ai[2] == 0)
+				{
+                    if (npc.localAI[1] == 0)
+                    {
+						int baseRot = Main.rand.Next(0, 3);
+						int offset = Main.rand.NextBool() ? -1 : 1;
+						Main.npc[brotherId].ai[1] = 3f;
+						Main.npc[brotherId].ai[2] = 0;
+						npc.localAI[0] = MathHelper.Pi / 4 * (baseRot * 2 + offset);
+						Main.npc[brotherId].localAI[0] = MathHelper.Pi / 4 * (baseRot * 2 - offset);
+						npc.netUpdate = true;
+						Main.npc[brotherId].netUpdate = true;
+					}
+					else if (npc.localAI[1] == 1)
+                    {
+						float baseRot = MathHelper.Pi / 6 * (Main.rand.NextBool() ? 1 : 5) + MathHelper.PiOver2;
+						int offset = Main.rand.NextBool() ? -1 : 1;
+						Main.npc[brotherId].ai[1] = 3f;
+						Main.npc[brotherId].ai[2] = 0;
+						npc.localAI[0] = baseRot + offset * MathHelper.PiOver2;
+						Main.npc[brotherId].localAI[0] = baseRot - offset * MathHelper.PiOver2;
+						npc.netUpdate = true;
+						Main.npc[brotherId].netUpdate = true;
+					}
+				}
+				Vector2 dist = new Vector2(npc.localAI[1] == 0 ? 450f : 600f, 0);
+				HoverMovement(player.Center + dist.RotatedBy(npc.localAI[0]), 30f + player.velocity.Length(), 0.8f);
+				npc.ai[2]++;
+
+                if (npc.localAI[1] == 1)
+                {
+					setRotation(new Vector2(vecToPlayer.X, 0));
+                }
+
+				if (npc.ai[2] >= 120)
+				{
+					npc.ai[1] = 4f;
+					npc.ai[2] = 0;
+					npc.netUpdate = true;
+					if (npc.localAI[1] == 0)
+						npc.velocity = Vector2.Normalize(vecToPlayer + player.velocity * 10) * (20f + player.velocity.Length() / 2);
+					else if (npc.localAI[1] == 1)
+						npc.velocity = new Vector2(Math.Sign(vecToPlayer.X) * (15f + player.velocity.Length() / 2), 0);
+				}
+			}
+			else if (npc.ai[1] == 4f)
+			{
+				npc.ai[2]++;
+
+				if (npc.localAI[1] == 1 && npc.ai[2] % 5 == 0 && npc.ai[2] <= 55 && Main.netMode != NetmodeID.MultiplayerClient)//horizonal dash,while releasing projectiles
+                {
+					float speed = 6.5f;
+					int damage = 30;
+					if (Main.expertMode)
+					{
+						speed = 9.5f;
+						damage = 27;
+					}
+					Vector2 velocity = vecToPlayer;
+					velocity *= speed / velocity.Length();
+					int num410 = Projectile.NewProjectile(npc.Center + velocity * 15f, velocity, ProjectileID.CursedFlameHostile, damage, 0f, Main.myPlayer);
+				}
+
+				if (npc.ai[2] >= 30)
+                {
+					SlowDown(0.98f);
+                }
+
+				if (npc.localAI[1] == 1 && npc.ai[2] <= 60)
+				{
+					setRotation(npc.velocity);
+					return;
+				}
+
+				if (npc.ai[2] >= 75 && npc.localAI[1] == 0)
+				{
+					npc.ai[1] = 3f;
+					npc.ai[2] = 0;
+					npc.localAI[1]++;
+					CoAttackTimer = 0;
+					Main.npc[brotherId].ai[1] = 3f;
+					Main.npc[brotherId].ai[2] = 0;
+					Main.npc[brotherId].localAI[1]++;
+					npc.netUpdate = true;
+					Main.npc[brotherId].netUpdate = true;
+				}
+				else if (npc.ai[2] >= 75 && npc.localAI[1] == 1)
+                {
+					resetCoAttack();
+					CoAttackPatternAI = 5;
+				}
+			}
+            #endregion
+            #region CoAttack Pattern 2
+            else if (npc.ai[1] == 5f)
+            {
+				if (npc.localAI[1] >= 7)
+				{
+                    if (npc.ai[2] == 0)//setup rotation attack for brother
+                    {
+						Main.npc[brotherId].ai[1] = 6f;
+						Main.npc[brotherId].ai[2] = 0;
+						Main.npc[brotherId].netUpdate = true;
+						var target = player.Center + player.velocity * 30f;
+						npc.localAI[2] = target.X;
+						npc.localAI[3] = target.Y;
+                    }
+					var center = new Vector2(npc.localAI[2], npc.localAI[3]);
+                    if (npc.ai[2] < 45)
+                    {
+						Vector2 dist = center + Vector2.Normalize(npc.Center - center) * 900f;
+						HoverMovement(dist, 30f + player.velocity.Length(), 0.8f);
+					}
+					else if (npc.ai[2] < 60)
+                    {
+						Vector2 dist = center + Vector2.Normalize(npc.Center - center) * 900f;
+						npc.Center = dist;
+					}
+                    else
+                    {
+						float speed = 30f;
+						float r = 900f;
+						if (npc.ai[2] == 60)
+						{
+							Vector2 dist = center + Vector2.Normalize(npc.Center - center) * 900f;
+							npc.Center = dist;
+							npc.velocity = Vector2.Normalize((npc.Center - center).RotatedBy(Math.PI / 2)) * speed;
+							setRotation(npc.velocity);
+							npc.ai[2]++;
+							return;
+						}
+						else if (npc.ai[2] <= 540)
+                        {
+							npc.velocity = npc.velocity.RotatedBy(speed / r);
+							setRotation(npc.velocity);
+
+                            if (npc.ai[2] % 30 == 0)
+                            {
+								int damage = 30;
+								Vector2 velocity = vecToPlayer;
+								velocity = Main.rand.NextVector2Unit(velocity.ToRotation(), 0.2f) * velocity.Length();
+								velocity *= 10f / velocity.Length();
+								int num410 = Projectile.NewProjectile(npc.Center + velocity * 15f, velocity, ProjectileID.CursedFlameHostile, damage, 0f, Main.myPlayer);
+							}
+							npc.ai[2]++;
+							return;
+                        }
+                        else//ended co-attack
+                        {
+							npc.velocity = Vector2.Normalize(npc.velocity) * 6f;
+							resetCoAttack();
+							CoAttackPatternAI = 3;
+                        }
+                    }
+				}
+				else if ((npc.ai[2] >= 30 && npc.localAI[1] == 0) || (npc.localAI[1] > 0 && npc.ai[2] >= 15))//localAI[1] is always the counter
+                {
+					float speed = 20f;
+					Vector2 vector8 = new Vector2(npc.position.X + (float)npc.width * 0.5f, npc.position.Y + (float)npc.height * 0.5f);
+					float num48 = Main.player[npc.target].position.X + (float)(Main.player[npc.target].width / 2) - vector8.X;
+					float num49 = Main.player[npc.target].position.Y + (float)(Main.player[npc.target].height / 2) - vector8.Y;
+					float num50 = Math.Abs(Main.player[npc.target].velocity.X) / 4f + Math.Abs(Main.player[npc.target].velocity.Y) / 4f;
+					num50 += 10f - num50;
+					if (num50 < 5f)
+					{
+						num50 = 5f;
+					}
+					if (num50 > 15f)
+					{
+						num50 = 15f;
+					}
+					/*if (npc.ai[2] == -1f)
+					{
+						num50 *= 4f;
+						num47 *= 1.3f;
+					}*/
+					num48 -= Main.player[npc.target].velocity.X * num50 / 4f;
+					num49 -= Main.player[npc.target].velocity.Y * num50 / 4f;
+					num48 *= 1f + (float)Main.rand.Next(-10, 11) * 0.01f;
+					num49 *= 1f + (float)Main.rand.Next(-10, 11) * 0.01f;
+					float num51 = (float)Math.Sqrt(num48 * num48 + num49 * num49);
+					float num52 = num51;
+					num51 = speed / num51;
+					npc.velocity.X = num48 * num51;
+					npc.velocity.Y = num49 * num51;
+					npc.velocity.X += (float)Main.rand.Next(-20, 21) * 0.1f;
+					npc.velocity.Y += (float)Main.rand.Next(-20, 21) * 0.1f;
+					if (num52 < 100f)
+					{
+						if (Math.Abs(npc.velocity.X) > Math.Abs(npc.velocity.Y))
+						{
+							float num55 = Math.Abs(npc.velocity.X);
+							float num56 = Math.Abs(npc.velocity.Y);
+							if (npc.Center.X > Main.player[npc.target].Center.X)
+							{
+								num56 *= -1f;
+							}
+							if (npc.Center.Y > Main.player[npc.target].Center.Y)
+							{
+								num55 *= -1f;
+							}
+							npc.velocity.X = num56;
+							npc.velocity.Y = num55;
+						}
+					}
+					else if (Math.Abs(npc.velocity.X) > Math.Abs(npc.velocity.Y))
+					{
+						float num57 = (Math.Abs(npc.velocity.X) + Math.Abs(npc.velocity.Y)) / 2f;
+						float num58 = num57;
+						if (npc.Center.X > Main.player[npc.target].Center.X)
+						{
+							num58 *= -1f;
+						}
+						if (npc.Center.Y > Main.player[npc.target].Center.Y)
+						{
+							num57 *= -1f;
+						}
+						npc.velocity.X = num58;
+						npc.velocity.Y = num57;
+					}
+					npc.ai[1] = 6f;
+					npc.ai[2] = 0;
+					npc.netUpdate = true;
+					if (npc.netSpam > 10)
+					{
+						npc.netSpam = 10;
+					}
+					setRotation(npc.velocity);
+					npc.ai[2]++;
+					return;//dont handle rotation to player
+				}
+				npc.ai[2]++;
+			}
+			else if (npc.ai[1] == 6f)
+            {
+                if (npc.ai[2] == 0)
+                {
+					Main.PlaySound(SoundID.ForceRoar, (int)npc.position.X, (int)npc.position.Y, -1);
+				}
+				npc.ai[2]++;
+				
+				//if(npc.localAI[1] < 7)
+                //{
+					if (npc.ai[2] >= 20)
+					{
+						npc.ai[1] = 5f;
+						npc.ai[2] = 0;
+						npc.localAI[1]++;
+						npc.netUpdate = true;
+					}
+				//}
+				setRotation(npc.velocity);
+				return;
+            }
+            #endregion
+            #region CoAttack Pattern 3
+            #endregion
+            else if (npc.ai[1]==EnragedStateTrans)
+            {
+				npc.ai[2]++;
+                if (npc.ai[2] >= 80)
+                {
+					npc.ai[2]++;
+					SlowDown(0.98f);
+					if (npc.ai[2] >= 80)
+					{
+						npc.ai[1] = EnragedState;
+						npc.ai[2] = 0;
+						npc.ai[3] = 0;
+						NewOrBoardcastText("Overloaded mode on.", Color.Green);
+					}
+				}
+            }
+			if (CheckBrother<LumiteRetinazer>() && npc.ai[1] <= 2)
+            {
+				CoAttackTimer++;
+            }
+			#endregion
+			handleRotation(distRotation);
+        }
 
         public override bool PreDraw(SpriteBatch spriteBatch, Color drawColor)
         {
-			for (int i = 0; i < 200; i++)
-			{
-				if (!Main.npc[i].active || npc.whoAmI == i || (Main.npc[i].type != ModContent.NPCType<LumiteRetinazer>()))
-				{
-					continue;
-				}
-				float num2 = Main.npc[i].position.X + (float)Main.npc[i].width * 0.5f;
-				float num3 = Main.npc[i].position.Y + (float)Main.npc[i].height * 0.5f;
-				Vector2 vector = new Vector2(npc.position.X + npc.width * 0.5f, npc.position.Y + npc.height * 0.5f);
-				float num4 = num2 - vector.X;
-				float num5 = num3 - vector.Y;
-				float rotation = (float)Math.Atan2(num5, num4) - 1.57f;
-				bool flag2 = true;
-				float num6 = (float)Math.Sqrt(num4 * num4 + num5 * num5);
-				if (num6 > 2000f)
-				{
-					flag2 = false;
-				}
-				while (flag2)
-				{
-					num6 = (float)Math.Sqrt(num4 * num4 + num5 * num5);
-					if (num6 < 40f)
-					{
-						flag2 = false;
-						continue;
-					}
-					num6 = (float)Main.chain12Texture.Height / num6;
-					num4 *= num6;
-					num5 *= num6;
-					vector.X += num4;
-					vector.Y += num5;
-					num4 = num2 - vector.X;
-					num5 = num3 - vector.Y;
-					Microsoft.Xna.Framework.Color color = Lighting.GetColor((int)vector.X / 16, (int)(vector.Y / 16f));
-					Main.spriteBatch.Draw(Main.chain12Texture, new Vector2(vector.X - Main.screenPosition.X, vector.Y - Main.screenPosition.Y), new Microsoft.Xna.Framework.Rectangle(0, 0, Main.chain12Texture.Width, Main.chain12Texture.Height), color, rotation, new Vector2((float)Main.chain12Texture.Width * 0.5f, (float)Main.chain12Texture.Height * 0.5f), 1f, SpriteEffects.None, 0f);
-				}
-			}
-
 			Microsoft.Xna.Framework.Rectangle frame4 = npc.frame;
             SpriteEffects spriteEffects = SpriteEffects.None;
 			float num64 = 0f;
@@ -710,6 +897,69 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 			}
 
             return false;
+        }
+        public override void DrawEffects(ref Color drawColor)
+        {
+            if (CheckBrother<LumiteRetinazer>())
+            {
+                if (brotherId < npc.whoAmI)
+                {
+					for (int i = 0; i < 200; i++)
+					{
+						if (!Main.npc[i].active || npc.whoAmI == i || (Main.npc[i].type != ModContent.NPCType<LumiteRetinazer>()))
+						{
+							continue;
+						}
+						float num2 = Main.npc[i].position.X + (float)Main.npc[i].width * 0.5f;
+						float num3 = Main.npc[i].position.Y + (float)Main.npc[i].height * 0.5f;
+						Vector2 vector = new Vector2(npc.position.X + npc.width * 0.5f, npc.position.Y + npc.height * 0.5f);
+						float num4 = num2 - vector.X;
+						float num5 = num3 - vector.Y;
+						float rotation = (float)Math.Atan2(num5, num4) - 1.57f;
+						bool flag2 = true;
+						float num6 = (float)Math.Sqrt(num4 * num4 + num5 * num5);
+						if (num6 > 2000f)
+						{
+							flag2 = false;
+						}
+						while (flag2)
+						{
+							num6 = (float)Math.Sqrt(num4 * num4 + num5 * num5);
+							if (num6 < 40f)
+							{
+								flag2 = false;
+								continue;
+							}
+							num6 = (float)Main.chain12Texture.Height / num6;
+							num4 *= num6;
+							num5 *= num6;
+							vector.X += num4;
+							vector.Y += num5;
+							num4 = num2 - vector.X;
+							num5 = num3 - vector.Y;
+							Microsoft.Xna.Framework.Color color = Lighting.GetColor((int)vector.X / 16, (int)(vector.Y / 16f));
+							Main.spriteBatch.Draw(Main.chain12Texture, new Vector2(vector.X - Main.screenPosition.X, vector.Y - Main.screenPosition.Y), new Microsoft.Xna.Framework.Rectangle(0, 0, Main.chain12Texture.Width, Main.chain12Texture.Height), color, rotation, new Vector2((float)Main.chain12Texture.Width * 0.5f, (float)Main.chain12Texture.Height * 0.5f), 1f, SpriteEffects.None, 0f);
+						}
+					}
+				}
+            }
+			base.DrawEffects(ref drawColor);
+        }
+		public override bool CanHitPlayer(Player target, ref int cooldownSlot)
+		{
+			return npc.ai[1] != 3f;
+		}
+		public override void SendExtraAI(BinaryWriter writer)
+        {
+			writer.Write(CoAttackTimer);
+			writer.Write(CoAttackPatternAI);
+            base.SendExtraAI(writer);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+			CoAttackTimer = reader.ReadInt32();
+			CoAttackPatternAI = reader.ReadInt32();
+            base.ReceiveExtraAI(reader);
         }
     }
 }

@@ -145,7 +145,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             {
                 for (int i = 0; i < 2; i++)
                 {
-                    int num = Dust.NewDust(new Vector2(npc.position.X, npc.position.Y), npc.width, npc.height, 229, 0f, 0f, 100, default, 2f);
+                    int num = Dust.NewDust(new Vector2(npc.position.X, npc.position.Y), npc.width, npc.height, DustID.Vortex, 0f, 0f, 100, default, 2f);
                     Main.dust[num].noGravity = true;
                     Main.dust[num].noLight = true;
                     Main.dust[num].color = Color.LightBlue;
@@ -663,7 +663,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                     double angle = Main.rand.NextDouble() * 2 * Math.PI;
                     offset.X += (float)(Math.Cos(angle) * r);
                     offset.Y += (float)(Math.Sin(angle) * r);
-                    Dust dust = Main.dust[Dust.NewDust(pivot + offset,0,0,112,0,0,100,Color.White)];
+                    Dust dust = Main.dust[Dust.NewDust(pivot + offset,0,0,DustID.Clentaminator_Purple,0,0,100,Color.White)];
                     dust.velocity = Vector2.Zero;
                     if (Main.rand.Next(3) == 0)
                         dust.velocity += Vector2.Normalize(offset) * 5f;

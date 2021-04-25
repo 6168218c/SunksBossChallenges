@@ -145,7 +145,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
 
             for (int num615 = 0; num615 < 45; num615++)
             {
-                int num616 = Dust.NewDust(spawnPos, (int)size.X, (int)size.Y, 31, 0f, 0f, 100, default(Color), 1.5f);
+                int num616 = Dust.NewDust(spawnPos, (int)size.X, (int)size.Y, DustID.Smoke, 0f, 0f, 100, default(Color), 1.5f);
                 Main.dust[num616].velocity *= 1.4f;
             }
 
@@ -197,7 +197,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
 
                 for (int i = 0; i < 30; i++)
                 {
-                    int dust = Dust.NewDust(dustPos, 32, 32, 31, 0f, 0f, 100, default(Color), 3f);
+                    int dust = Dust.NewDust(dustPos, 32, 32, DustID.Smoke, 0f, 0f, 100, default(Color), 3f);
                     Main.dust[dust].velocity *= 1.4f;
                 }
 

@@ -83,7 +83,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             {
                 for (int i = 0; i < 2; i++)
                 {
-                    int num = Dust.NewDust(new Vector2(npc.position.X, npc.position.Y), npc.width, npc.height, 229, 0f, 0f, 100, default, 2f);
+                    int num = Dust.NewDust(new Vector2(npc.position.X, npc.position.Y), npc.width, npc.height, DustID.Vortex, 0f, 0f, 100, default, 2f);
                     Main.dust[num].noGravity = true;
                     Main.dust[num].noLight = true;
                     Main.dust[num].color = Color.LightBlue;

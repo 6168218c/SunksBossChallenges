@@ -59,7 +59,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
             projectile.rotation = projectile.rotation + (Math.Abs(projectile.velocity.X) + Math.Abs(projectile.velocity.Y)) * 0.01f * projectile.direction;
 
             if (Main.rand.Next(30) == 0)
-                Dust.NewDust(projectile.position, projectile.width, projectile.height, 58, (float)(projectile.velocity.X * 0.5), (float)(projectile.velocity.Y * 0.5), 150, default, 1.2f);
+                Dust.NewDust(projectile.position, projectile.width, projectile.height, DustID.Enchanted_Pink, (float)(projectile.velocity.X * 0.5), (float)(projectile.velocity.Y * 0.5), 150, default, 1.2f);
 
             Lighting.AddLight(projectile.Center, 0.9f, 0.8f, 0.1f);
         }
@@ -71,7 +71,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
             int num2 = 3;
 
             for (int index = 0; index < num1; ++index)
-                Dust.NewDust(projectile.position, projectile.width, projectile.height, 58, projectile.velocity.X * 0.1f, projectile.velocity.Y * 0.1f, 150, new Color(), 1.2f);
+                Dust.NewDust(projectile.position, projectile.width, projectile.height, DustID.Enchanted_Pink, projectile.velocity.X * 0.1f, projectile.velocity.Y * 0.1f, 150, new Color(), 1.2f);
             for (int index = 0; index < num2; ++index)
             {
                 int Type = Main.rand.Next(16, 18);
@@ -81,7 +81,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
             }
 
             for (int index = 0; index < 10; ++index)
-                Dust.NewDust(projectile.position, projectile.width, projectile.height, 57, projectile.velocity.X * 0.1f, projectile.velocity.Y * 0.1f, 150, new Color(), 1.2f);
+                Dust.NewDust(projectile.position, projectile.width, projectile.height, DustID.Enchanted_Gold, projectile.velocity.X * 0.1f, projectile.velocity.Y * 0.1f, 150, new Color(), 1.2f);
             for (int index = 0; index < 3; ++index)
                 Gore.NewGore(projectile.position, new Vector2(projectile.velocity.X * 0.05f, projectile.velocity.Y * 0.05f), Main.rand.Next(16, 18), 1f);
         }
