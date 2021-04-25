@@ -13,9 +13,9 @@ using Terraria.Enums;
 
 namespace SunksBossChallenges.Projectiles.LumiteTwins
 {
-    public class RetinDeathRay:ModProjectile
+    public class RetinDeathRay : ModProjectile
     {
-        int maxTime => 480;
+        int maxTime { get; set; } = 480;
         float transparency => 0f;
         public override void SetStaticDefaults()
         {
@@ -36,12 +36,14 @@ namespace SunksBossChallenges.Projectiles.LumiteTwins
         }
         public override void AI()
         {
+            maxTime = (int)projectile.ai[0];
             Vector2? vector78 = null;
             if (projectile.velocity.HasNaNs() || projectile.velocity == Vector2.Zero)
             {
                 projectile.velocity = -Vector2.UnitY;
             }
-            if (Main.npc[(int)projectile.ai[1]].active && Main.npc[(int)projectile.ai[1]].type == ModContent.NPCType<LumiteRetinazer>() && Main.npc[(int)projectile.ai[1]].ai[1] == 6)
+            if (Main.npc[(int)projectile.ai[1]].active && Main.npc[(int)projectile.ai[1]].type == ModContent.NPCType<LumiteRetinazer>()
+                && (Main.npc[(int)projectile.ai[1]].ai[1] == 6 || Main.npc[(int)projectile.ai[1]].ai[1] == 7))
             {
                 //Vector2 value21 = new Vector2(27f, 59f);
                 //Vector2 fireFrom = new Vector2(Main.npc[(int)projectile.ai[1]].Center.X, Main.npc[(int)projectile.ai[1]].Center.Y);

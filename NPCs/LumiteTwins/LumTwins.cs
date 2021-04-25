@@ -14,6 +14,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 {
     public abstract class LumTwins:ModNPC
     {
+        protected float Relaxed => 98f;
         protected float EnragedStateTrans => 99f;
         protected float EnragedState => 100f;
         protected int brotherId = -1;
