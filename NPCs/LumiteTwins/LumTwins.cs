@@ -18,6 +18,8 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
         protected float EnragedStateTrans => 99f;
         protected float EnragedState => 100f;
         protected int brotherId = -1;
+
+        protected float fastHoverAccle => 0.75f;
         protected float Phase { get => npc.ai[0]; set => npc.ai[0] = value; }
 
         public bool CheckBrother<T>() where T : LumTwins
@@ -37,28 +39,34 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
             }
         }
 
-        protected void NewOrBoardcastText(string quote,Color color)
+        protected void NewOrBoardcastText(string quote, Color color, bool combatText = true)
         {
             if (Main.netMode == NetmodeID.SinglePlayer)
                 Main.NewText(quote, color);
             if (Main.netMode == NetmodeID.Server)
                 NetMessage.BroadcastChatMessage(NetworkText.FromLiteral(quote), color);
+            CombatText.NewText(npc.Hitbox, color, quote);
         }
 
-        protected void setRotation(Vector2 direction)
+        protected void SetRotation(Vector2 direction)
         {
             npc.rotation = direction.ToRotation() - 1.57f;
         }
 
-        protected void handleRotation(float direction, float rotateAccle = 0.1f)
+        protected void HandleRotation(Vector2 direct, float rotateAccle = 0.1f)
         {
+            HandleRotation(direct.ToRotation() - 1.57f, rotateAccle);
+        }
+        protected void HandleRotation(float direction, float rotateAccle = 0.1f)
+        {
+            rotateAccle = Math.Abs(rotateAccle);
             if (direction < 0f)
             {
-                direction += MathHelper.TwoPi;
+                direction += 6.283f;
             }
-            else if ((double)direction > MathHelper.TwoPi)
+            else if ((double)direction > 6.283f)
             {
-                direction -= MathHelper.TwoPi;
+                direction -= 6.283f;
             }
             if (npc.rotation < direction)
             {
@@ -82,24 +90,77 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
                     npc.rotation -= rotateAccle;
                 }
             }
+            /*if ((double)Math.Abs(npc.rotation - direction) > 3.1415)
+            {
+                npc.rotation += rotateAccle * Math.Sign(npc.rotation - direction);
+            }
+            else
+            {
+                npc.rotation -= rotateAccle * Math.Sign(npc.rotation - direction);
+            }*/
             if (npc.rotation > direction - rotateAccle && npc.rotation < direction + rotateAccle)
             {
                 npc.rotation = direction;
             }
             if (npc.rotation < 0f)
             {
-                npc.rotation += MathHelper.TwoPi;
+                npc.rotation += 6.283f;
             }
-            else if ((double)npc.rotation > MathHelper.TwoPi)
+            else if ((double)npc.rotation > 6.283f)
             {
-                npc.rotation -= MathHelper.TwoPi;
+                npc.rotation -= 6.283f;
             }
             if (npc.rotation > direction - rotateAccle && npc.rotation < direction + rotateAccle)
             {
                 npc.rotation = direction;
             }
         }
-
+        protected int GetRotationDirection(Vector2 direct)
+        {
+            return GetRotationDirection(direct.ToRotation() - 1.57f);
+        }
+        protected int GetRotationDirection(float direction)
+        {
+            if (npc.rotation < 0f)
+            {
+                npc.rotation += 6.283f;
+            }
+            else if ((double)npc.rotation > 6.283f)
+            {
+                npc.rotation -= 6.283f;
+            }
+            if (direction < 0f)
+            {
+                direction += 6.283f;
+            }
+            else if ((double)direction > 6.283f)
+            {
+                direction -= 6.283f;
+            }
+            if (npc.rotation < direction)
+            {
+                if ((double)(direction - npc.rotation) > 3.1415)
+                {
+                    return -1;
+                }
+                else
+                {
+                    return 1;
+                }
+            }
+            else if (npc.rotation > direction)
+            {
+                if ((double)(npc.rotation - direction) > 3.1415)
+                {
+                    return 1;
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+            return 0;
+        }
         protected void SlowDown(float accle)
         {
             npc.velocity.X *= accle;
@@ -148,6 +209,20 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
                 {
                     npc.velocity.Y -= accle;
                 }
+            }
+        }
+
+        protected void DrawAim(SpriteBatch spriteBatch, Vector2 endpoint,Color color)
+        {
+            Texture2D aimTexture = mod.GetTexture("NPCs/LumiteTwins/RayAim");
+            Vector2 unit = endpoint - npc.Center;
+            float length = unit.Length();
+            unit.Normalize();
+            for (int k = 0; k <= length; k += 4)
+            {
+                Vector2 drawPos = npc.Center + unit * k - Main.screenPosition;
+                Color alphaCenter = color * 0.8f;
+                spriteBatch.Draw(aimTexture, drawPos, null, alphaCenter, k, new Vector2(2, 2), 1f, SpriteEffects.None, 0f);
             }
         }
 
