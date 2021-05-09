@@ -14,18 +14,17 @@ using SunksBossChallenges.Projectiles;
 
 namespace SunksBossChallenges.NPCs.LumiteTwins
 {
+	[AutoloadBossHead]
     public class LumiteSpazmatism:LumTwins
     {
 		public int CoAttackTimer = 0;
 		public int CoAttackPatternAI = 3;
-		public override string Texture => "Terraria/NPC_" + NPCID.Spazmatism;
         public override void SetStaticDefaults()
         {
             DisplayName.SetDefault(@"LS-005 ""Infernal""");
 			Main.npcFrameCount[npc.type] = Main.npcFrameCount[NPCID.Spazmatism];
 			NPCID.Sets.TrailingMode[npc.type] = NPCID.Sets.TrailingMode[NPCID.Spazmatism];
 			NPCID.Sets.TrailCacheLength[npc.type] = NPCID.Sets.TrailCacheLength[NPCID.Spazmatism];
-			NPCID.Sets.BossHeadTextures[npc.type] = NPCID.Sets.BossHeadTextures[NPCID.Spazmatism];
 		}
 
         public override void ScaleExpertStats(int numPlayers, float bossLifeScale)
@@ -68,6 +67,13 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 				int num425 = Dust.NewDust(new Vector2(npc.position.X, npc.position.Y + (float)npc.height * 0.25f), npc.width, (int)((float)npc.height * 0.5f), DustID.Blood, npc.velocity.X, 2f);
 				Main.dust[num425].velocity.X *= 0.5f;
 				Main.dust[num425].velocity.Y *= 0.1f;
+			}
+            if (npc.ai[1] >= EnragedState)
+            {
+				int num425 = Dust.NewDust(new Vector2(npc.position.X, npc.position.Y + (float)npc.height * 0.25f), npc.width, (int)((float)npc.height * 0.5f), DustID.Electric, npc.velocity.X, 2f);
+				Main.dust[num425].velocity.X *= 0.5f;
+				Main.dust[num425].velocity.Y *= 0.1f;
+				Main.dust[num425].noGravity = true;
 			}
             #region Despawn
             if (Main.netMode != NetmodeID.MultiplayerClient && !Main.dayTime && !targetDead && npc.timeLeft < 10)
@@ -429,13 +435,46 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 			npc.HitSound = SoundID.NPCHit4;
 			npc.damage = (int)((double)npc.defDamage * 1.5);
 			npc.defense = npc.defDefense + 18;
-			if (!CheckBrother<LumiteRetinazer>() && (npc.ai[1] < EnragedStateTrans))//this means brother has died
+			/*if (!CheckBrother<LumiteRetinazer>() && (npc.ai[1] < EnragedStateTrans))//this means brother has died
 			{
 				npc.dontTakeDamage = true;
 				CoAttackTimer = 0;
 				npc.ai[1] = EnragedStateTrans;
 				npc.ai[2] = 0;
+            }*/
+            if (CheckBrother<LumiteRetinazer>())//check and setup enrage
+            {
+                if (npc.life <= 1)
+                {
+                    if (Main.npc[brotherId].life > 1)
+                    {
+						npc.dontTakeDamage = true;
+                        if (npc.ai[1] < EnragedStateTrans)
+                        {
+							npc.ai[1] = EnragedStateTrans;
+							npc.ai[2] = 0;
+							Main.npc[brotherId].ai[1] = EnragedStateTrans;
+							Main.npc[brotherId].ai[2] = 0;
+							npc.netUpdate = true;
+							Main.npc[brotherId].netUpdate = true;
+						}
+                    }
+                    else
+                    {
+						npc.dontTakeDamage = false;
+						npc.life = 0;
+						Main.npc[brotherId].dontTakeDamage = false;
+						Main.npc[brotherId].life = 0;
+						npc.checkDead();
+						Main.npc[brotherId].checkDead();
+					}
+                }
             }
+            else
+            {
+				npc.life = 0;
+				npc.checkDead();
+			}
 			if (npc.ai[1] == 0f)
 			{
 				float num444 = 4f;
@@ -538,7 +577,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 							vector43.Y -= num448 * 1f;*/
 							velocity *= scaleFactor;
 							velocity += new Vector2(Main.rand.Next(-40, 41) * 0.01f, Main.rand.Next(-40, 41) * 0.01f);
-							velocity += npc.velocity * 0.5f;
+							velocity += npc.velocity * 0.6f;
 							int num453 = Projectile.NewProjectile(npc.Center - velocity * 1f, velocity, ProjectileID.EyeFire, num451, 0f, Main.myPlayer);
 						}
 					}
@@ -548,18 +587,19 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 			{
 				Main.PlaySound(SoundID.Roar, (int)npc.position.X, (int)npc.position.Y, 0);
 				npc.rotation = distRotation;
-				float num454 = 14f;
+				float speed = 16f;
 				if (Main.expertMode)
 				{
-					num454 += 2.5f;
+					speed += 4.5f;
 				}
 				Vector2 vector44 = new Vector2(npc.position.X + (float)npc.width * 0.5f, npc.position.Y + (float)npc.height * 0.5f);
 				float num455 = Main.player[npc.target].position.X + (float)(Main.player[npc.target].width / 2) - vector44.X;
 				float num456 = Main.player[npc.target].position.Y + (float)(Main.player[npc.target].height / 2) - vector44.Y;
 				float num457 = (float)Math.Sqrt(num455 * num455 + num456 * num456);
-				num457 = num454 / num457;
-				npc.velocity.X = num455 * num457;
-				npc.velocity.Y = num456 * num457;
+				num457 = speed / num457;
+				/*npc.velocity.X = num455 * num457;
+				npc.velocity.Y = num456 * num457;*/
+				npc.velocity = Vector2.Normalize(new Vector2(num455, num456) + player.velocity * 5) * speed;
 				npc.ai[1] = 2f;
 			}
 			else if (npc.ai[1] == 2f)
@@ -923,7 +963,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 						SlowDown(0.98f);
 						if (npc.ai[2] < 60)
 						{
-							HandleRotation(dist.ToRotation() - 1.57f, 0.02f);
+							HandleRotation(dist.ToRotation() - 1.57f, 0.05f);
 							return;
 						}
 						else
@@ -933,19 +973,19 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 								int damage = 80;
 								if (npc.ai[2] == 60)
 								{
-									SetRotation(dist);
+									//SetRotation(dist);
 								}
 								if (npc.ai[2] == 105)
 								{
 									npc.ai[3] = GetRotationDirection(dist);
 								}
-								Vector2 velocity = Vector2.Normalize((npc.rotation + 1.57f).ToRotationVector2()) * vecToPlayer.Length() / 60f;
+								Vector2 velocity = Vector2.Normalize((npc.rotation + 1.57f).ToRotationVector2()) * Math.Min(vecToPlayer.Length() / 60f, 60f);
 								Projectile.NewProjectile(npc.Center + Vector2.Normalize((npc.rotation + 1.57f).ToRotationVector2()) * npc.width, velocity, ProjectileID.EyeFire, damage, 0f, Main.myPlayer);
 							}
 							else if (npc.ai[2] < 150)
 							{
 								int damage = 80;
-								Vector2 velocity = Vector2.Normalize((npc.rotation + 1.57f).ToRotationVector2()) * vecToPlayer.Length() / 60f;
+								Vector2 velocity = Vector2.Normalize((npc.rotation + 1.57f).ToRotationVector2()) * Math.Min(vecToPlayer.Length() / 60f, 60f);
 								HandleRotation(npc.rotation + 0.01f * npc.ai[3]);
 								Projectile.NewProjectile(npc.Center + Vector2.Normalize((npc.rotation + 1.57f).ToRotationVector2()) * npc.width, velocity, ProjectileID.EyeFire, damage, 0f, Main.myPlayer);
 							}
@@ -998,6 +1038,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 			{
 				npc.ai[2]++;
 				SlowDown(0.98f);
+				npc.dontTakeDamage = true;
 				if (npc.ai[2] == 100)
 				{
 					NewOrBoardcastText("OVERLOADED MODE ON", Color.Green);
@@ -1009,7 +1050,8 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 				}
 				if (npc.ai[2] >= 160)
 				{
-					npc.dontTakeDamage = false;
+					if(npc.life>1)
+						npc.dontTakeDamage = false;
 					npc.ai[1] = EnragedState;
 					npc.ai[2] = 0;
 					npc.ai[3] = 0;
@@ -1027,10 +1069,9 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 				Vector2 vector44 = new Vector2(npc.position.X + (float)npc.width * 0.5f, npc.position.Y + (float)npc.height * 0.5f);
 				float num455 = Main.player[npc.target].position.X + (float)(Main.player[npc.target].width / 2) - vector44.X;
 				float num456 = Main.player[npc.target].position.Y + (float)(Main.player[npc.target].height / 2) - vector44.Y;
-				float num457 = (float)Math.Sqrt(num455 * num455 + num456 * num456);
-				num457 = speed / num457;
-				npc.velocity.X = num455 * num457;
-				npc.velocity.Y = num456 * num457;
+				//float num457 = (float)Math.Sqrt(num455 * num455 + num456 * num456);
+				//num457 = speed / num457;
+				npc.velocity = Vector2.Normalize(new Vector2(num455, num456) - player.velocity * 5) * speed;
 				npc.ai[1] = EnragedState + 1f;
 			}
 			else if (npc.ai[1] == EnragedState + 1f)
@@ -1058,7 +1099,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 				vector43.Y -= num448 * 1f;*/
 				velocity *= scaleFactor;
 				velocity += new Vector2(Main.rand.Next(-40, 41) * 0.01f, Main.rand.Next(-40, 41) * 0.01f);
-				velocity += npc.velocity * 0.5f;
+				velocity += npc.velocity * 0.45f;
 				int num453 = Projectile.NewProjectile(npc.Center - velocity * 1f, velocity, ProjectileID.EyeFire, num451, 0f, Main.myPlayer);
 				if (Main.expertMode)
 				{
@@ -1099,7 +1140,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 						if (npc.localAI[1] % 2 == 0)
 						{
 							if(npc.ai[2] <= 60)
-								DrawAim(spriteBatch, (Main.player[npc.target].Center - npc.Center + Main.player[npc.target].velocity * 100) * 5 + npc.Center, Color.Green);
+								DrawAim(spriteBatch, (npc.rotation + 1.57f).ToRotationVector2() * (Main.player[npc.target].Center - npc.Center).Length() * 5 + npc.Center, Color.Green);
 							if (npc.ai[2] >= 180)
 								DrawAim(spriteBatch, (Main.player[npc.target].Center - npc.Center + Main.player[npc.target].velocity * 10) * 5 + npc.Center, Color.Green);
 						}
@@ -1214,11 +1255,25 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
         {
             if (npc.ai[0] == 3)
             {
-				damage *= (1 - 0.45);
+				damage *= (1 - 0.375);
 				if(npc.ai[1] == 7)
 				{
 					damage *= (1 - 0.80);
 				}
+            }
+			return true;
+        }
+        public override bool CheckDead()
+        {
+			UpdateBrother<LumiteRetinazer>();
+            if (CheckBrother<LumiteRetinazer>())
+            {
+                if (Main.npc[brotherId].life > 1)
+                {
+					npc.dontTakeDamage = true;
+					npc.life = 1;
+					return false;
+                }
             }
 			return true;
         }

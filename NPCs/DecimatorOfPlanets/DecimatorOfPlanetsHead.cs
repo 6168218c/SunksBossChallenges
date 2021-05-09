@@ -305,28 +305,31 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                 //WormMovement(player.Center, maxSpeed * 0.75f, 0.135f);
                 if (Vector2.Distance(npc.Center, player.Center) >= 9000f)
                 {
-                    npc.ai[2] = 9;//enraged
+                    npc.ai[1] = 9;//enraged
 					npc.netUpdate=true;
                 }
                 else
                 {
-                    if (npc.ai[2] == 9)//if has enraged previously
+                    if (npc.ai[1] == 9)//if has enraged previously
                     {
                         if (npc.velocity.Length() > maxSpeed * 1.25)
-                            npc.velocity = scaleLength(npc.velocity, maxSpeed * 0.6f);
-                        npc.ai[2] = 0;
+                            npc.velocity = scaleLength(npc.velocity, maxSpeed);
+                        npc.ai[1] = 0;
 						npc.netUpdate=true;
                     }
-                }
-                if (npc.ai[2] == 9)
-                {
-                    if (npc.ai[2] != 1) 
-                        maxSpeed *= 5f;
-                    turnAcc *= 5f;
                 }
 
                 if (npc.ai[3] <= passiveTime)//passive ai
                 {
+                    if (npc.ai[3] == passiveTime)//this pattern is not good for some bosses
+                    {
+                        npc.ai[2] = 0;
+                    }
+                    if (npc.ai[1] == 9)
+                    {
+                        maxSpeed *= 5f;
+                        turnAcc *= 5f;
+                    }
                     if (!SkyManager.Instance["SunksBossChallenges:DecimatorOfPlanetsPassive"].IsActive() && !hasEnteredLastPhase)
                     {
                         SkyManager.Instance.Deactivate("SunksBossChallenges:DecimatorOfPlanetsLastPhase");
@@ -343,7 +346,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                         npc.velocity = scaleLength(npc.velocity, maxSpeed * 0.6f);
                     maxSpeed *= 0.75f;
 
-                    if (npc.ai[2] != 9)//not enraged
+                    if (npc.ai[1] != 9)//not enraged
                         turnAcc = 0.15f;
 
                     var targetPos = player.Center;
@@ -480,26 +483,38 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                         SkyManager.Instance.Deactivate("SunksBossChallenges:DecimatorOfPlanetsAggressive");
                         SkyManager.Instance.Deactivate("SunksBossChallenges:DecimatorOfPlanetsPassive");
                     }
-                    if (npc.Center.Y < player.Center.Y - 216f)
+                    if (npc.Center.Y < player.Center.Y - 360f)
                     {
                         npc.ai[2] = 1;
                     }
                     if (npc.ai[2] == 1)
                     {
                         var directionVect = player.Center - npc.Center;
-                        if ((npc.Center.Y > player.Center.Y && Math.Abs(directionVect.X) > 2400) || (npc.Center.Y > player.Center.Y + 300))
+                        if ((npc.Center.Y > player.Center.Y && Math.Abs(directionVect.X) > 2400) || (npc.Center.Y > player.Center.Y + 600))
                         {
                             //if (npc.velocity.Length() > maxSpeed * 1.25)
                             //    npc.velocity = scaleLength(npc.velocity, maxSpeed * 0.8f);
+                            if (Math.Abs(directionVect.X) > 4200f || Math.Abs(directionVect.Y) > 3000f)
+                            {
+                                npc.ai[2] = 2;
+                            }
                             if (Math.Cos(npc.velocity.ToRotation() - directionVect.ToRotation()) < Math.Cos(Math.PI / 3))
                             {
                                 WormMovement(player.Center + player.velocity, maxSpeed, turnAcc * 8, 0.15f);
                                 npc.velocity = scaleLength(npc.velocity, MathHelper.Lerp(directionVect.Length() / 100f, maxSpeed,0.45f));
+                                if (npc.velocity.Y > 10f && npc.Center.Y > player.Center.Y + 2000)
+                                {
+                                    npc.velocity.Y = Math.Min(npc.velocity.Y - turnAcc * 2, npc.velocity.Y * 0.95f);
+                                }
                             }
                             else
                             {
                                 WormMovement(player.Center + player.velocity, maxSpeed, turnAcc * 3.75f, 0.3f);
                                 npc.velocity = scaleLength(npc.velocity, MathHelper.Lerp(directionVect.Length() / 100f, maxSpeed, 0.45f));
+                                if (npc.velocity.Y > 10f && npc.Center.Y > player.Center.Y + 2000)
+                                {
+                                    npc.velocity.Y = Math.Min(npc.velocity.Y - turnAcc * 2, npc.velocity.Y * 0.95f);
+                                }
                             }
                             if (Math.Cos(npc.velocity.ToRotation() - directionVect.ToRotation()) > Math.Cos(Math.PI / 12))
                             {
@@ -508,9 +523,13 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                         }
                         else
                         {
-                            WormMovement(npc.Center + new Vector2(Math.Sign(npc.velocity.X) * 450f + Math.Sign(directionVect.X) * Math.Min((player.Center.Y - npc.Center.Y), 250f), 375f),
-                                maxSpeed * 1.2f, turnAcc, 0.6f) ;
-                            if (Math.Abs(directionVect.X) > 4200f)
+                            if (npc.Center.Y < player.Center.Y - 600f || Math.Abs(npc.Center.X - player.Center.X) > 1500)
+                                WormMovement(npc.Center + new Vector2(Math.Sign(npc.velocity.X) * 450f + Math.Sign(directionVect.X) * Math.Min((player.Center.Y - npc.Center.Y), 250f), 375f),
+                                    maxSpeed * 2f, turnAcc * 3, 0.45f);
+                            else
+                                WormMovement(npc.Center + new Vector2(Math.Sign(npc.velocity.X) * 450f + Math.Sign(directionVect.X) * Math.Min((player.Center.Y - npc.Center.Y), 250f), 375f),
+                                    maxSpeed * 2f, turnAcc, 0.45f);
+                            if (Math.Abs(directionVect.X) > 4200f || Math.Abs(directionVect.Y) > 3000f)
                             {
                                 npc.ai[2] = 2;
                             }
@@ -519,49 +538,68 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                     else if (npc.ai[2] == 2)
                     {
                         var directionVect = player.Center - npc.Center;
-                        if(npc.Center.Y > player.Center.Y + 2400)
+                        if(npc.Center.Y > player.Center.Y + 800)
                         {
-                            WormMovement(new Vector2(npc.Center.X, player.Center.Y + 2400), maxSpeed * 2, turnAcc * 8, 0.45f);
-                        }
-                        else if (Math.Abs(npc.Center.X - player.Center.X) <= 600f)
-                        {
-                            //if (npc.velocity.Length() > maxSpeed * 1.25)
-                            //    npc.velocity = scaleLength(npc.velocity, maxSpeed * 0.8f);
-                            if (Math.Cos(npc.velocity.ToRotation() - directionVect.ToRotation()) < Math.Cos(Math.PI / 3))
+                            if (Math.Abs(npc.Center.X - player.Center.X) <= 600)
                             {
-                                WormMovement(player.Center + player.velocity, maxSpeed, turnAcc * 8, 0.15f);
-                                npc.velocity = scaleLength(npc.velocity, MathHelper.Lerp(directionVect.Length() / 100f, maxSpeed, 0.45f));
+                                npc.velocity.Y = 0;
+                                npc.velocity = scaleLength(npc.velocity, 18f);
+                                npc.ai[2] = 3;
+                                return;
                             }
-                            else
+                            WormMovement(new Vector2(player.Center.X, player.Center.Y + 1800), maxSpeed * 3, turnAcc / 1.5f, 0.45f);
+                            npc.velocity.X += Math.Sign(player.Center.X - npc.Center.X) * turnAcc * 2;
+                            if (npc.velocity.Y > 10f&& npc.Center.Y > player.Center.Y + 2000)
                             {
-                                WormMovement(player.Center + player.velocity, maxSpeed, turnAcc * 3.75f, 0.3f);
+                                npc.velocity.Y = Math.Min(npc.velocity.Y - turnAcc * 2, npc.velocity.Y * 0.95f);
                             }
-                            if (Math.Cos(npc.velocity.ToRotation() - directionVect.ToRotation()) > Math.Cos(Math.PI / 12))
-                            {
-                                npc.ai[2] = 0;
-                            }
+                            //if (npc.ai[1] != 9)
+                            //    npc.velocity = scaleLength(npc.velocity, MathHelper.Lerp(directionVect.Length() / 100f, maxSpeed, 0.45f));
                         }
                         else
                         {
-                            var distVect = new Vector2(player.Center.X, player.Center.Y + 3000);
-                            WormMovement(distVect, maxSpeed * 2, turnAcc * 20, 0.45f);
-                            if (Math.Abs(npc.Center.X - player.Center.X) > 4500)
-                            {
-                                npc.velocity = scaleLength(npc.velocity, MathHelper.Lerp(directionVect.Length() / 100f, maxSpeed * 1.5f, 0.45f));
-                            }
+                            var distVect = new Vector2(npc.Center.X, player.Center.Y + 2400);
+                            WormMovement(distVect, maxSpeed * 3, turnAcc * 20, 0.45f);
                             //if (Math.Cos(npc.velocity.ToRotation() - distVect.ToRotation()) < Math.Cos(Math.PI / 3))
                             //{
                             //    npc.velocity = scaleLength(npc.velocity, MathHelper.Lerp(directionVect.Length() / 100f, maxSpeed * 1.5f, 0.45f));
                             //}
                         }
                     }
-                    else
+                    else if (npc.ai[2] == 3)
                     {
                         var directionVect = player.Center - npc.Center;
+                        //if (npc.velocity.Length() > maxSpeed * 1.25)
+                        //    npc.velocity = scaleLength(npc.velocity, maxSpeed * 0.8f);
+                        if (Math.Cos(npc.velocity.ToRotation() - directionVect.ToRotation()) < Math.Cos(Math.PI / 3))
+                        {
+                            WormMovement(player.Center + player.velocity, maxSpeed, turnAcc * 5, 0.15f);
+                            if (Math.Abs(npc.velocity.X) > 8f)
+                                npc.velocity.X = Math.Sign(npc.velocity.X) * 
+                                    Math.Max(Math.Min(Math.Abs(npc.velocity.X) * 0.95f, Math.Abs(npc.velocity.X) - turnAcc), 8f);
+                            npc.velocity = scaleLength(npc.velocity, MathHelper.Lerp(directionVect.Length() / 100f, maxSpeed, 0.45f));
+                        }
+                        else
+                        {
+                            WormMovement(player.Center + player.velocity, maxSpeed, turnAcc * 3.75f, 0.3f);
+                        }
+                        if (Math.Cos(npc.velocity.ToRotation() - directionVect.ToRotation()) > Math.Cos(Math.PI / 12))
+                        {
+                            npc.ai[2] = 0;
+                        }
+                    }
+                    else
+                    {
+                        if (npc.ai[1] == 9)
+                        {
+                            maxSpeed *= 5f;
+                            turnAcc *= 5f;
+                        }
+                        var directionVect = player.Center - npc.Center;
                         if (Vector2.Distance(npc.Center, player.Center) <= 1500)
-                            WormMovement(player.Center, maxSpeed * 0.8f, turnAcc * 0.2f, 0.3f);
+                            WormMovement(player.Center, maxSpeed * 0.8f, turnAcc * 0.3f, 0.3f);
                         else if (Vector2.Distance(npc.Center, player.Center) <= 2400)
-                            WormMovement(player.Center, maxSpeed, turnAcc * 0.3f, 0.3f);
+                            WormMovement(player.Center, maxSpeed, turnAcc * 0.5f, 0.3f);
                         else if (Vector2.Distance(npc.Center, player.Center) <= 3200)
                         {
                             WormMovement(player.Center + player.velocity, maxSpeed*1.08f, turnAcc * 4.5f, 0.3f);
@@ -599,6 +637,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                         Main.npc[currentNPC].alpha = 255;
                         currentNPC = (int)Main.npc[currentNPC].ai[0];
                     }
+                    npc.velocity = Vector2.Normalize(center - npc.Center) * maxSpeed;
                     //Vector2 destination = Vector2.Normalize(npc.Center - center) * r;
                     //if (destination == Vector2.Zero || destination.HasNaNs())
                     //    destination = center + new Vector2(0, r);
@@ -615,7 +654,6 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                         npc.velocity = Vector2.Normalize(npc.Center - center)
                             .RotatedBy(-Math.PI / 2 * npc.direction) * DecimatorOfPlanetsArguments.SpinSpeed;
                         npc.rotation = npc.velocity.ToRotation();
-                        npc.localAI[3] = npc.direction;
                         chaosPlanets[0] = chaosPlanets[1] = chaosPlanets[2] = -1;
                         npc.ai[2] = 12;
                     }
@@ -632,7 +670,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                 else if (npc.ai[2] == 12)
                 {
                     npc.chaseable = false;
-                    int direction = (int)npc.localAI[3];
+                    int direction = npc.direction;
                     var center = new Vector2(npc.localAI[1], npc.localAI[2]);
                     if (npc.Distance(center) < DecimatorOfPlanetsArguments.R)
                     {
@@ -740,9 +778,8 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             writer.Write(npc.localAI[2]);
             writer.Write(npc.localAI[3]);
             writer.Write(spinTimer);
-            writer.Write(chaosPlanets[0]);
-            writer.Write(chaosPlanets[1]);
-            writer.Write(chaosPlanets[2]);
+            for (int i = 0; i < chaosPlanets.Length; i++)
+                writer.Write(chaosPlanets[i]);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
@@ -752,9 +789,8 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
             npc.localAI[2] = reader.ReadSingle();
             npc.localAI[3] = reader.ReadSingle();
             spinTimer = reader.ReadInt32();
-            chaosPlanets[0] = reader.ReadInt32();
-            chaosPlanets[1] = reader.ReadInt32();
-            chaosPlanets[2] = reader.ReadInt32();
+            for (int i = 0; i < chaosPlanets.Length; i++)
+                chaosPlanets[i] = reader.ReadInt32();
         }
 
         public override bool? CanBeHitByProjectile(Projectile projectile)

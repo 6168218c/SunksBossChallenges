@@ -20,7 +20,7 @@ namespace SunksBossChallenges.Items
 
 		public override void SetDefaults() 
 		{
-			item.damage = 2000;
+			item.damage = 3000;
 			item.melee = true;
 			item.width = 40;
 			item.height = 40;
@@ -32,17 +32,18 @@ namespace SunksBossChallenges.Items
 			item.rare = ItemRarityID.Green;
 			item.UseSound = SoundID.Item1;
 			item.autoReuse = true;
-			item.shoot = ModContent.ProjectileType<LaserBarrage>();
+			item.shoot = ProjectileID.Typhoon;
+			item.shootSpeed = 7.5f;
 		}
 
         public override bool Shoot(Player player, ref Vector2 position, ref float speedX, ref float speedY, ref int type, ref int damage, ref float knockBack)
         {
-			const float length = 600f;
+			/*const float length = 600f;
 			for(int i = 0; i < 5; i++)
             {
 				Vector2 pos = Main.rand.NextVector2Unit(MathHelper.Pi / 3, MathHelper.Pi / 3) * length;
 				Projectile.NewProjectile(player.Center + pos, Vector2.Zero, ModContent.ProjectileType<LaserBarrage>(), 60, 0f, Main.myPlayer, player.Center.X, player.Center.Y);
-			}
+			}*/
 			return true;
 		}
 

@@ -10,54 +10,16 @@ using SunksBossChallenges.Projectiles.DecimatorOfPlanets;
 using Terraria.Graphics.Effects;
 using Terraria.Localization;
 
-namespace SunksBossChallenges.NPCs.LumiteTwins
+
+namespace SunksBossChallenges
 {
-    public abstract class LumTwins:ModNPC
+    public static class Util
     {
-        protected float Relaxed => 98f;
-        protected float EnragedStateTrans => 99f;
-        protected float EnragedState => 100f;
-        protected int brotherId = -1;
-
-        protected float fastHoverAccle => 0.75f;
-        protected float Phase { get => npc.ai[0]; set => npc.ai[0] = value; }
-
-        public bool CheckBrother<T>() where T : LumTwins
+        public static void HandleRotation(this NPC npc, Vector2 direct, float rotateAccle = 0.1f)
         {
-            return !(brotherId == -1 || !Main.npc[brotherId].active || Main.npc[brotherId].type != ModContent.NPCType<T>());
+            HandleRotation(npc, direct.ToRotation() - 1.57f, rotateAccle);
         }
-
-        public void UpdateBrother<T>() where T : LumTwins
-        {
-            for (int i = 0; i < 200; i++)
-            {
-                if (Main.npc[i].active && npc.whoAmI != i && Main.npc[i].type == ModContent.NPCType<T>())
-                {
-                    brotherId = i;
-                    break;
-                }
-            }
-        }
-
-        protected void NewOrBoardcastText(string quote, Color color, bool combatText = true)
-        {
-            if (Main.netMode == NetmodeID.SinglePlayer)
-                Main.NewText(quote, color);
-            if (Main.netMode == NetmodeID.Server)
-                NetMessage.BroadcastChatMessage(NetworkText.FromLiteral(quote), color);
-            CombatText.NewText(npc.Hitbox, color, quote, true);
-        }
-
-        protected void SetRotation(Vector2 direction)
-        {
-            npc.rotation = direction.ToRotation() - 1.57f;
-        }
-
-        protected void HandleRotation(Vector2 direct, float rotateAccle = 0.1f)
-        {
-            HandleRotation(direct.ToRotation() - 1.57f, rotateAccle);
-        }
-        protected void HandleRotation(float direction, float rotateAccle = 0.1f)
+        public static void HandleRotation(this NPC npc, float direction, float rotateAccle = 0.1f)
         {
             rotateAccle = Math.Abs(rotateAccle);
             if (direction < 0f)
@@ -115,11 +77,11 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
                 npc.rotation = direction;
             }
         }
-        protected int GetRotationDirection(Vector2 direct)
+        public static int GetRotationDirection(this NPC npc, Vector2 direct)
         {
-            return GetRotationDirection(direct.ToRotation() - 1.57f);
+            return GetRotationDirection(npc, direct.ToRotation() - 1.57f);
         }
-        protected int GetRotationDirection(float direction)
+        public static int GetRotationDirection(this NPC npc, float direction)
         {
             if (npc.rotation < 0f)
             {
@@ -161,7 +123,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
             }
             return 0;
         }
-        protected void SlowDown(float accle)
+        public static void SlowDown(this NPC npc, float accle)
         {
             npc.velocity.X *= accle;
             npc.velocity.Y *= accle;
@@ -174,7 +136,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
                 npc.velocity.Y = 0f;
             }
         }
-        protected void HoverMovement(Vector2 dist,float maxSpeed,float accle)
+        public static void HoverMovement(this NPC npc, Vector2 dist, float maxSpeed, float accle)
         {
             Vector2 velo = dist - npc.Center;
             velo *= maxSpeed / velo.Length();
@@ -211,50 +173,70 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
                 }
             }
         }
-
-        protected void DrawAim(SpriteBatch spriteBatch, Vector2 endpoint,Color color)
+        public static void WormMovement(this Entity entity, Vector2 position, float maxSpeed, float turnAccle = 0.1f, float ramAccle = 0.15f)
         {
-            Texture2D aimTexture = mod.GetTexture("NPCs/LumiteTwins/RayAim");
-            Vector2 unit = endpoint - npc.Center;
-            float length = unit.Length();
-            unit.Normalize();
-            for (int k = 0; k <= length; k += 4)
+            Vector2 targetVector = position - entity.Center;
+            targetVector = Vector2.Normalize(targetVector) * maxSpeed;
+            if ((targetVector.X * entity.velocity.X > 0f) && (targetVector.Y * entity.velocity.Y > 0f)) //acclerate
             {
-                Vector2 drawPos = npc.Center + unit * k - Main.screenPosition;
-                Color alphaCenter = color * 0.8f;
-                spriteBatch.Draw(aimTexture, drawPos, null, alphaCenter, k, new Vector2(2, 2), 1f, SpriteEffects.None, 0f);
+                entity.velocity.X += Math.Sign(targetVector.X - entity.velocity.X) * ramAccle;
+                entity.velocity.Y += Math.Sign(targetVector.Y - entity.velocity.Y) * ramAccle;
             }
-        }
-        public override void BossHeadSlot(ref int index)
-        {
-            if (this.Phase >= 2f)
+            if ((targetVector.X * entity.velocity.X > 0f) || (targetVector.Y * entity.velocity.Y > 0f)) //turn
             {
-                index = ModContent.GetModBossHeadSlot($"SunksBossChallenges/NPCs/LumiteTwins/{this.GetType().Name}_Head_Boss2");
+                entity.velocity.X += Math.Sign(targetVector.X - entity.velocity.X) * turnAccle;
+                entity.velocity.Y += Math.Sign(targetVector.Y - entity.velocity.Y) * turnAccle;
+
+                if (Math.Abs(targetVector.Y) < maxSpeed * 0.2 && targetVector.X * entity.velocity.X < 0)
+                {
+                    entity.velocity.Y += Math.Sign(entity.velocity.Y) * turnAccle * 2f;
+                }
+
+                if (Math.Abs(targetVector.X) < maxSpeed * 0.2 && targetVector.Y * entity.velocity.Y < 0)
+                {
+                    entity.velocity.X += Math.Sign(entity.velocity.X) * turnAccle * 2f;
+                }
+            }
+            else if (Math.Abs(targetVector.X) > Math.Abs(targetVector.Y))
+            {
+                entity.velocity.X += Math.Sign(targetVector.X - entity.velocity.X) * turnAccle * 1.1f;
+                if (Math.Abs(entity.velocity.X) + Math.Abs(entity.velocity.Y) < maxSpeed * 0.5)
+                {
+                    entity.velocity.Y += Math.Sign(entity.velocity.Y) * turnAccle;
+                }
             }
             else
             {
-                index = ModContent.GetModBossHeadSlot($"SunksBossChallenges/NPCs/LumiteTwins/{this.GetType().Name}_Head_Boss");
+                entity.velocity.Y += Math.Sign(targetVector.Y - entity.velocity.Y) * turnAccle * 1.1f;
+                if (Math.Abs(entity.velocity.X) + Math.Abs(entity.velocity.Y) < maxSpeed * 0.5)
+                {
+                    entity.velocity.X += Math.Sign(entity.velocity.X) * turnAccle;
+                }
             }
-            base.BossHeadSlot(ref index);
         }
-        public override void SendExtraAI(BinaryWriter writer)
+        public static float GetLerpValue(float from, float to, float t, bool clamped = false)
         {
-            writer.Write(brotherId);
-            writer.Write(npc.localAI[0]);
-            writer.Write(npc.localAI[1]);
-            writer.Write(npc.localAI[2]);
-            writer.Write(npc.localAI[3]);
-            base.SendExtraAI(writer);
-        }
+            if (clamped)
+            {
+                if (from < to)
+                {
+                    if (t < from)
+                        return 0f;
 
-        public override void ReceiveExtraAI(BinaryReader reader)
-        {
-            brotherId = reader.ReadInt32();
-            npc.localAI[0] = reader.ReadSingle();
-            npc.localAI[1] = reader.ReadSingle();
-            npc.localAI[2] = reader.ReadSingle();
-            npc.localAI[3] = reader.ReadSingle();
-            base.ReceiveExtraAI(reader);
+                    if (t > to)
+                        return 1f;
+                }
+                else
+                {
+                    if (t < to)
+                        return 1f;
+
+                    if (t > from)
+                        return 0f;
+                }
+            }
+
+            return (t - from) / (to - from);
         }
     }
 }

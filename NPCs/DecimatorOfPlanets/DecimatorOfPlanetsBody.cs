@@ -112,7 +112,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                 {
                     npc.chaseable = false;
                     Vector2 pivot = new Vector2(head.localAI[1], head.localAI[2]);
-                    if (npc.Distance(pivot) < DecimatorOfPlanetsArguments.R)
+                    if (Vector2.Distance(npc.Center, pivot) < DecimatorOfPlanetsArguments.R)
                     {
                         npc.Center = pivot + npc.DirectionFrom(pivot) * DecimatorOfPlanetsArguments.R;
                     }
@@ -122,7 +122,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
                     npc.chaseable = true;
                 }
 
-                if (npc.Distance(previousSegment.Center) > 6)
+                if (Vector2.Distance(npc.Center, previousSegment.Center) > 6)
                 {
                     Vector2 offset = new Vector2(0, 1f);
                     try//default behavior

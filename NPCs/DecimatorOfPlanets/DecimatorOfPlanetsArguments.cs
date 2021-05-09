@@ -12,7 +12,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
         public static float SpinSpeed
         {
             get{
-                float Speed = 20f;
+                float Speed = 24f;
                 if (Main.expertMode)
                     Speed *= 1.125f;
                 //if (Main.getGoodWorld)
@@ -24,7 +24,7 @@ namespace SunksBossChallenges.NPCs.DecimatorOfPlanets
         {
             get
             {
-                double Speed = Math.PI * 2f / 225;
+                double Speed = Math.PI * 4f / 375;
                 return Speed;
             }
         }
