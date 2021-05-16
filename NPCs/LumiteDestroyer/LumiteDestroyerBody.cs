@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
+using SunksBossChallenges.Projectiles.LumiteDestroyer;
 using SunksBossChallenges.Projectiles.DecimatorOfPlanets;
 using SunksBossChallenges.Projectiles;
 
@@ -83,7 +84,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             }
             else if (Main.npc[(int)npc.ai[1]].life <= 0 || !Main.npc[(int)npc.ai[1]].active)
             {
-                dead = true;
+                if (Main.npc[(int)npc.realLife].ai[1] >= DeathStruggleStart+5)
+                    dead = true;
             }
             if (dead)
             {
@@ -145,8 +147,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             #region Music
             if (head.ai[1] >= 0)
             {
-                if (music != mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Crystar"))
-                    music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Crystar");
+                if (music != mod.GetSoundSlot(SoundType.Music, "Sounds/Music/CyberMeteoroid"))
+                    music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/CyberMeteoroid");
             }
             #endregion
 
@@ -160,12 +162,13 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 Main.dust[num].velocity = Main.rand.NextVector2Unit(npc.rotation - 0.001f, npc.rotation + 0.001f) * 9f;
             }
 
-            npc.dontTakeDamage = (head.modNPC as LumiteDestroyerHead).CanBeTransparent();
-            if (this.SyncAttackState < DivideAttackStart)//normal state
+            npc.dontTakeDamage = (head.modNPC as LumiteDestroyerHead).CanBeTransparent()
+                || (head.modNPC as LumiteDestroyerHead).IsDeathStruggling();
+            if (npc.localAI[0] < DivideAttackStart)//normal state
             {
                 if (npc.ai[1] >= 0f && npc.ai[1] < Main.npc.Length)
                 {
-                    if (head.ai[1] >= SpinAttackStart)//spinning or preparing spinning
+                    if ((head.ai[1] >= SpinAttackStart && head.ai[1] < DeathStruggleStart) || (head.ai[1] >= DeathStruggleStart + 2 && head.ai[1] <= DeathStruggleStart + 3)) //spinning or preparing spinning
                     {
                         npc.chaseable = false;
                         Vector2 pivot = (head.modNPC as LumiteDestroyerHead).spinCenter;
@@ -214,16 +217,24 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             npc.localAI[1]--;
                             if (npc.localAI[1] <= 0 && Main.netMode != NetmodeID.MultiplayerClient)
                             {
-                                if (npc.localAI[0] == 0)
-                                    Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<DeathLaserEx>(), npc.damage / 5, 0f, Main.myPlayer, 36f, npc.target);
+                                npc.localAI[1] = 0;
+                                if (head.ai[1] == -1)
+                                {
+                                    Projectile.NewProjectile(npc.Center, npc.localAI[0].ToRotationVector2() * 20, ModContent.ProjectileType<DarkStar>(), npc.damage / 5, 0f, Main.myPlayer);
+                                }
+                                else
+                                {
+                                    if (npc.localAI[0] == 0)
+                                        Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<DeathLaserEx>(), npc.damage / 5, 0f, Main.myPlayer, 36f, npc.target);
+                                }
                             }
                         }
                     }
                 }
             }
-            else 
+            else
             {
-                if (this.SyncAttackState >= DivideAttackStart)//acting as head
+                if (npc.localAI[0] >= DivideAttackStart)//acting as head
                 {
                     var maxSpeed = 18f + player.velocity.Length() / 2;
                     float turnAcc = 0.15f;
@@ -232,11 +243,215 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         maxSpeed *= 1.125f;
                     //if (Main.getGoodWorld)
                     //    maxSpeed *= 1.25f;
-                    maxSpeed = maxSpeed * 0.9f + maxSpeed * ((npc.lifeMax - npc.life) / (float)npc.lifeMax) * 0.2f;
+                    maxSpeed = maxSpeed * 0.9f + maxSpeed * ((head.lifeMax - head.life) / (float)head.lifeMax) * 0.2f;
                     maxSpeed = Math.Max(player.velocity.Length() * 1.5f, maxSpeed);
                     if (npc.localAI[0] == DivideAttackStart + 1)
                     {
                         npc.WormMovement(player.Center + targetModifier, maxSpeed * 0.75f, turnAcc * 1.25f, ramAcc);
+                    }
+                    #region CoAttack Pattern1
+                    else if (npc.localAI[0] == DivideAttackStart + 2)
+                    {
+                        npc.WormMovementEx(player.Center + targetModifier, maxSpeed * 0.75f, turnAcc * 1.25f, ramAcc);
+                    }
+                    else if (npc.localAI[0] == DivideAttackStart + 3)
+                    {
+                        var targetPos = player.Center;
+                        int playerTileX = (int)(targetPos.X / 16f);
+                        int playerTileY = (int)(targetPos.Y / 16f);
+                        int OffgroundTile = -1;
+                        for (int i = playerTileX - 2; i <= playerTileX + 2; i++)
+                        {
+                            for (int j = playerTileY; j <= playerTileY + 18; j++)
+                            {
+                                if (WorldGen.SolidTile2(i, j))
+                                {
+                                    OffgroundTile = j;
+                                    break;
+                                }
+                            }
+                            if (OffgroundTile > 0)
+                            {
+                                break;
+                            }
+                        }
+                        if (OffgroundTile > 0)
+                        {
+                            OffgroundTile *= 16;
+                            float heightOffset = OffgroundTile - 600;
+                            if (player.Center.Y > heightOffset)
+                            {
+                                targetPos.Y = heightOffset - 200;
+                                if (Math.Abs(npc.Center.X - player.Center.X) < 500f)
+                                {
+                                    targetPos.X = targetPos.X + Math.Sign(npc.velocity.X) * 600f;
+                                }
+                                turnAcc *= 1.5f;
+                            }
+                            else
+                            {
+                                turnAcc *= 1.2f;
+                            }
+                        }
+                        else
+                        {
+                            maxSpeed *= 1.125f;//charge
+                            turnAcc *= 2f;
+                        }
+                        float speed = npc.velocity.Length();
+                        if (OffgroundTile > 0)
+                        {
+                            float num47 = maxSpeed * 1.3f;
+                            float num48 = maxSpeed * 0.7f;
+                            float num49 = npc.velocity.Length();
+                            if (num49 > 0f)
+                            {
+                                if (num49 > num47)
+                                {
+                                    npc.velocity.Normalize();
+                                    npc.velocity *= num47;
+                                }
+                                else if (num49 < num48)
+                                {
+                                    npc.velocity.Normalize();
+                                    npc.velocity *= num48;
+                                }
+                            }
+                        }
+                        npc.WormMovementEx(targetPos, maxSpeed, turnAcc);
+                    }
+                    else if (npc.localAI[0] == DivideAttackStart + 4)
+                    {
+                        var targetPos = player.Center;
+                        int playerTileX = (int)(targetPos.X / 16f);
+                        int playerTileY = (int)(targetPos.Y / 16f);
+                        int OffgroundTile = -1;
+                        for (int i = playerTileX - 2; i <= playerTileX + 2; i++)
+                        {
+                            for (int j = playerTileY; j <= playerTileY + 18; j++)
+                            {
+                                if (WorldGen.SolidTile2(i, j))
+                                {
+                                    OffgroundTile = j;
+                                    break;
+                                }
+                            }
+                            if (OffgroundTile > 0)
+                            {
+                                break;
+                            }
+                        }
+                        if (OffgroundTile > 0)
+                        {
+                            OffgroundTile *= 16;
+                            float heightOffset = OffgroundTile - 600;
+                            if (player.Center.Y > heightOffset)
+                            {
+                                targetPos.Y = heightOffset + 1200;
+                                if (Math.Abs(npc.Center.X - player.Center.X) < 500f)
+                                {
+                                    targetPos.X = targetPos.X + Math.Sign(npc.velocity.X) * 600f;
+                                }
+                                turnAcc *= 1.5f;
+                            }
+                            else
+                            {
+                                turnAcc *= 1.2f;
+                            }
+                        }
+                        else
+                        {
+                            maxSpeed *= 1.125f;//charge
+                            turnAcc *= 2f;
+                        }
+                        float speed = npc.velocity.Length();
+                        if (OffgroundTile > 0)
+                        {
+                            float num47 = maxSpeed * 1.3f;
+                            float num48 = maxSpeed * 0.7f;
+                            float num49 = npc.velocity.Length();
+                            if (num49 > 0f)
+                            {
+                                if (num49 > num47)
+                                {
+                                    npc.velocity.Normalize();
+                                    npc.velocity *= num47;
+                                }
+                                else if (num49 < num48)
+                                {
+                                    npc.velocity.Normalize();
+                                    npc.velocity *= num48;
+                                }
+                            }
+                        }
+                        npc.WormMovementEx(targetPos, maxSpeed, turnAcc);
+                    }
+                    #endregion
+                    #region CoAttack Pattern2
+                    else if (npc.localAI[0] == DivideAttackStart + 5)
+                    {
+                        Vector2 dest = player.Center + Vector2.UnitY * npc.localAI[1] * LumiteDestroyerArguments.R / 2
+                            + Vector2.UnitX * (head.ai[3]) * LumiteDestroyerArguments.R * 1.8f;
+                        if (npc.localAI[2] <= 10)
+                        {
+                            npc.FastMovement(dest);
+                        }
+                        else if (npc.localAI[2] < 75)
+                        {
+                            npc.HoverMovementEx(dest, maxSpeed, 0.8f);
+                        }
+                        else if (npc.localAI[2] < 225)
+                        {
+                            npc.velocity.Y = 0;
+                            if (npc.localAI[2] == 135 && Main.netMode != NetmodeID.MultiplayerClient)
+                            {
+                                var velocity = Vector2.UnitX * Math.Sign(player.Center.X - npc.Center.X);
+                                Projectile.NewProjectile(npc.Center, velocity, ModContent.ProjectileType<DestroyerDeathRay>(), npc.damage, 0f, Main.myPlayer, 90, npc.whoAmI);
+                            }
+                            npc.WormMovement(npc.Center + new Vector2(1000, 0) * (-head.ai[3]), maxSpeed * 1.35f, turnAcc, ramAcc);
+                        }
+                        npc.localAI[2]++;
+                    }
+                    else if (npc.localAI[0] == DivideAttackStart + 6)
+                    {
+                        Vector2 dest = player.Center + Vector2.UnitX * npc.localAI[1] * LumiteDestroyerArguments.R / 2
+                            + Vector2.UnitY * (head.ai[3]) * LumiteDestroyerArguments.R * 1.8f;
+                        if (npc.localAI[2] <= 10)
+                        {
+                            npc.FastMovement(dest);
+                        }
+                        else if (npc.localAI[2] < 75)
+                        {
+                            npc.HoverMovementEx(dest, maxSpeed, 0.8f);
+                        }
+                        else if (npc.localAI[2] < 225)
+                        {
+                            npc.velocity.X = 0;
+                            if (npc.localAI[2] == 135 && Main.netMode != NetmodeID.MultiplayerClient)
+                            {
+                                var velocity = Vector2.UnitY * Math.Sign(player.Center.Y - npc.Center.Y);
+                                Projectile.NewProjectile(npc.Center, velocity, ModContent.ProjectileType<DestroyerDeathRay>(), npc.damage, 0f, Main.myPlayer, 90, npc.whoAmI);
+                            }
+                            npc.WormMovement(npc.Center + new Vector2(0, 1000) * (-head.ai[3]), maxSpeed * 1.35f, turnAcc, ramAcc);
+                        }
+                        npc.localAI[2]++;
+                    }
+                    #endregion
+                    else if (npc.localAI[0] == DivideAttackStart + DivideAILength - 1)
+                    {
+                        npc.localAI[2]++;
+                        var fakeCenter = (head.modNPC as LumiteDestroyerHead).spinCenter;
+                        var center = fakeCenter + head.ai[3].ToRotationVector2().RotatedBy(npc.localAI[1])
+                            * LumiteDestroyerArguments.R * 1.25f;
+                        npc.HoverMovementEx(center, maxSpeed, 0.6f);
+                        if (Main.netMode != NetmodeID.MultiplayerClient && npc.localAI[2]>=150 && npc.localAI[2] % 5 == 0)
+                        {
+                            Projectile.NewProjectile(npc.Center, (fakeCenter - npc.Center).SafeNormalize(Vector2.Zero) * 5f, ModContent.ProjectileType<DeathLaserEx>(), npc.damage / 5, 0f, Main.myPlayer, 90f, -1);
+                        }
+                    }
+                    else if (npc.localAI[0] == DivideAttackStart + DivideAILength)
+                    {
+                        npc.WormMovement(player.Center + targetModifier, maxSpeed / 2, turnAcc, ramAcc / 2);
                     }
 
                     npc.rotation = npc.velocity.ToRotation();
@@ -257,7 +472,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 mod.GetTexture("NPCs/LumiteDestroyer/LumiteDestroyerBody_Glow") 
                 : mod.GetTexture("NPCs/LumiteDestroyer/LumiteDestroyerTail_Glow");
             NPC head = Main.npc[npc.realLife];
-            Color color = head.ai[1] != 1 ? Color.White : Color.Lerp(Color.White, Color.Red, (float)Math.Sin(MathHelper.Pi / 14 * npc.localAI[2]));
+            Color glowColor = head.ai[1] != 1 ? Color.White : Color.Lerp(Color.White, Color.Red, (float)Math.Sin(MathHelper.Pi / 14 * npc.localAI[2]));
             SpriteEffects effects = (npc.direction < 0) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             var mainColor = drawColor;
             if (head.ai[1] == 2)
@@ -268,7 +483,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     {
                         float k = 1 - (float)i / NPCID.Sets.TrailCacheLength[npc.type];
                         spriteBatch.Draw(texture2D, npc.oldPos[i] + npc.Size / 2 - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), drawColor * k * npc.Opacity, npc.oldRot[i] + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
-                        spriteBatch.Draw(DestTexture, npc.oldPos[i] + npc.Size / 2 - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), color * 0.75f * npc.Opacity * k, npc.oldRot[i] + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
+                        spriteBatch.Draw(DestTexture, npc.oldPos[i] + npc.Size / 2 - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), glowColor * 0.75f * npc.Opacity * k, npc.oldRot[i] + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
                     }
                 }
                 else
@@ -276,8 +491,33 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     mainColor *= 0.5f;
                 }
             }
+            else if ((head.ai[1] == DivideAttackStart + 5) || (head.ai[1] == DivideAttackStart + 6))
+            {
+                if (head.ai[2] >= 10)
+                {
+                    if(npc.localAI[0]==DivideAttackStart+5)
+                        npc.DrawAim(spriteBatch, npc.Center + new Vector2(LumiteDestroyerArguments.R, 0) * 2 * (-head.ai[3]), Color.Red);
+                    if(npc.localAI[0]==DivideAttackStart+6)
+                        npc.DrawAim(spriteBatch, npc.Center + new Vector2(0, LumiteDestroyerArguments.R) * 2 * (-head.ai[3]), Color.Red);
+                }
+            }
+            else if (head.ai[1] == DeathStruggleStart + 4)
+            {
+                if (head.ai[2] >= 240)
+                {
+                    float alpha = 1 - (head.ai[2] - 240) / 240;
+                    if (alpha < 0) alpha = 0;
+                    glowColor *= alpha;
+                    mainColor = Color.Lerp(mainColor, Color.Black, alpha / 2);
+                }
+            }
+            else if (head.ai[1] == DeathStruggleStart + 5)
+            {
+                glowColor *= 0;
+                mainColor = Color.Lerp(mainColor, Color.Black, 0.5f);
+            }
             spriteBatch.Draw(texture2D, npc.Center - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), mainColor * npc.Opacity, npc.rotation + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
-            spriteBatch.Draw(DestTexture, npc.Center - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), color * 0.75f * npc.Opacity, npc.rotation + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
+            spriteBatch.Draw(DestTexture, npc.Center - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), glowColor * 0.75f * npc.Opacity, npc.rotation + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
             return false;
         }
 
@@ -292,6 +532,14 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 index = -1;
             }
             base.BossHeadSlot(ref index);
+        }
+        public override bool CheckDead()
+        {
+            if (npc.realLife != -1 && Main.npc[npc.realLife].type == ModContent.NPCType<LumiteDestroyerHead>())
+            {
+                return Main.npc[npc.realLife].ai[1] >= DeathStruggleStart + 5;
+            }
+            return true;
         }
 
         public override void SendExtraAI(BinaryWriter writer)

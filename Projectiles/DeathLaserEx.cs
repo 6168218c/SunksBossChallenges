@@ -59,7 +59,7 @@ namespace SunksBossChallenges.Projectiles
                     }
                     else
                     {
-                        projectile.velocity = Vector2.Normalize(projectile.velocity) * (length + maxAccle);
+                        projectile.velocity = Vector2.Normalize(projectile.velocity) * (length + maxAccle * 2.5f);
                     }
                 }
             }
@@ -86,11 +86,12 @@ namespace SunksBossChallenges.Projectiles
             }*/
             for (int i = 0; i < ProjectileID.Sets.TrailCacheLength[projectile.type] - 1; i++)
             {
+                int cacheLen = ProjectileID.Sets.TrailCacheLength[projectile.type];
                 //int i2 = (int)(i + projectile.ai[0]) % (ProjectileID.Sets.TrailCacheLength[projectile.type] - 1);
                 Rectangle rect = new Rectangle(0, 5 * i, 84, 5 * (i + 1));  //10 84
                 float len = (projectile.oldPos[i + 1] - projectile.oldPos[i]).Length();
                 if (projectile.oldPos[i + 1] == Vector2.Zero || projectile.oldPos[i] == Vector2.Zero) continue;
-                Vector2 scale = new Vector2(0.2f, len / 10);
+                Vector2 scale = new Vector2(0.2f * (cacheLen - i) / cacheLen, len / 10);
                 float ops = (50f - i) / 50f;
                 Vector2 MidCenter = (projectile.oldPos[i] + projectile.oldPos[i + 1]) / 2 + projectile.Size / 2;
                 spriteBatch.Draw(TrailTex, MidCenter - Main.screenPosition, rect, glow2 * ops, projectile.oldRot[i], rect.Size() / 2, scale, SpriteEffects.None, 0);

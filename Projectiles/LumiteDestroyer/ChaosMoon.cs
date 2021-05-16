@@ -12,11 +12,11 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
     public class ChaosMoon:ModProjectile
     {
         float planetDistance = 24;
-        readonly float GFactor = 3600;
+        readonly float GFactor = 3900;
         float maxSpeed = 20f;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Chaos Planet");
+            DisplayName.SetDefault("Chaos Moon");
             ProjectileID.Sets.TrailCacheLength[projectile.type] = 15;
             ProjectileID.Sets.TrailingMode[projectile.type] = 2;
         }
@@ -85,7 +85,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     }
                 }
             }
-
+            if (projectile.velocity.Compare(6) < 0) projectile.velocity = projectile.velocity.SafeNormalize(Vector2.UnitY) * 6;
             if (!othersLeft)
                 projectile.velocity = Vector2.Normalize(projectile.velocity) * maxSpeed;
 

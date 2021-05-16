@@ -43,11 +43,11 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
             {
                 projectile.alpha = 255;
             }
-            if (projectile.localAI[0] == 75)
+            if (projectile.localAI[0] == 60)
             {
                 projectile.alpha = 0;
                 Vector2 target = new Vector2(projectile.ai[0], projectile.ai[1]) - projectile.Center;
-                projectile.velocity = Vector2.Normalize(target) * Speed * 2f;
+                projectile.velocity = Vector2.Normalize(target) * Speed * 1.6f;
                 projectile.rotation = projectile.velocity.ToRotation() + MathHelper.PiOver2;
             }
         }
@@ -65,8 +65,8 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
 
         public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
         {
-            Texture2D aimTexture = mod.GetTexture("Projectiles/DecimatorOfPlanets/LaserBarrageAim");
-            if (projectile.localAI[0] >= 10 && projectile.localAI[0] <= 50)
+            Texture2D aimTexture = mod.GetTexture("Projectiles/AimLine");
+            if (projectile.localAI[0] >= 0 && projectile.localAI[0] <= 45)
             {
                 Vector2 endpoint = new Vector2(projectile.ai[0], projectile.ai[1]);
                 endpoint += endpoint - projectile.Center;
@@ -77,9 +77,23 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
                 {
                     Vector2 drawPos = projectile.Center + unit * k - Main.screenPosition;
                     Color alphaCenter = (((int)projectile.localAI[0] / 15) % 2 == 0) ? Color.CornflowerBlue : Color.BlueViolet;
+                    if (projectile.localAI[0] >= 30)
+                    {
+                        alphaCenter *= (45 - projectile.localAI[0]) / 15f;
+                    }
                     spriteBatch.Draw(aimTexture, drawPos, null, alphaCenter, k, new Vector2(2, 2), 1f, SpriteEffects.None, 0f);
                 }
             }
+            Texture2D glow = mod.GetTexture("Projectiles/DecimatorOfPlanets/DarkStar_Glow");
+            int rect1 = glow.Height / Main.projFrames[projectile.type];
+            int rect2 = rect1 * projectile.frame;
+            Rectangle glowrectangle = new Rectangle(0, rect2, glow.Width, rect1);
+            Vector2 gloworigin2 = glowrectangle.Size() / 2f;
+            Color glowcolor = Color.Lerp(new Color(255, 100, 100, 150), Color.Transparent, 0.8f);
+            Vector2 drawCenter = projectile.Center - (projectile.velocity.SafeNormalize(Vector2.UnitX) * 14);
+
+            Main.spriteBatch.Draw(glow, drawCenter - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(glowrectangle),//create small, non transparent trail texture
+                   projectile.GetAlpha(lightColor), projectile.velocity.ToRotation() + MathHelper.PiOver2, gloworigin2, projectile.scale, SpriteEffects.None, 0f);
             return base.PreDraw(spriteBatch, lightColor);
         }
 

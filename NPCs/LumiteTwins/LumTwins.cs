@@ -176,7 +176,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
         }
         protected void HoverMovement(Vector2 dist,float maxSpeed,float accle)
         {
-            Vector2 velo = dist - npc.Center;
+            Vector2 velo = dist - npc.Center - npc.velocity;
             velo *= maxSpeed / velo.Length();
             if (npc.velocity.X < velo.X)
             {
@@ -214,7 +214,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 
         protected void DrawAim(SpriteBatch spriteBatch, Vector2 endpoint,Color color)
         {
-            Texture2D aimTexture = mod.GetTexture("NPCs/LumiteTwins/RayAim");
+            Texture2D aimTexture = mod.GetTexture("Projectiles/AimLine");
             Vector2 unit = endpoint - npc.Center;
             float length = unit.Length();
             unit.Normalize();
