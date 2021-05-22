@@ -29,6 +29,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
             projectile.hostile = true;
             projectile.tileCollide = false;
             projectile.ignoreWater = true;
+            projectile.alpha = 255;
         }
 
         public override void AI()
@@ -77,6 +78,10 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
                 {
                     Vector2 drawPos = projectile.Center + unit * k - Main.screenPosition;
                     Color alphaCenter = (((int)projectile.localAI[0] / 15) % 2 == 0) ? Color.CornflowerBlue : Color.BlueViolet;
+                    if (projectile.localAI[0] <= 10)
+                    {
+                        alphaCenter *= projectile.localAI[0] / 10f;
+                    }
                     if (projectile.localAI[0] >= 30)
                     {
                         alphaCenter *= (45 - projectile.localAI[0]) / 15f;

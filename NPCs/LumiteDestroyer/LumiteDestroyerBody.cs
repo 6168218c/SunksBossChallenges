@@ -19,7 +19,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("LD-002 \"Destruction\"");
+            DisplayName.SetDefault("LM-002 \"Annhilation\"");
             NPCID.Sets.TrailingMode[npc.type] = 3;
             NPCID.Sets.TrailCacheLength[npc.type] = 2;
             Main.npcFrameCount[npc.type] = 3;
@@ -84,14 +84,25 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             }
             else if (Main.npc[(int)npc.ai[1]].life <= 0 || !Main.npc[(int)npc.ai[1]].active)
             {
-                if (Main.npc[(int)npc.realLife].ai[1] >= DeathStruggleStart+5)
+                if (Main.npc[(int)npc.realLife].type != ModContent.NPCType<LumiteDestroyerHead>() || !Main.npc[(int)npc.realLife].active
+                    || Main.npc[(int)npc.realLife].ai[1] >= DeathStruggleStart + 5)
                     dead = true;
+            }
+            if (Main.npc[(int)npc.realLife].type != ModContent.NPCType<LumiteDestroyerHead>() || !Main.npc[(int)npc.realLife].active)
+            {
+                dead = true;
             }
             if (dead)
             {
-                npc.life = 0;
-                npc.HitEffect(0, 10.0);
-                npc.checkDead();
+                npc.ai[2]++;
+
+                if (npc.ai[2] >= npc.localAI[3])
+                {
+                    npc.life = 0;
+                    npc.HitEffect(0, 10.0);
+                    npc.checkDead();
+                }
+                return;
             }
             Player player = Main.player[npc.target];
             Vector2 targetModifier = player.velocity;
@@ -147,8 +158,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             #region Music
             if (head.ai[1] >= 0)
             {
-                if (music != mod.GetSoundSlot(SoundType.Music, "Sounds/Music/CyberMeteoroid"))
-                    music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/CyberMeteoroid");
+                if (music != mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Revenger"))
+                    music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Revenger");
             }
             #endregion
 
@@ -218,7 +229,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             if (npc.localAI[1] <= 0 && Main.netMode != NetmodeID.MultiplayerClient)
                             {
                                 npc.localAI[1] = 0;
-                                if (head.ai[1] == -1)
+                                if (head.ai[1] == -2)
                                 {
                                     Projectile.NewProjectile(npc.Center, npc.localAI[0].ToRotationVector2() * 20, ModContent.ProjectileType<DarkStar>(), npc.damage / 5, 0f, Main.myPlayer);
                                 }
@@ -247,7 +258,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     maxSpeed = Math.Max(player.velocity.Length() * 1.5f, maxSpeed);
                     if (npc.localAI[0] == DivideAttackStart + 1)
                     {
-                        npc.WormMovement(player.Center + targetModifier, maxSpeed * 0.75f, turnAcc * 1.25f, ramAcc);
+                        npc.WormMovement(npc.Center + npc.velocity * 600f, maxSpeed * 0.75f, turnAcc * 1.25f, ramAcc);
                     }
                     #region CoAttack Pattern1
                     else if (npc.localAI[0] == DivideAttackStart + 2)
@@ -347,7 +358,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             float heightOffset = OffgroundTile - 600;
                             if (player.Center.Y > heightOffset)
                             {
-                                targetPos.Y = heightOffset + 1200;
+                                targetPos.Y = heightOffset + 600;
                                 if (Math.Abs(npc.Center.X - player.Center.X) < 500f)
                                 {
                                     targetPos.X = targetPos.X + Math.Sign(npc.velocity.X) * 600f;
@@ -390,8 +401,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     #region CoAttack Pattern2
                     else if (npc.localAI[0] == DivideAttackStart + 5)
                     {
-                        Vector2 dest = player.Center + Vector2.UnitY * npc.localAI[1] * LumiteDestroyerArguments.R / 2
-                            + Vector2.UnitX * (head.ai[3]) * LumiteDestroyerArguments.R * 1.8f;
+                        Vector2 dest = player.Center + Vector2.UnitY * npc.localAI[1] * LumiteDestroyerArguments.R
+                            + Vector2.UnitX * (head.ai[3]) * LumiteDestroyerArguments.R * 1.5f;
                         if (npc.localAI[2] <= 10)
                         {
                             npc.FastMovement(dest);
@@ -414,7 +425,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     }
                     else if (npc.localAI[0] == DivideAttackStart + 6)
                     {
-                        Vector2 dest = player.Center + Vector2.UnitX * npc.localAI[1] * LumiteDestroyerArguments.R / 2
+                        Vector2 dest = player.Center + Vector2.UnitX * npc.localAI[1] * LumiteDestroyerArguments.R
                             + Vector2.UnitY * (head.ai[3]) * LumiteDestroyerArguments.R * 1.8f;
                         if (npc.localAI[2] <= 10)
                         {
@@ -472,7 +483,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 mod.GetTexture("NPCs/LumiteDestroyer/LumiteDestroyerBody_Glow") 
                 : mod.GetTexture("NPCs/LumiteDestroyer/LumiteDestroyerTail_Glow");
             NPC head = Main.npc[npc.realLife];
-            Color glowColor = head.ai[1] != 1 ? Color.White : Color.Lerp(Color.White, Color.Red, (float)Math.Sin(MathHelper.Pi / 14 * npc.localAI[2]));
+            Color glowColor = head.ai[1] != 1 ? Color.White : Color.Lerp(Color.White, Color.Black, (float)Math.Sin(MathHelper.Pi / 14 * npc.localAI[2]));
             SpriteEffects effects = (npc.direction < 0) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             var mainColor = drawColor;
             if (head.ai[1] == 2)
@@ -496,9 +507,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 if (head.ai[2] >= 10)
                 {
                     if(npc.localAI[0]==DivideAttackStart+5)
-                        npc.DrawAim(spriteBatch, npc.Center + new Vector2(LumiteDestroyerArguments.R, 0) * 2 * (-head.ai[3]), Color.Red);
+                        npc.DrawAim(spriteBatch, npc.Center + new Vector2(LumiteDestroyerArguments.R, 0) * 5 * (-head.ai[3]), Color.Red);
                     if(npc.localAI[0]==DivideAttackStart+6)
-                        npc.DrawAim(spriteBatch, npc.Center + new Vector2(0, LumiteDestroyerArguments.R) * 2 * (-head.ai[3]), Color.Red);
+                        npc.DrawAim(spriteBatch, npc.Center + new Vector2(0, LumiteDestroyerArguments.R) * 5 * (-head.ai[3]), Color.Red);
                 }
             }
             else if (head.ai[1] == DeathStruggleStart + 4)
@@ -535,7 +546,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         }
         public override bool CheckDead()
         {
-            if (npc.realLife != -1 && Main.npc[npc.realLife].type == ModContent.NPCType<LumiteDestroyerHead>())
+            if (npc.realLife != -1 && Main.npc[npc.realLife].type == ModContent.NPCType<LumiteDestroyerHead>() && Main.npc[npc.realLife].active)
             {
                 return Main.npc[npc.realLife].ai[1] >= DeathStruggleStart + 5;
             }

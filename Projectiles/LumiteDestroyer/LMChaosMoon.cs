@@ -9,10 +9,10 @@ using SunksBossChallenges.NPCs.LumiteDestroyer;
 
 namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 {
-    public class ChaosMoon:ModProjectile
+    public class LMChaosMoon:ModProjectile
     {
         float planetDistance = 24;
-        readonly float GFactor = 3900;
+        readonly float GFactor = 4200;
         float maxSpeed = 20f;
         public override void SetStaticDefaults()
         {
@@ -85,7 +85,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     }
                 }
             }
-            if (projectile.velocity.Compare(6) < 0) projectile.velocity = projectile.velocity.SafeNormalize(Vector2.UnitY) * 6;
+            if (projectile.velocity.Compare(3) < 0) projectile.velocity = projectile.velocity.SafeNormalize(Vector2.UnitY) * 3;
             if (!othersLeft)
                 projectile.velocity = Vector2.Normalize(projectile.velocity) * maxSpeed;
 

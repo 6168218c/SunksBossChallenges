@@ -9,6 +9,7 @@ using SunksBossChallenges.NPCs.DecimatorOfPlanets;
 
 namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
 {
+    //Original Author:FargoWilta(https://github.com/FargoWilta)
     public class DarkStar:ModProjectile
     {
         public override string Texture => "Terraria/Projectile_" + ProjectileID.FallingStar;
@@ -93,7 +94,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
             int rect2 = rect1 * projectile.frame;
             Rectangle glowrectangle = new Rectangle(0, rect2, glow.Width, rect1);
             Vector2 gloworigin2 = glowrectangle.Size() / 2f;
-            Color glowcolor = Color.Lerp(new Color(255, 100, 100, 150), Color.Transparent, 0.8f);
+            Color glowcolor = Color.Lerp(new Color(180, 100, 180, 150), Color.Transparent, 0.8f);
             Vector2 drawCenter = projectile.Center - (projectile.velocity.SafeNormalize(Vector2.UnitX) * 14);
 
             Main.spriteBatch.Draw(glow, drawCenter - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(glowrectangle),//create small, non transparent trail texture

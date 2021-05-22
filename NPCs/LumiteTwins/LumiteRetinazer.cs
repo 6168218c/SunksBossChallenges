@@ -18,7 +18,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 	{
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault(@"LR-003 ""Radioactive""");
+            DisplayName.SetDefault(@"LS-003 ""Radioactive""");
 			Main.npcFrameCount[npc.type] = Main.npcFrameCount[NPCID.Retinazer];
 			NPCID.Sets.TrailingMode[npc.type] = NPCID.Sets.TrailingMode[NPCID.Retinazer];
 			NPCID.Sets.TrailCacheLength[npc.type] = NPCID.Sets.TrailCacheLength[NPCID.Retinazer];

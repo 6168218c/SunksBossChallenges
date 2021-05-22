@@ -13,7 +13,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("LD-002 \"Destruction\"");
+            DisplayName.SetDefault("LM-002 \"Annhilation\"");
             NPCID.Sets.TrailingMode[npc.type] = 3;
             NPCID.Sets.TrailCacheLength[npc.type] = 16;
             Main.npcFrameCount[npc.type] = Main.npcFrameCount[NPCID.TheDestroyerTail];
