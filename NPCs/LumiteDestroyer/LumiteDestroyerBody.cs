@@ -92,14 +92,18 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             {
                 dead = true;
             }
+            
+            if (Main.npc[(int)npc.realLife].target < 0 || Main.npc[(int)npc.realLife].target == 255 || Main.player[Main.npc[(int)npc.realLife].target].dead)
+            {
+                if (npc.localAI[0] >= DivideAttackStart)//acting as head
+                {
+                    npc.WormMovement(npc.Center + new Vector2(0, -900f), 25f);
+                    npc.rotation = npc.velocity.ToRotation();
+                }
+            }
             if (dead)
             {
                 npc.ai[2]++;
-				if (npc.localAI[0] >= DivideAttackStart)//acting as head
-                {
-					npc.WormMovement(npc.Center + new Vector2(0, -900f), 25f);
-                    npc.rotation = npc.velocity.ToRotation();
-				}
 				
                 if (npc.ai[2] >= npc.localAI[3])
                 {
@@ -163,8 +167,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             #region Music
             if (head.ai[1] >= 0)
             {
-                if (music != mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Revenger"))
-                    music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Revenger");
+                if (music != mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Frontier"))
+                    music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Frontier");
             }
             #endregion
 
@@ -411,12 +415,16 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     else if (npc.localAI[0] == DivideAttackStart + 6)
                     {
                         npc.localAI[2]++;//the head will create the aim
-                        if (npc.localAI[2] == 75)
+                        if (npc.localAI[2] < 144)
+                        {
+                            npc.WormMovementEx(player.Center + targetModifier, maxSpeed * 0.6f, turnAcc * 1.25f, ramAcc);
+                        }
+                        else if (npc.localAI[2] == 144)
                         {
                             Projectile aim = Main.projectile[(int)npc.localAI[1]];
                             Vector2 endpoint = new Vector2(aim.ai[0], aim.ai[1]);
                             npc.Center = aim.Center;
-                            npc.velocity = (endpoint - npc.Center).SafeNormalize(Vector2.Zero) * maxSpeed * 3f;
+                            npc.velocity = (endpoint - npc.Center).SafeNormalize(Vector2.Zero) * maxSpeed / 3;
                             int i = npc.whoAmI;
                             int counter = 0;
                             while (i != -1)
@@ -432,7 +440,20 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             }
                             aim.Kill();
                         }
-                        if (npc.localAI[2] >= 120)
+                        else if (npc.localAI[2] > 144)
+                        {
+                            if (npc.velocity.Compare(maxSpeed * 1.5f) < 0) npc.velocity *= 1.2f;
+                            if (npc.ai[2] % 6 == 2 && Main.netMode != NetmodeID.MultiplayerClient)
+                            {
+                                var direction = npc.velocity.SafeNormalize(Vector2.UnitY);
+                                Vector2 target = npc.Center +
+                                    Vector2.Lerp(direction, Vector2.UnitX * Math.Sign(player.Center.X - npc.Center.X), 0.8f) * Math.Max(1800, Math.Abs(player.Center.X - npc.Center.X));
+                                Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<Projectiles.DecimatorOfPlanets.LaserBarrage>(),
+                                    npc.damage / 6, 0f, Main.myPlayer, target.X, target.Y);
+
+                            }
+                        }
+                        if (npc.localAI[2] >= 180)
                         {
                             npc.localAI[0] = DivideAttackStart + 5;
                             npc.localAI[1] = 0;
@@ -479,9 +500,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             Color glowColor = head.ai[1] != 1 ? Color.White : Color.Lerp(Color.White, Color.Black, (float)Math.Sin(MathHelper.Pi / 14 * npc.localAI[2]));
             SpriteEffects effects = (npc.direction < 0) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             var mainColor = drawColor;
-            if (head.ai[1] == 2)
+            if (head.ai[1] == 3)
             {
-                if (head.ai[2] >= 200)
+                if (head.ai[2] >= 240)
                 {
                     for (int i = 0; i < NPCID.Sets.TrailCacheLength[npc.type]; i++)
                     {
@@ -497,13 +518,13 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             }
             else if ((head.ai[1] == DivideAttackStart + 5) || (head.ai[1] == DivideAttackStart + 6))
             {
-                if (head.ai[2] >= 10)
+                /*if (head.ai[2] >= 10)
                 {
                     if(npc.localAI[0]==DivideAttackStart+5)
                         npc.DrawAim(spriteBatch, npc.Center + new Vector2(LumiteDestroyerArguments.R, 0) * 5 * (-head.ai[3]), Color.Red);
                     if(npc.localAI[0]==DivideAttackStart+6)
                         npc.DrawAim(spriteBatch, npc.Center + new Vector2(0, LumiteDestroyerArguments.R) * 5 * (-head.ai[3]), Color.Red);
-                }
+                }*/
             }
             else if (head.ai[1] == DeathStruggleStart + 4)
             {

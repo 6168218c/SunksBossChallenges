@@ -30,7 +30,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             projectile.ignoreWater = true;
             projectile.tileCollide = false;
 
-            projectile.timeLeft = 1200;
+            projectile.timeLeft = 450;
             projectile.extraUpdates = 0;
             cooldownSlot = 1;
             projectile.penetrate = -1;

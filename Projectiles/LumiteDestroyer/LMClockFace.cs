@@ -39,7 +39,37 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             projectile.alpha -= 25;
             if (projectile.alpha < 0) projectile.alpha = 0;
             //Player player = Main.player[(int)projectile.ai[0]];
-            projectile.Center = (player.Center + projectile.Center * 64) / 65;
+            if (head.ai[1] == 3)
+            {
+                if(head.ai[2] <= 180)
+                    projectile.Center = (player.Center + projectile.Center * 64) / 65;
+                if (head.ai[2] == 270 && Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    if (Main.rand.NextBool())
+                    {
+                        Vector2 unit = -Vector2.UnitY;
+                        for (int i = 0; i < 12; i++)
+                        {
+                            Vector2 projPos = projectile.Center + unit * ClockR;
+                            Projectile.NewProjectile(projPos, unit * 8f, ModContent.ProjectileType<DeathLaserEx>(),
+                                projectile.damage / 5, 0f, projectile.owner, 36f, head.target);
+                            unit = unit.RotatedBy(-MathHelper.Pi / 6);
+                        }
+                    }
+                    else
+                    {
+                        Vector2 unit = -Vector2.UnitY;
+                        for (int i = 0; i < 12; i++)
+                        {
+                            Vector2 projPos = projectile.Center + unit * ClockR;
+                            Projectile.NewProjectile(projPos, unit * 6f, ModContent.ProjectileType<DecimatorOfPlanets.LaserBarrage>(),
+                                projectile.damage / 5, 0f, projectile.owner, Main.player[head.target].Center.X, Main.player[head.target].Center.Y);
+                            unit = unit.RotatedBy(-MathHelper.Pi / 6);
+                        }
+                    }
+                }
+                //head.localAI[0] = projectile.whoAmI;
+            }
             if (player.DistanceSQ(projectile.Center) > ClockR * ClockR)
             {
                 player.Center = projectile.Center + player.DirectionFrom(projectile.Center) * ClockR;
@@ -62,7 +92,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
         {
             Texture2D aimTexture = SunksBossChallenges.Instance.GetTexture("Projectiles/AimLine");
-            var color = Color.BlueViolet * projectile.Opacity;
+            var color = Color.Yellow * projectile.Opacity;
             for(int i = 0; i < 750; i++)//draw the circle
             {
                 float rotation = i * MathHelper.TwoPi / 750;

@@ -29,12 +29,18 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             projectile.light = 0.8f;
             projectile.hostile = true;
             projectile.penetrate = -1;
+            projectile.alpha = 255;
 
             cooldownSlot = 1;
             projectile.scale = 0.5f;
             projectile.tileCollide = false;
             projectile.ignoreWater = true;
             projectile.aiStyle = -1;
+        }
+        protected void LoomUp(int rate=42)
+        {
+            projectile.alpha += rate;
+            if (projectile.alpha < 0) projectile.alpha = 0;
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
         {

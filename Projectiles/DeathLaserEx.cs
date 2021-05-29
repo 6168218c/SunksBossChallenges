@@ -7,7 +7,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
 using Terraria.Graphics.Shaders;
-using SunksBossChallenges.Effects;
 
 namespace SunksBossChallenges.Projectiles
 {

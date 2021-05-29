@@ -30,18 +30,18 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         }
         public override void AI()
         {
-            if (projectile.ai[0] == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+            if (projectile.ai[1] == 0 && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 Projectile.NewProjectile(projectile.Center, Vector2.Zero, ModContent.ProjectileType<LMPlanetMoon>(),
                     projectile.damage, 0f, projectile.owner, -1, projectile.whoAmI);
                 Projectile.NewProjectile(projectile.Center, Vector2.Zero, ModContent.ProjectileType<LMPlanetMoon>(),
                     projectile.damage, 0f, projectile.owner, 1, projectile.whoAmI);
             }
-            projectile.ai[0]++;
-            if (projectile.ai[0] >= 150)
+            projectile.ai[1]++;
+            if (projectile.ai[1] >= 150)
             {
                 projectile.SlowDown(0.98f);
-                if (projectile.velocity == Vector2.Zero)
+                if (projectile.velocity == Vector2.Zero || projectile.velocity.Compare(projectile.ai[0]) < 0)
                 {
                     projectile.Kill();
                 }
@@ -52,6 +52,10 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
     {
         public override string Texture => "SunksBossChallenges/Projectiles/LumiteDestroyer/LMChaosMoon";
         public float Omega => 0.1f;
+        public override void SetDefaults()
+        {
+            base.SetDefaults();
+        }
         public override void AI()
         {
             Projectile parent = Main.projectile[(int)projectile.ai[1]];

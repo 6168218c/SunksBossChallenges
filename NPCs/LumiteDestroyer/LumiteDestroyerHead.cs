@@ -96,7 +96,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         void SwitchToRandomly(float normalAI1, float randomAI1, float possibility)
         {
             randomCorrecter++;
-            if ((Main.rand.NextFloat() < possibility && randomCorrecter > 2) || randomCorrecter == 6)//at least one divide attack every 6 attacks
+            if ((Main.rand.NextFloat() < possibility && randomCorrecter > 2) || randomCorrecter == 8)//at least one divide attack every 6 attacks
             {
                 randomCorrecter = 0;
                 SwitchTo(randomAI1);
@@ -140,51 +140,47 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         public override bool? DrawHealthBar(byte hbPosition, ref float scale, ref Vector2 position)
         {
             scale = 1.5f;
-            if (npc.ai[1] >= DivideAttackStart && npc.ai[1] <= DivideAttackStart + DivideAILength)
+            Vector2 value = default(Vector2);
+            float num2 = 999999f;
+            for(int i = 0; i < Main.npc.Length; i++)
             {
-                Vector2 value = default(Vector2);
-                float num2 = 999999f;
-                for(int i = 0; i < Main.npc.Length; i++)
+                if (Main.npc[i].active && 
+                    (Main.npc[i].type==ModContent.NPCType<LumiteDestroyerHead>()
+                    || Main.npc[i].type == ModContent.NPCType<LumiteDestroyerTail>()
+                    || Main.npc[i].type == ModContent.NPCType<LumiteDestroyerBody>()))
                 {
-                    if (Main.npc[i].active && 
-                        (Main.npc[i].type==ModContent.NPCType<LumiteDestroyerHead>()
-                        || Main.npc[i].type == ModContent.NPCType<LumiteDestroyerTail>()
-                        || Main.npc[i].type == ModContent.NPCType<LumiteDestroyerBody>()))
+                    Vector2 vector = Main.player[Main.myPlayer].Center - Main.npc[i].Center;
+                    if (vector.Length() < num2 && Collision.CanHit(Main.player[Main.myPlayer].Center, 1, 1, Main.npc[i].Center, 1, 1))
                     {
-                        Vector2 vector = Main.player[Main.myPlayer].Center - Main.npc[i].Center;
-                        if (vector.Length() < num2 && Collision.CanHit(Main.player[Main.myPlayer].Center, 1, 1, Main.npc[i].Center, 1, 1))
-                        {
-                            num2 = vector.Length();
-                            value = Main.npc[i].Center;
-                        }
+                        num2 = vector.Length();
+                        value = Main.npc[i].Center;
                     }
                 }
-                if (!Main.gamePaused)
+            }
+            if (!Main.gamePaused)
+            {
+                if (num2 < (float)Main.screenWidth)
                 {
-                    if (num2 < (float)Main.screenWidth)
+                    if (healBarPos.X < 100f && healBarPos.Y < 100f)
                     {
-                        if (healBarPos.X < 100f && healBarPos.Y < 100f)
-                        {
-                            healBarPos = value;
-                        }
-                        else
-                        {
-                            healBarPos = (healBarPos * 49f + value) / 50f;
-                        }
-                        position = healBarPos;
+                        healBarPos = value;
                     }
                     else
                     {
-                        healBarPos = new Vector2(0f, 0f);
+                        healBarPos = (healBarPos * 49f + value) / 50f;
                     }
+                    position = healBarPos;
                 }
                 else
                 {
-                    position = healBarPos;
+                    healBarPos = new Vector2(0f, 0f);
                 }
-                return true;
-            } 
-            return base.DrawHealthBar(hbPosition, ref scale, ref position);
+            }
+            else
+            {
+                position = healBarPos;
+            }
+            return true;
         }
 
         public override bool? CanBeHitByProjectile(Projectile projectile)
@@ -212,7 +208,14 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             {
                 if (npc.ai[1] == 3)//chrono dash
                 {
+                    Projectile clock = Main.projectile[(int)npc.localAI[0]];
                     Main.fastForwardTime = false;
+                    if (clock.active && clock.type == ModContent.ProjectileType<LMClockFace>())
+                    {
+                        clock.active = false;
+                        Main.dayTime = false;
+                        Main.time = 16200;
+                    }
                 }
                 npc.life = 1;
                 npc.ai[1] = DeathStruggleStart;
@@ -236,9 +239,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             Color glowColor = npc.ai[1] != 1 ? Color.White : Color.Lerp(Color.White, Color.Black, (float)Math.Sin(MathHelper.Pi / 14 * npc.localAI[2]));
             SpriteEffects effects = (npc.direction < 0) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             var mainColor = drawColor;
-            if (npc.ai[1] == 2)
+            if (npc.ai[1] == 3)
             {
-                if(npc.ai[2] >= 200)
+                if(npc.ai[2] >= 240)
                 {
                     for (int i = 0; i < NPCID.Sets.TrailCacheLength[npc.type]; i++)
                     {
@@ -254,13 +257,13 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             }
             else if ((npc.ai[1] == DivideAttackStart + 5 )|| (npc.ai[1] == DivideAttackStart + 6))
             {
-                if (npc.ai[2] >= 10)
+                /*if (npc.ai[2] >= 10)
                 {
                     if (npc.ai[1] == DivideAttackStart + 5)
                         npc.DrawAim(spriteBatch, npc.Center + new Vector2(LumiteDestroyerArguments.R, 0) * 5 * npc.ai[3], Color.Red);
                     if (npc.ai[1] == DivideAttackStart + 6)
                         npc.DrawAim(spriteBatch, npc.Center + new Vector2(0, LumiteDestroyerArguments.R) * 5 * npc.ai[3], Color.Red);
-                }
+                }*/
             }
             else if (npc.ai[1] == DeathStruggleStart + 4)
             {

@@ -256,7 +256,8 @@ namespace SunksBossChallenges
             float radiusSpeed = 0.05f, int distLimit = 900, float angleLimit = MathHelper.Pi * 3 / 5)
         {
             Vector2 targetVector = dest - entity.Center;
-            targetVector = targetVector.SafeNormalize(Vector2.Zero) * maxSpeed;
+            targetVector = targetVector.SafeNormalize(Vector2.UnitY) * maxSpeed;
+            if (targetVector.HasNaNs()) System.Diagnostics.Debugger.Break();
             if ((targetVector.X * entity.velocity.X > 0f) && (targetVector.Y * entity.velocity.Y > 0f)) //acclerate
             {
                 entity.velocity.X += Math.Sign(targetVector.X - entity.velocity.X) * ramAccle;

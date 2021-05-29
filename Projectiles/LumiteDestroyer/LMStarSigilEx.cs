@@ -30,12 +30,13 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         }
         public override void AI()
         {
-            projectile.rotation += 0.015f;
-
-            projectile.Center = Main.player[(int)projectile.ai[1]].Center;
+            projectile.rotation -= 0.015f * Math.Sign(projectile.ai[0]);
+            if (projectile.localAI[0] <= LMSigilSubStar.LaunchTime - 75)
+                projectile.Center = Main.player[(int)projectile.ai[1]].Center;
 
             if (projectile.localAI[0] == 0 && Main.netMode != NetmodeID.MultiplayerClient)
             {
+                projectile.rotation = MathHelper.WrapAngle(projectile.ai[0]);
                 Vector2 baseVector = projectile.rotation.ToRotationVector2();
 
                 for (int i = 0; i < 5; i++)
@@ -156,6 +157,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         public override bool NeedSyncLocalAI => true;
         public override void AI()
         {
+            LoomUp(25);
             Projectile parent = Main.projectile[(int)projectile.ai[1]];
             if (projectile.localAI[0] == 0)
             {

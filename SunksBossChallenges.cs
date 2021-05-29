@@ -7,7 +7,6 @@ using Terraria.ID;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.Graphics.Effects;
-using SunksBossChallenges.Effects;
 
 namespace SunksBossChallenges
 {
