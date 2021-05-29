@@ -17,7 +17,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
     {
         int Timer = 0;
         float length = 0;
-        float rotation;
+        //float rotation;
         int maxTime { get; set; } = 480;
         float transparency => 0f;
         public override void SetStaticDefaults()
@@ -53,7 +53,9 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 //projectile.position = fireFrom + value22 - new Vector2(projectile.width, projectile.height) / 2f;
                 Vector2 offset = new Vector2(Main.npc[(int)projectile.ai[1]].width, 0).RotatedBy(Main.npc[(int)projectile.ai[1]].rotation);
                 if (projectile.localAI[1] != 1f)
-                projectile.Center = Main.npc[(int)projectile.ai[1]].Center + offset;
+                    projectile.Center = Main.npc[(int)projectile.ai[1]].Center + offset;
+                else
+                    projectile.Center -= projectile.velocity;
             }
             else if(Main.npc[(int)projectile.ai[1]].active && Main.npc[(int)projectile.ai[1]].type == ModContent.NPCType<LumiteDestroyerBody>())
             {
@@ -63,7 +65,9 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 //projectile.position = fireFrom + value22 - new Vector2(projectile.width, projectile.height) / 2f;
                 Vector2 offset = new Vector2(Main.npc[(int)projectile.ai[1]].width, 0).RotatedBy(Main.npc[(int)projectile.ai[1]].rotation);
                 if (projectile.localAI[1] != 1f)
-                projectile.Center = Main.npc[(int)projectile.ai[1]].Center + offset;
+                    projectile.Center = Main.npc[(int)projectile.ai[1]].Center + offset;
+                else
+                    projectile.Center -= projectile.velocity;
             }
             else
             {

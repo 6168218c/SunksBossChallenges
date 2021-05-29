@@ -16,7 +16,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
     public partial class LumiteDestroyerHead : LumiteDestroyerSegment
     {
         internal Vector2 spinCenter;
-        internal int spinTimer = 0;
+        internal int spinTimer = 900;
         internal int[] chaosPlanets = new int[3];
         internal int randomCorrecter = 0;
 
@@ -63,10 +63,19 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             return npc.ai[1] >= DeathStruggleStart && npc.ai[1] < DeathStruggleStart + 5;
         }
+        public bool IsPhase3()
+        {
+            return npc.life < npc.lifeMax * 0.5f;
+        }
         public bool CanBeTransparent()
         {
             return (npc.ai[1] == -1 || npc.ai[1] == DivideAttackStart || npc.ai[1] == DivideAttackStart + DivideAILength
                 || npc.ai[1] == DeathStruggleStart);
+        }
+        public bool AllowSpin()
+        {
+            return IsPhase3() && (npc.ai[1] < DivideAttackStart || npc.ai[1] > DivideAttackStart + DivideAILength) &&
+                (npc.ai[1] != 1) && (npc.ai[1] != 3) && (npc.ai[1] != 4);
         }
         void SwitchTo(float ai1, bool resetCounter = true, bool resetAllTimer = true)
         {
@@ -87,7 +96,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         void SwitchToRandomly(float normalAI1, float randomAI1, float possibility)
         {
             randomCorrecter++;
-            if (Main.rand.NextFloat() < possibility || randomCorrecter == 6)//at least one divide attack every 6 attacks
+            if ((Main.rand.NextFloat() < possibility && randomCorrecter > 2) || randomCorrecter == 6)//at least one divide attack every 6 attacks
             {
                 randomCorrecter = 0;
                 SwitchTo(randomAI1);
@@ -201,6 +210,10 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             if (npc.ai[1] < DeathStruggleStart)
             {
+                if (npc.ai[1] == 3)//chrono dash
+                {
+                    Main.fastForwardTime = false;
+                }
                 npc.life = 1;
                 npc.ai[1] = DeathStruggleStart;
                 npc.ai[2] = 0;

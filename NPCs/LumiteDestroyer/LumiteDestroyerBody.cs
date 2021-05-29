@@ -95,7 +95,12 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             if (dead)
             {
                 npc.ai[2]++;
-
+				if (npc.localAI[0] >= DivideAttackStart)//acting as head
+                {
+					npc.WormMovement(npc.Center + new Vector2(0, -900f), 25f);
+                    npc.rotation = npc.velocity.ToRotation();
+				}
+				
                 if (npc.ai[2] >= npc.localAI[3])
                 {
                     npc.life = 0;
@@ -258,7 +263,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     maxSpeed = Math.Max(player.velocity.Length() * 1.5f, maxSpeed);
                     if (npc.localAI[0] == DivideAttackStart + 1)
                     {
-                        npc.WormMovement(npc.Center + npc.velocity * 600f, maxSpeed * 0.75f, turnAcc * 1.25f, ramAcc);
+                        npc.WormMovement(npc.Center + npc.localAI[1].ToRotationVector2() * 600f, maxSpeed * 0.75f, turnAcc * 1.25f, ramAcc);
                     }
                     #region CoAttack Pattern1
                     else if (npc.localAI[0] == DivideAttackStart + 2)
@@ -401,51 +406,39 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     #region CoAttack Pattern2
                     else if (npc.localAI[0] == DivideAttackStart + 5)
                     {
-                        Vector2 dest = player.Center + Vector2.UnitY * npc.localAI[1] * LumiteDestroyerArguments.R
-                            + Vector2.UnitX * (head.ai[3]) * LumiteDestroyerArguments.R * 1.5f;
-                        if (npc.localAI[2] <= 10)
-                        {
-                            npc.FastMovement(dest);
-                        }
-                        else if (npc.localAI[2] < 75)
-                        {
-                            npc.HoverMovementEx(dest, maxSpeed, 0.8f);
-                        }
-                        else if (npc.localAI[2] < 225)
-                        {
-                            npc.velocity.Y = 0;
-                            if (npc.localAI[2] == 135 && Main.netMode != NetmodeID.MultiplayerClient)
-                            {
-                                var velocity = Vector2.UnitX * Math.Sign(player.Center.X - npc.Center.X);
-                                Projectile.NewProjectile(npc.Center, velocity, ModContent.ProjectileType<DestroyerDeathRay>(), npc.damage, 0f, Main.myPlayer, 90, npc.whoAmI);
-                            }
-                            npc.WormMovement(npc.Center + new Vector2(1000, 0) * (-head.ai[3]), maxSpeed * 1.35f, turnAcc, ramAcc);
-                        }
-                        npc.localAI[2]++;
+                        npc.WormMovementEx(player.Center + targetModifier, maxSpeed * 0.6f, turnAcc * 1.25f, ramAcc);
                     }
                     else if (npc.localAI[0] == DivideAttackStart + 6)
                     {
-                        Vector2 dest = player.Center + Vector2.UnitX * npc.localAI[1] * LumiteDestroyerArguments.R
-                            + Vector2.UnitY * (head.ai[3]) * LumiteDestroyerArguments.R * 1.8f;
-                        if (npc.localAI[2] <= 10)
+                        npc.localAI[2]++;//the head will create the aim
+                        if (npc.localAI[2] == 75)
                         {
-                            npc.FastMovement(dest);
-                        }
-                        else if (npc.localAI[2] < 75)
-                        {
-                            npc.HoverMovementEx(dest, maxSpeed, 0.8f);
-                        }
-                        else if (npc.localAI[2] < 225)
-                        {
-                            npc.velocity.X = 0;
-                            if (npc.localAI[2] == 135 && Main.netMode != NetmodeID.MultiplayerClient)
+                            Projectile aim = Main.projectile[(int)npc.localAI[1]];
+                            Vector2 endpoint = new Vector2(aim.ai[0], aim.ai[1]);
+                            npc.Center = aim.Center;
+                            npc.velocity = (endpoint - npc.Center).SafeNormalize(Vector2.Zero) * maxSpeed * 3f;
+                            int i = npc.whoAmI;
+                            int counter = 0;
+                            while (i != -1)
                             {
-                                var velocity = Vector2.UnitY * Math.Sign(player.Center.Y - npc.Center.Y);
-                                Projectile.NewProjectile(npc.Center, velocity, ModContent.ProjectileType<DestroyerDeathRay>(), npc.damage, 0f, Main.myPlayer, 90, npc.whoAmI);
+                                counter++;
+                                NPC tmpNPC = Main.npc[i];
+                                if (tmpNPC.localAI[0] >= DivideAttackStart && tmpNPC.whoAmI != npc.whoAmI)
+                                {
+                                    break;
+                                }
+                                tmpNPC.Center = aim.Center;
+                                i = (int)Main.npc[i].ai[0];
                             }
-                            npc.WormMovement(npc.Center + new Vector2(0, 1000) * (-head.ai[3]), maxSpeed * 1.35f, turnAcc, ramAcc);
+                            aim.Kill();
                         }
-                        npc.localAI[2]++;
+                        if (npc.localAI[2] >= 120)
+                        {
+                            npc.localAI[0] = DivideAttackStart + 5;
+                            npc.localAI[1] = 0;
+                            npc.localAI[2] = 0;
+                            npc.netUpdate = true;
+                        }
                     }
                     #endregion
                     else if (npc.localAI[0] == DivideAttackStart + DivideAILength - 1)
@@ -514,9 +507,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             }
             else if (head.ai[1] == DeathStruggleStart + 4)
             {
-                if (head.ai[2] >= 240)
+                if (head.ai[2] >= 360)
                 {
-                    float alpha = 1 - (head.ai[2] - 240) / 240;
+                    float alpha = 1 - (head.ai[2] - 360) / 360;
                     if (alpha < 0) alpha = 0;
                     glowColor *= alpha;
                     mainColor = Color.Lerp(mainColor, Color.Black, alpha / 2);
@@ -595,11 +588,11 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     {
                         if (head.ai[1] >= DivideAttackStart && head.ai[1] <= DivideAttackStart + DivideAILength)
                         {
-                            damage *= (1 - 0.875);
+                            damage *= (1 - 0.80);
                         }
                         else
                         {
-                            damage *= (1 - 0.80);
+                            damage *= (1 - 0.75);
                         }
                     }
                     if (npc.alpha > 0 || Main.npc[npc.realLife].ai[1] >= SpinAttackStart)

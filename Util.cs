@@ -253,7 +253,7 @@ namespace SunksBossChallenges
             }
         }
         public static void WormMovementEx(this Entity entity, Vector2 dest, float maxSpeed, float turnAccle = 0.1f, float ramAccle = 0.15f,
-            float radiusSpeed = 0.05f, int distLimit = 900, bool alwaysFastTurn = false)
+            float radiusSpeed = 0.05f, int distLimit = 900, float angleLimit = MathHelper.Pi * 3 / 5)
         {
             Vector2 targetVector = dest - entity.Center;
             targetVector = targetVector.SafeNormalize(Vector2.Zero) * maxSpeed;
@@ -263,7 +263,7 @@ namespace SunksBossChallenges
                 entity.velocity.Y += Math.Sign(targetVector.Y - entity.velocity.Y) * ramAccle;
             }
             float angle = MathHelper.WrapAngle(targetVector.ToRotation() - entity.velocity.ToRotation());
-            if ((alwaysFastTurn || Math.Abs(angle) >= MathHelper.Pi * 3 / 5) && (dest - entity.Center).Compare(distLimit) >= 0)
+            if (Math.Abs(angle) >= angleLimit && (dest - entity.Center).Compare(distLimit) >= 0)
             {
                 var speed = entity.velocity.Length();
                 entity.velocity = entity.velocity.RotatedBy(radiusSpeed * Math.Sign(angle));
@@ -323,11 +323,14 @@ namespace SunksBossChallenges
                 Main.NewText(quote, color);
             if (Main.netMode == NetmodeID.Server)
                 NetMessage.BroadcastChatMessage(NetworkText.FromLiteral(quote), color);
-            int num = CombatText.NewText(entity.Hitbox, color, quote, true);
-            if(Main.netMode==NetmodeID.MultiplayerClient&&num!=100)
+            if (combatText)
             {
-                CombatText text = Main.combatText[num];
-                NetMessage.SendData(MessageID.CombatTextString, -1, -1, NetworkText.FromLiteral(quote), (int)text.color.PackedValue, text.position.X, text.position.Y);
+                int num = CombatText.NewText(entity.Hitbox, color, quote, true);
+                if (Main.netMode == NetmodeID.MultiplayerClient && num != 100)
+                {
+                    CombatText text = Main.combatText[num];
+                    NetMessage.SendData(MessageID.CombatTextString, -1, -1, NetworkText.FromLiteral(quote), (int)text.color.PackedValue, text.position.X, text.position.Y);
+                }
             }
         }
         public static void DrawAim(this Entity entity,SpriteBatch spriteBatch, Vector2 endpoint, Color color)

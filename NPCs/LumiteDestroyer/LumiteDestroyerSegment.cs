@@ -36,7 +36,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         }
 
         public static float R => (float)(SpinSpeed / SpinRadiusSpeed);
-        public static float Scale => 1.25f;
+        public static float Scale => 1.35f;
         public static float Phase2HealthFactor => 0.75f;
     }
     public abstract class LumiteDestroyerSegment:ModNPC
