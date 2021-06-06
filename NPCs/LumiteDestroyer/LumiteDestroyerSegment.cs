@@ -38,9 +38,17 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         public static float R => (float)(SpinSpeed / SpinRadiusSpeed);
         public static float Scale => 1.35f;
         public static float Phase2HealthFactor => 0.75f;
+        public static int TeleportDistance => 750;
     }
     public abstract class LumiteDestroyerSegment:ModNPC
     {
+        protected int LaserMatrix => 0;
+        protected int StarSigilEx => 1;
+        protected int HalfCircleDash => 2;
+        protected int StarDash => 3;
+        protected int ChronoDash => 4;
+        protected int StarFall => 5;
+
         // should have used Split,but used it in order not to confuse with SpinAttack
         protected int DivideAttackStart => 10;
         protected int DivideAILength => 8;
@@ -51,6 +59,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         /// </summary>
         protected float SyncAttackState { get => npc.localAI[0]; set => npc.localAI[0] = value; }
         protected float SyncAttackTimer { get => npc.localAI[1]; set => npc.localAI[1] = value; }
+        protected int ImmuneTimer = 0;
 
         protected void ForeachSegment(Action<NPC,int> actionIdCount)
         {
@@ -133,6 +142,21 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     }
                 }
             }
+        }
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write(ImmuneTimer);
+            base.SendExtraAI(writer);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            ImmuneTimer = reader.ReadInt32();
+            base.ReceiveExtraAI(reader);
+        }
+        public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
+        {
+            if (ImmuneTimer != 0) damage *= (1 - 0.99);
+            return true;
         }
         public override bool CheckActive()
         {

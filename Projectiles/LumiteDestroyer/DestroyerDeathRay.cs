@@ -22,7 +22,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         float transparency => 0f;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Lumite Deathray");
+            DisplayName.SetDefault("Gamma Deathray");
         }
         public override void SetDefaults()
         {
@@ -97,6 +97,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             }
             if (projectile.localAI[1] == 1f)
             {
+                projectile.velocity = projectile.velocity.RotatedBy(0.01);
                 float num804 = projectile.velocity.ToRotation();
                 projectile.rotation = num804 - 1.57079637f;
                 projectile.velocity = num804.ToRotationVector2();

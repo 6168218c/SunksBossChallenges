@@ -38,7 +38,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             unitVect = unitVect.RotatedBy(Math.PI / 2 * (int)projectile.ai[1]);
 
             unitVect *= projectile.ai[0];
-            if (projectile.localAI[0] % 20 == 5 && Main.netMode != NetmodeID.MultiplayerClient)
+            if (projectile.localAI[0] % 15 == 5 && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 var startPos = projectile.Center;
                 startPos += unitVect.RotatedBy(-MathHelper.PiOver2) * 8;
@@ -58,7 +58,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 
             projectile.localAI[0]++;
 
-            if (projectile.localAI[0] % 20 == 0)
+            if (projectile.localAI[0] % 15 == 0)
             {
                 projectile.Center += unitVect * 2;
             }

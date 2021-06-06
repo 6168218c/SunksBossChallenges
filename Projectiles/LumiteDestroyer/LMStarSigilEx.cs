@@ -94,10 +94,10 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             {
                 projectile.Center = parent.Center + parent.rotation.ToRotationVector2().RotatedBy(projectile.ai[0]) * LumiteDestroyerArguments.R * 0.8f;
             }
-            projectile.rotation -= 0.015f;
+            projectile.rotation -= 0.025f;
             projectile.localAI[0]++;
 
-            if (projectile.localAI[0] % 20 == 0 && projectile.localAI[0] / 20 <= 7)
+            if (projectile.localAI[0] % 20 == 0 && projectile.localAI[0] / 20 <= 7 && Main.netMode != NetmodeID.MultiplayerClient) 
             {
                 float lineCenterDist = 60;
                 float lineHalfLen = lineCenterDist * (float)Math.Tan(Math.PI / 2.5);
@@ -110,8 +110,9 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     var end = projectile.Center + baseVector + baseUnit.RotatedBy(-Math.PI / 2) * lineHalfLen;
                     //we will have five stars per line
                     int count = (int)projectile.localAI[0] / 20 - 1;
-                    var tarPos = Vector2.Lerp(start, end, 1.0f / 6 * count);//the end will not be covered
-                    Projectile.NewProjectile(tarPos, Vector2.Zero, ModContent.ProjectileType<LMStarSigilUnit>(),
+                    //var tarPos = Vector2.Lerp(start, end, 1.0f / 6 * count);//the end will not be covered
+                    var tarPos = projectile.Center + Main.rand.NextVector2Circular(150f, 100f);
+                    Projectile.NewProjectile(tarPos, Vector2.Zero, ModContent.ProjectileType<LMStarSigilExUnit>(),
                         projectile.damage, 0f, projectile.owner, count + i * 6, projectile.whoAmI);
                     baseVector = baseVector.RotatedBy(Math.PI / 2.5);
                     baseUnit = baseUnit.RotatedBy(Math.PI / 2.5);
@@ -140,7 +141,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             base.ReceiveExtraAI(reader);
         }
     }
-    public class LMStarSigilUnit : LMProjUnit
+    public class LMStarSigilExUnit : LMProjUnit
     {
         protected bool hasBeenLaunched = false;
         protected override int CacheLen
@@ -159,6 +160,13 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         {
             LoomUp(25);
             Projectile parent = Main.projectile[(int)projectile.ai[1]];
+            if (DeathAnimationTimer > 0)
+            {
+                projectile.velocity = Vector2.Zero;
+                DeathAnimationTimer--;
+                if (DeathAnimationTimer == 0) projectile.Kill();
+                return;
+            }
             if (projectile.localAI[0] == 0)
             {
                 projectile.localAI[1] = parent.localAI[1];
@@ -176,7 +184,12 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 var end = parent.Center + baseVector + baseUnit.RotatedBy(-Math.PI / 2) * lineHalfLen;
                 var tarPos = Vector2.Lerp(start, end, 1.0f / 6 * pos);//the end will not be covered
 
-                projectile.Center = tarPos;
+                if (projectile.localAI[0] < 30)
+                {
+                    projectile.FastMovement(tarPos);
+                }
+                else
+                    projectile.Center = tarPos;
             }
             else
             {
@@ -191,7 +204,8 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             projectile.localAI[0]++;
             if ((projectile.localAI[0] >= 180 || projectile.ai[0] % 6 <= 3) && hasBeenLaunched)
             {
-                projectile.Kill();
+                //projectile.Kill();
+                DeathAnimationTimer = 15;
             }
         }
 

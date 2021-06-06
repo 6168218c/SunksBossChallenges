@@ -347,7 +347,22 @@ namespace SunksBossChallenges
                 spriteBatch.Draw(aimTexture, drawPos, null, alphaCenter, k, new Vector2(2, 2), 1f, SpriteEffects.None, 0f);
             }
         }
-
+        public static bool CheckNPCAlive<T>(int index)where T : ModNPC
+        {
+            if (Main.npc.IndexInRange(index) && Main.npc[index].active && Main.npc[index].type == ModContent.NPCType<T>())
+            {
+                return true;
+            }
+            return false;
+        }
+        public static bool CheckProjAlive<T>(int index) where T : ModProjectile
+        {
+            if (Main.projectile.IndexInRange(index) && Main.projectile[index].active && Main.projectile[index].type == ModContent.ProjectileType<T>())
+            {
+                return true;
+            }
+            return false;
+        }
         public static int Compare(this Vector2 vector, float length)
         {
             float vecLen = vector.LengthSquared();

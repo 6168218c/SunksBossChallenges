@@ -15,6 +15,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         public override string Texture => "SunksBossChallenges/Projectiles/LumiteDestroyer/LMProjUnit";
         public abstract override void AI();
         public virtual bool NeedSyncLocalAI => false;
+        public int DeathAnimationTimer { get; set; }
         protected abstract int CacheLen { get; }
         public override void SetStaticDefaults()
         {
@@ -32,14 +33,14 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             projectile.alpha = 255;
 
             cooldownSlot = 1;
-            projectile.scale = 0.5f;
+            projectile.scale = 0.75f;
             projectile.tileCollide = false;
             projectile.ignoreWater = true;
             projectile.aiStyle = -1;
         }
         protected void LoomUp(int rate=42)
         {
-            projectile.alpha += rate;
+            projectile.alpha -= rate;
             if (projectile.alpha < 0) projectile.alpha = 0;
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
@@ -75,13 +76,16 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 Vector2 MidCenter = (projectile.oldPos[i] + projectile.oldPos[i + 1]) / 2 + projectile.Size / 2;
                 spriteBatch.Draw(TrailTex, MidCenter - Main.screenPosition, rect, glow2 * ops, rotation, rect.Size() / 2, scale, SpriteEffects.None, 0);
             }
-            spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
-            spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), Color.White, projectile.rotation, origin2, projectile.scale, SpriteEffects.None, 0f);
+            if (DeathAnimationTimer == 0)
+            {
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
+                spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), Color.White, projectile.rotation, origin2, projectile.scale, SpriteEffects.None, 0f);
 
-            spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
-            spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), glow2 * 0.35f, projectile.rotation, origin2, projectile.scale, SpriteEffects.None, 0f);
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
+                spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), glow2 * 0.35f, projectile.rotation, origin2, projectile.scale, SpriteEffects.None, 0f);
+            }
 
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
@@ -94,6 +98,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 writer.Write(projectile.localAI[0]);
                 writer.Write(projectile.localAI[1]);
             }
+            writer.Write(DeathAnimationTimer);
             base.SendExtraAI(writer);
         }
 
@@ -104,6 +109,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 projectile.localAI[0] = reader.ReadSingle();
                 projectile.localAI[1] = reader.ReadSingle();
             }
+            DeathAnimationTimer = reader.ReadInt32();
             base.ReceiveExtraAI(reader);
         }
     }

@@ -19,7 +19,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("LM-002 \"Annhilation\"");
+            DisplayName.SetDefault("Nova Annihilator");
             NPCID.Sets.TrailingMode[npc.type] = 3;
             NPCID.Sets.TrailCacheLength[npc.type] = 2;
             Main.npcFrameCount[npc.type] = 3;
@@ -93,14 +93,6 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 dead = true;
             }
             
-            if (Main.npc[(int)npc.realLife].target < 0 || Main.npc[(int)npc.realLife].target == 255 || Main.player[Main.npc[(int)npc.realLife].target].dead)
-            {
-                if (npc.localAI[0] >= DivideAttackStart)//acting as head
-                {
-                    npc.WormMovement(npc.Center + new Vector2(0, -900f), 25f);
-                    npc.rotation = npc.velocity.ToRotation();
-                }
-            }
             if (dead)
             {
                 npc.ai[2]++;
@@ -112,6 +104,14 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     npc.checkDead();
                 }
                 return;
+            }
+            if (Main.npc[(int)npc.realLife].target < 0 || Main.npc[(int)npc.realLife].target == 255 || Main.player[Main.npc[(int)npc.realLife].target].dead)
+            {
+                if (npc.localAI[0] >= DivideAttackStart)//acting as head
+                {
+                    npc.WormMovement(npc.Center + new Vector2(0, -900f), 25f);
+                    npc.rotation = npc.velocity.ToRotation();
+                }
             }
             Player player = Main.player[npc.target];
             Vector2 targetModifier = player.velocity;
@@ -135,6 +135,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 dust.noLight = true;
                                 dust.color = Color.LightBlue;
                             }
+                            ImmuneTimer = 300;
                         }
                         npc.alpha -= 42;
                         if (npc.alpha < 0)
@@ -154,6 +155,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             dust.noLight = true;
                             dust.color = Color.LightBlue;
                         }
+                        ImmuneTimer = 300;
                     }
                     npc.alpha -= 42;
                     if (npc.alpha < 0)
@@ -162,7 +164,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     }
                 }
             }
-
+            if (ImmuneTimer > 0) --ImmuneTimer;
             #endregion
             #region Music
             if (head.ai[1] >= 0)
@@ -188,7 +190,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             {
                 if (npc.ai[1] >= 0f && npc.ai[1] < Main.npc.Length)
                 {
-                    if ((head.ai[1] >= SpinAttackStart && head.ai[1] < DeathStruggleStart) || (head.ai[1] >= DeathStruggleStart + 2 && head.ai[1] <= DeathStruggleStart + 3)) //spinning or preparing spinning
+                    if ((head.ai[1] == HalfCircleDash&&head.ai[2]>=180) || (head.ai[1] >= SpinAttackStart && head.ai[1] < DeathStruggleStart) || (head.ai[1] >= DeathStruggleStart + 2 && head.ai[1] <= DeathStruggleStart + 3))//spinning or preparing spinning
                     {
                         npc.chaseable = false;
                         Vector2 pivot = (head.modNPC as LumiteDestroyerHead).spinCenter;
@@ -211,6 +213,20 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             offset -= Vector2.Normalize(offset) * dist;
                             npc.velocity = Vector2.Zero;
                             npc.position += offset;
+                        }
+
+                        if (npc.localAI[1] > 0)
+                        {
+                            npc.localAI[1]--;
+                            if (npc.localAI[1] <= 0 && Main.netMode != NetmodeID.MultiplayerClient)
+                            {
+                                npc.localAI[1] = 0;
+                                if (head.ai[1] == HalfCircleDash)
+                                {
+                                    Projectile.NewProjectile(npc.Center, (player.Center - npc.Center).SafeNormalize(Vector2.Zero)
+                                        , ModContent.ProjectileType<DeathLaserEx>(), npc.damage / 5, 0f, Main.myPlayer, 36f, -1);
+                                }
+                            }
                         }
                     }
                     else
@@ -242,10 +258,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 {
                                     Projectile.NewProjectile(npc.Center, npc.localAI[0].ToRotationVector2() * 20, ModContent.ProjectileType<DarkStar>(), npc.damage / 5, 0f, Main.myPlayer);
                                 }
-                                else
+                                else if(head.ai[1]==StarFall)
                                 {
-                                    if (npc.localAI[0] == 0)
-                                        Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<DeathLaserEx>(), npc.damage / 5, 0f, Main.myPlayer, 36f, npc.target);
+                                    Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<LMSigilStarUnit>(), npc.damage / 5, 0f, Main.myPlayer, npc.localAI[3], npc.localAI[2]);
                                 }
                             }
                         }
@@ -443,7 +458,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         else if (npc.localAI[2] > 144)
                         {
                             if (npc.velocity.Compare(maxSpeed * 1.5f) < 0) npc.velocity *= 1.2f;
-                            if (npc.ai[2] % 6 == 2 && Main.netMode != NetmodeID.MultiplayerClient)
+                            if (npc.localAI[2] % 6 == 2 && Main.netMode != NetmodeID.MultiplayerClient)
                             {
                                 var direction = npc.velocity.SafeNormalize(Vector2.UnitY);
                                 Vector2 target = npc.Center +
@@ -500,7 +515,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             Color glowColor = head.ai[1] != 1 ? Color.White : Color.Lerp(Color.White, Color.Black, (float)Math.Sin(MathHelper.Pi / 14 * npc.localAI[2]));
             SpriteEffects effects = (npc.direction < 0) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             var mainColor = drawColor;
-            if (head.ai[1] == 3)
+            /*if (head.ai[1] == 3)
             {
                 if (head.ai[2] >= 240)
                 {
@@ -515,8 +530,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 {
                     mainColor *= 0.5f;
                 }
-            }
-            else if ((head.ai[1] == DivideAttackStart + 5) || (head.ai[1] == DivideAttackStart + 6))
+            }*/
+            if ((head.ai[1] == DivideAttackStart + 5) || (head.ai[1] == DivideAttackStart + 6))
             {
                 /*if (head.ai[2] >= 10)
                 {
@@ -573,6 +588,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             writer.Write(npc.localAI[1]);
             writer.Write(npc.localAI[2]);
             writer.Write(npc.localAI[3]);
+            base.SendExtraAI(writer);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
@@ -581,6 +597,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             npc.localAI[1] = reader.ReadSingle();
             npc.localAI[2] = reader.ReadSingle();
             npc.localAI[3] = reader.ReadSingle();
+            base.ReceiveExtraAI(reader);
         }
 
         public override bool? CanBeHitByProjectile(Projectile projectile)
@@ -625,7 +642,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 if (npc.alpha > 0)
                     damage *= (1 - 0.99);
             }
-            return true;
+            return base.StrikeNPC(ref damage, defense, ref knockback, hitDirection, ref crit);
         }
     }
 }

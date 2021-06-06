@@ -16,9 +16,12 @@
     <None Remove="Effects - 复制\**" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="tModLoader.CodeAssist" Version="0.1.*" />
+    <None Remove="Effects\fxcompiler.exe" />
+    <None Remove="Effects\Microsoft.Xna.Framework.Content.Pipeline.dll" />
+    <None Remove="Effects\Microsoft.Xna.Framework.Content.Pipeline.EffectImporter.dll" />
+    <None Remove="Effects\wcfxcompiler.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Effects\" />
+    <PackageReference Include="tModLoader.CodeAssist" Version="0.1.*" />
   </ItemGroup>
 </Project>

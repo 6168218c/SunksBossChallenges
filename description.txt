@@ -1,1 +1,2 @@
-Sunk's Boss Challenges is a pretty cool mod, it does...this. Modify this file with a description of your mod.
+SunK's Boss Challenges is a small content mod mainly targeting on adding some new bosses.
+Current progress : Lumite Mechs.

@@ -24,7 +24,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         int Length => 80;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("LM-002 \"Annhilation\"");
+            DisplayName.SetDefault("Nova Annihilator");
             NPCID.Sets.TrailingMode[npc.type] = 3;
             NPCID.Sets.TrailCacheLength[npc.type] = 16;
             Main.npcFrameCount[npc.type] = Main.npcFrameCount[NPCID.TheDestroyer];
@@ -47,7 +47,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             npc.value = 0f;
             npc.netAlways = true;
             npc.alpha = 255;
-            npc.scale = LumiteDestroyerArguments.Scale;
+            npc.scale = LumiteDestroyerArguments.Scale * 1.1f;
             for (int i = 0; i < npc.buffImmune.Length; i++)
                 npc.buffImmune[i] = true;
             music = MusicID.Boss3;
@@ -106,6 +106,178 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 SwitchTo(normalAI1);
             }
         }
+        void DeathStruggle(Player player,Vector2 targetModifier,float maxSpeed,float turnAcc,float ramAcc)
+        {
+            #region Death Struggle
+            if (npc.ai[1] == DeathStruggleStart)
+            {
+                npc.WormMovement(player.Center + targetModifier, maxSpeed / 2, turnAcc, ramAcc / 2);
+                npc.ai[2]++;
+                ForeachSegment((tmpNPC, counter) =>
+                {
+                    tmpNPC.alpha += 3;
+                    if (tmpNPC.alpha > 255) tmpNPC.alpha = 255;
+                });
+
+                if (npc.ai[2] == 15)
+                {
+                    npc.NewOrBoardcastText("OVERLOADED MODE ON", Color.BlueViolet, false);
+                }
+
+                if (npc.ai[2] >= 200)
+                {
+                    Vector2 dist = Main.rand.NextVector2Unit() * 1000;
+                    npc.Center = player.Center + player.velocity * 60f + dist;
+                    npc.velocity = Vector2.Normalize(player.Center - npc.Center) * maxSpeed / 3;
+                    ForeachSegment((tmpNPC, counter) =>
+                    {
+                        tmpNPC.Center = player.Center + dist;
+                        tmpNPC.velocity = Vector2.Zero;
+                        tmpNPC.localAI[0] = 0;
+                        tmpNPC.localAI[1] = 0;
+                        tmpNPC.localAI[2] = 0;
+                        tmpNPC.frame.Y = 0;
+                        tmpNPC.netUpdate = true;
+                    });
+                    SwitchTo(DeathStruggleStart + 1);
+                }
+            }
+            else if (npc.ai[1] == DeathStruggleStart + 1)
+            {
+                var center = player.Center + player.velocity * 10;
+                spinCenter = center;
+                Vector2 dist = npc.DirectionFrom(spinCenter);
+                dist *= LumiteDestroyerArguments.R * 1.75f;
+                dist = center + dist;
+                npc.WormMovement(dist, maxSpeed * 5f, turnAcc * 5f);
+                SwitchTo(DeathStruggleStart + 2);
+            }
+            else if (npc.ai[1] == DeathStruggleStart + 2)
+            {
+                float r = (float)(LumiteDestroyerArguments.SpinSpeed / LumiteDestroyerArguments.SpinRadiusSpeed);
+                var center = spinCenter;
+                if (Vector2.Distance(npc.Center, center) <= r)//has moved to the desired position
+                {
+                    if (npc.Distance(center) < r)//modify it to retain accuracy
+                        npc.position += center + Vector2.Normalize(npc.Center - center) * r - npc.Center;
+                    npc.direction = Main.rand.NextBool() ? -1 : 1;
+                    npc.velocity = Vector2.Normalize(npc.Center - center)
+                        .RotatedBy(-Math.PI / 2 * npc.direction) * LumiteDestroyerArguments.SpinSpeed;
+                    npc.rotation = npc.velocity.ToRotation();
+                    SwitchTo(DeathStruggleStart + 3);
+                }
+                else
+                {
+                    npc.WormMovement(center, maxSpeed * 1.5f, 0.5f, 0.75f);
+                }
+                if (Vector2.Distance(player.Center, center) > LumiteDestroyerArguments.R)
+                {
+                    player.Center = center + Vector2.Normalize(player.Center - center) * LumiteDestroyerArguments.R;
+                }
+                var pivot = spinCenter;
+                for (int i = 0; i < 20; i++)
+                {
+                    Vector2 offset = new Vector2();
+                    double angle = Main.rand.NextDouble() * 2 * Math.PI;
+                    offset.X += (float)(Math.Cos(angle) * r);
+                    offset.Y += (float)(Math.Sin(angle) * r);
+                    Dust dust = Main.dust[Dust.NewDust(pivot + offset, 0, 0, DustID.Clentaminator_Purple, 0, 0, 100, Color.White)];
+                    dust.velocity = Vector2.Zero;
+                    if (Main.rand.Next(3) == 0)
+                        dust.velocity += Vector2.Normalize(offset) * 5f;
+                    dust.noGravity = true;
+                }
+            }
+            else if (npc.ai[1] == DeathStruggleStart + 3)
+            {
+                int direction = npc.direction;
+                var center = spinCenter;
+                if (npc.Distance(center) < LumiteDestroyerArguments.R)
+                {
+                    npc.Center = center + npc.DirectionFrom(center) * LumiteDestroyerArguments.R;
+                }
+                //player.wingTime = 100;
+                npc.velocity = npc.velocity.RotatedBy(-LumiteDestroyerArguments.SpinRadiusSpeed * direction);
+                //npc.rotation -= (float)(LumiteDestroyerArguments.SpinRadiusSpeed * direction);
+                if (Vector2.Distance(player.Center, center) > LumiteDestroyerArguments.R)
+                {
+                    player.Center = center + Vector2.Normalize(player.Center - center) * LumiteDestroyerArguments.R;
+                }
+                var pivot = spinCenter;
+                for (int i = 0; i < 20; i++)
+                {
+                    Vector2 offset = new Vector2();
+                    double angle = Main.rand.NextDouble() * 2 * Math.PI;
+                    offset.X += (float)(Math.Cos(angle) * LumiteDestroyerArguments.R);
+                    offset.Y += (float)(Math.Sin(angle) * LumiteDestroyerArguments.R);
+                    Dust dust = Main.dust[Dust.NewDust(pivot + offset, 0, 0, DustID.Clentaminator_Purple, 0, 0, 100, Color.White)];
+                    dust.velocity = Vector2.Zero;
+                    if (Main.rand.Next(3) == 0)
+                        dust.velocity += Vector2.Normalize(offset) * 5f;
+                    dust.noGravity = true;
+                }
+                npc.ai[2]++;
+
+                if (npc.ai[2] % 3 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    var target = spinCenter;
+                    Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<Projectiles.DecimatorOfPlanets.LaserBarrage>(),
+                        npc.damage / 3, 0f, Main.myPlayer, target.X, target.Y);
+                }
+
+                if (npc.ai[2] >= 360)
+                {
+                    SwitchTo(DeathStruggleStart + 4);
+                }
+            }
+            else if (npc.ai[1] == DeathStruggleStart + 4)
+            {
+                npc.ai[2]++;
+                if (npc.ai[2] == 120 || npc.ai[2] == 480 && Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    int direction = Main.rand.Next(4);
+                    if (npc.ai[2] == 120)
+                        Projectile.NewProjectile(player.Center, Vector2.Zero, ModContent.ProjectileType<LMStarSigilEx>(),
+                            npc.damage / 8, 0f, Main.myPlayer, 0f, npc.target);
+                    if (npc.ai[2] == 480)
+                        Projectile.NewProjectile(player.Center + player.velocity * 45 - Vector2.UnitX.RotatedBy(Math.PI / 2 * direction) * 720,
+                            Vector2.Zero, ModContent.ProjectileType<LMLaserMatrix>(),
+                            npc.damage / 6, 0f, Main.myPlayer, 240, direction);
+                }
+                if (npc.ai[2] >= 360)
+                {
+                    maxSpeed *= (1 - (npc.ai[2] - 360) / 360);
+                    if (maxSpeed < 0.01f)
+                    {
+                        maxSpeed = 0.01f;
+                    }
+                }
+                npc.WormMovementEx(player.Center, maxSpeed, turnAcc, ramAcc);
+                if (npc.velocity.Compare(maxSpeed) > 0)
+                {
+                    npc.velocity = npc.velocity.SafeNormalize(Vector2.Zero) * maxSpeed;
+                }
+
+                if (npc.ai[2] == 720)
+                {
+                    npc.NewOrBoardcastText("LOW POWER", Color.BlueViolet);
+                }
+                if (npc.ai[2] >= 750)
+                {
+                    ForeachSegment((tmpNPC, counter) =>
+                    {
+                        tmpNPC.localAI[0] = 0;
+                        tmpNPC.localAI[1] = 0;
+                        tmpNPC.localAI[2] = 0;
+                        tmpNPC.localAI[3] = counter * 1;
+                        tmpNPC.frame.Y = 0;
+                        tmpNPC.netUpdate = true;
+                    });
+                    SwitchTo(DeathStruggleStart + 5);
+                }
+            }
+            #endregion
+        }
         #endregion
         public override void SendExtraAI(BinaryWriter writer)
         {
@@ -120,6 +292,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             writer.Write(chaosPlanets[1]);
             writer.Write(chaosPlanets[2]);
             writer.Write(randomCorrecter);
+            base.SendExtraAI(writer);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
@@ -135,6 +308,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             chaosPlanets[1] = reader.ReadInt32();
             chaosPlanets[2] = reader.ReadInt32();
             randomCorrecter = reader.ReadInt32();
+            base.ReceiveExtraAI(reader);
         }
 
         public override bool? DrawHealthBar(byte hbPosition, ref float scale, ref Vector2 position)
@@ -199,7 +373,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             if (npc.alpha > 0 || npc.ai[1] >= 101)
                 damage *= (1 - 0.99);
-            return true;
+            return base.StrikeNPC(ref damage, defense, ref knockback, hitDirection, ref crit);
         }
 
         public override bool CheckDead()
@@ -239,7 +413,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             Color glowColor = npc.ai[1] != 1 ? Color.White : Color.Lerp(Color.White, Color.Black, (float)Math.Sin(MathHelper.Pi / 14 * npc.localAI[2]));
             SpriteEffects effects = (npc.direction < 0) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             var mainColor = drawColor;
-            if (npc.ai[1] == 3)
+            /*if (npc.ai[1] == 3)
             {
                 if(npc.ai[2] >= 240)
                 {
@@ -254,8 +428,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 {
                     mainColor *= 0.5f;
                 }
-            }
-            else if ((npc.ai[1] == DivideAttackStart + 5 )|| (npc.ai[1] == DivideAttackStart + 6))
+            }*/
+            if ((npc.ai[1] == DivideAttackStart + 5 )|| (npc.ai[1] == DivideAttackStart + 6))
             {
                 /*if (npc.ai[2] >= 10)
                 {

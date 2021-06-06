@@ -43,6 +43,12 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
                 Main.PlaySound(SoundID.Item9, projectile.position);
             }
 
+            if (projectile.ai[0] == 1f)
+            {
+                if (projectile.velocity.Compare(projectile.ai[1]) < 0)
+                    projectile.velocity *= 1.1f;
+            }
+
             if (projectile.localAI[0] == 0)
                 projectile.localAI[0] = 1f;
             projectile.alpha += (int)(25.0 * projectile.localAI[0]);

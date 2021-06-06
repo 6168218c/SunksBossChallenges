@@ -28,7 +28,7 @@ namespace SunksBossChallenges.Projectiles
             projectile.penetrate = -1;
 
             cooldownSlot = 1;
-			projectile.scale = 0.5f;
+			projectile.scale = 0.8f;
             projectile.timeLeft = 240;
             projectile.tileCollide = false;
             projectile.ignoreWater = true;

@@ -18,7 +18,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 	{
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault(@"LS-003 ""Radioactive""");
+            DisplayName.SetDefault(@"Gemini-R");
 			Main.npcFrameCount[npc.type] = Main.npcFrameCount[NPCID.Retinazer];
 			NPCID.Sets.TrailingMode[npc.type] = NPCID.Sets.TrailingMode[NPCID.Retinazer];
 			NPCID.Sets.TrailCacheLength[npc.type] = NPCID.Sets.TrailCacheLength[NPCID.Retinazer];
@@ -671,9 +671,9 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 					Vector2 velocity = vecToPlayer;
 					velocity *= speed / vecToPlayer.Length();
 					Projectile.NewProjectile(npc.Center + velocity.RotatedBy(Math.PI / 3) * 15f, velocity.RotatedBy(Math.PI / 3),
-						ModContent.ProjectileType<HomingLaser>(), damage, 0f, Main.myPlayer, npc.target, 0.06f);
+						ModContent.ProjectileType<LSHomingLaser>(), damage, 0f, Main.myPlayer, npc.target, 0.06f);
 					Projectile.NewProjectile(npc.Center + velocity.RotatedBy(-Math.PI / 3) * 15f, velocity.RotatedBy(-Math.PI / 3),
-						ModContent.ProjectileType<HomingLaser>(), damage, 0f, Main.myPlayer, npc.target, 0.06f);
+						ModContent.ProjectileType<LSHomingLaser>(), damage, 0f, Main.myPlayer, npc.target, 0.06f);
 				}
             }
 			else if (npc.ai[1] == 6)

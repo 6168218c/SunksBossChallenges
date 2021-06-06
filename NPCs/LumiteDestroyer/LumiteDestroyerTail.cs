@@ -13,7 +13,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("LM-002 \"Annhilation\"");
+            DisplayName.SetDefault("Nova Annihilator");
             NPCID.Sets.TrailingMode[npc.type] = 3;
             NPCID.Sets.TrailCacheLength[npc.type] = 16;
             Main.npcFrameCount[npc.type] = Main.npcFrameCount[NPCID.TheDestroyerTail];
@@ -46,7 +46,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             if (npc.alpha > 0 || npc.ai[2] >= 11)
                 damage *= (1 - 0.99);
-            return false;
+            return base.StrikeNPC(ref damage, defense, ref knockback, hitDirection, ref crit);
         }
 
         public override void FindFrame(int frameHeight)

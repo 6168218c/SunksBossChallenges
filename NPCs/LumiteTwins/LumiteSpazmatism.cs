@@ -21,7 +21,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 		public int CoAttackPatternAI = 3;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault(@"LS-005 ""Infernal""");
+            DisplayName.SetDefault(@"Gemini-S");
 			Main.npcFrameCount[npc.type] = Main.npcFrameCount[NPCID.Spazmatism];
 			NPCID.Sets.TrailingMode[npc.type] = NPCID.Sets.TrailingMode[NPCID.Spazmatism];
 			NPCID.Sets.TrailCacheLength[npc.type] = NPCID.Sets.TrailCacheLength[NPCID.Spazmatism];

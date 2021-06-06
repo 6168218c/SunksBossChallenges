@@ -1,3 +1,5 @@
-displayName = Sunk's Boss Challenges
+displayName = SunK's Boss Challenges
 author = 6168218c
-version = 0.1
+version = 0.0.1.0
+hideCode = true
+includeSource = false

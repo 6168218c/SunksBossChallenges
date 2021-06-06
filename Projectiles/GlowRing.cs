@@ -101,37 +101,6 @@ namespace SunksBossChallenges.Projectiles
                     maxTime = 60;
                     break;
 
-                case NPCID.EyeofCthulhu:
-                    color = new Color(51, 255, 191);
-                    maxTime = 45;
-                    break;
-
-                case NPCID.QueenBee:
-                    color = new Color(255, 255, 100);
-                    maxTime = 45;
-                    break;
-
-                case NPCID.WallofFleshEye:
-                    color = new Color(93, 255, 241);
-                    maxTime = 45;
-                    break;
-
-                case NPCID.Retinazer:
-                    color = new Color(255, 0, 0);
-                    scale = 24f;
-                    maxTime = 60;
-                    break;
-
-                case NPCID.CultistBoss:
-                    color = new Color(255, 127, 40);
-                    break;
-
-                case NPCID.MoonLordHand:
-                case NPCID.MoonLordHead:
-                    color = new Color(51, 255, 191);
-                    scale = 8f;
-                    break;
-
                 default:
                     break;
             }
