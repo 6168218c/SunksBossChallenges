@@ -42,12 +42,12 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
     }
     public abstract class LumiteDestroyerSegment:ModNPC
     {
-        protected int LaserMatrix => 0;
-        protected int StarSigilEx => 1;
-        protected int HalfCircleDash => 2;
-        protected int StarDash => 3;
-        protected int ChronoDash => 4;
-        protected int StarFall => 5;
+        public static int LaserMatrix => 0;
+        public static int StarSigilEx => 1;
+        public static int HalfCircleDash => 2;
+        public static int StarDash => 3;
+        public static int ChronoDash => 4;
+        public static int StarFall => 5;
 
         // should have used Split,but used it in order not to confuse with SpinAttack
         protected int DivideAttackStart => 10;
@@ -59,7 +59,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         /// </summary>
         protected float SyncAttackState { get => npc.localAI[0]; set => npc.localAI[0] = value; }
         protected float SyncAttackTimer { get => npc.localAI[1]; set => npc.localAI[1] = value; }
-        protected int ImmuneTimer = 0;
+        internal int ImmuneTimer = 0;
 
         protected void ForeachSegment(Action<NPC,int> actionIdCount)
         {

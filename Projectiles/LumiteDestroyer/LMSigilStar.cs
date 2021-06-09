@@ -30,6 +30,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         }
         public override void AI()
         {
+            projectile.rotation -= 0.02f;
             if (projectile.ai[0] == 0)
             {
                 Player player = Main.player[(int)projectile.ai[1]];
@@ -105,8 +106,10 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             get
             {
                 Projectile parent = Main.projectile[(int)projectile.ai[1]];
-                if (parent.active && parent.type == ModContent.ProjectileType<LMSigilSubStar>())
+                if (parent.active && parent.type == ModContent.ProjectileType<LMSigilStar>())
                     return 5;
+                else if (hasBeenLaunched && AIState == 0 && projectile.ai[0] % 6 != 0)
+                    return 8;
                 else
                     return ProjectileID.Sets.TrailCacheLength[projectile.type];
             }
@@ -170,10 +173,10 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                         hasBeenLaunched = true;
                         projectile.localAI[0] = 0;
                         if (parent.active && parent.type == ModContent.ProjectileType<LMSigilStar>())
-                            projectile.velocity = (parent.Center - projectile.Center) / 60f;
+                            projectile.velocity = -(parent.Center - projectile.Center) / 60f;
                     }
                     projectile.localAI[0]++;
-                    if (projectile.velocity.Compare(36f) < 0)
+                    if (projectile.velocity.Compare(60f) < 0)
                     {
                         projectile.velocity *= 1.1f;
                     }
@@ -223,6 +226,27 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     DeathAnimationTimer = 15;
                 }
             }
+        }
+
+        public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
+        {
+            if (AIState == 0)
+            {
+                if (hasBeenLaunched && projectile.velocity != Vector2.Zero && projectile.ai[0] % 6 == 0&& projectile.localAI[0] <= 45)
+                {
+                    Color alpha = Color.Yellow * projectile.Opacity;
+                    if (projectile.localAI[0] <= 10)
+                    {
+                        alpha *= projectile.localAI[0] / 10f;
+                    }
+                    else if (projectile.localAI[0] >= 30)
+                    {
+                        alpha *= (45 - projectile.localAI[0]) / 15f;
+                    }
+                    projectile.DrawAim(spriteBatch, projectile.Center + projectile.velocity.SafeNormalize(Vector2.Zero) * 1500, alpha);
+                }
+            }
+            return base.PreDraw(spriteBatch, lightColor);
         }
 
         public override void SendExtraAI(BinaryWriter writer)

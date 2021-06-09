@@ -66,7 +66,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 				Main.dust[num383].velocity.X *= 0.5f;
 				Main.dust[num383].velocity.Y *= 0.1f;
 			}
-			if (npc.ai[1] >= EnragedState)
+			if (npc.ai[1] >= EnragedState && npc.ai[1] < EnragedState + 2)
 			{
 				int num425 = Dust.NewDust(new Vector2(npc.position.X, npc.position.Y + (float)npc.height * 0.25f), npc.width, (int)((float)npc.height * 0.5f), DustID.Electric, npc.velocity.X, 2f);
 				Main.dust[num425].velocity.X *= 0.5f;
@@ -286,8 +286,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 								NewOrBoardcastText($"CONNECTION ESTABLISHED", Color.Red);
 								if (Main.netMode != NetmodeID.MultiplayerClient)
 								{
-									int index = Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<GlowRing>(), 0, 0f, Main.myPlayer, npc.whoAmI);
-									(Main.projectile[index].modProjectile as GlowRing).color = Color.Red;
+									int index = Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<GlowRing>(), 0, 0f, Main.myPlayer, npc.whoAmI, -7);
 								}
 								npc.netUpdate = true;
 							}
@@ -417,8 +416,10 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 						{
 							npc.ai[1] = EnragedStateTrans;
 							npc.ai[2] = 0;
+							npc.localAI[0] = EnragedState;
 							Main.npc[brotherId].ai[1] = EnragedStateTrans;
 							Main.npc[brotherId].ai[2] = 0;
+							Main.npc[brotherId].localAI[0] = EnragedState;
 							npc.netUpdate = true;
 							Main.npc[brotherId].netUpdate = true;
 						}
@@ -431,6 +432,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 						Main.npc[brotherId].life = 0;
 						npc.checkDead();
 						Main.npc[brotherId].checkDead();
+						return;
 					}
 				}
 			}
@@ -658,7 +660,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
             {
 				npc.ai[2]++;
 				Vector2 dist = player.Center + Vector2.Normalize(npc.Center - player.Center) * 600f;
-				HoverMovement(dist, 30f + player.velocity.Length(), fastHoverAccle);
+				npc.FastMovement(dist);
                 if (npc.ai[2] % 15 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
 					float speed = 7.5f;
@@ -681,7 +683,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 				npc.ai[2]++;
 				if (npc.ai[2] <= 45)
                 {
-					HoverMovement(new Vector2(Main.npc[brotherId].localAI[2], Main.npc[brotherId].localAI[3]), 30f, fastHoverAccle);
+					npc.FastMovement(new Vector2(Main.npc[brotherId].localAI[2], Main.npc[brotherId].localAI[3]));
                 }
 				else if (npc.ai[2] < 60)
                 {
@@ -692,7 +694,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 					if (npc.ai[2] == 105)
                     {
 						Vector2 speed = Vector2.UnitX.RotatedBy(npc.rotation);
-						Projectile.NewProjectile(npc.Center, speed, ModContent.ProjectileType<RetinDeathRay>(), npc.damage / 2, 0f, Main.myPlayer, 480f, npc.whoAmI);
+						Projectile.NewProjectile(npc.Center, speed, ModContent.ProjectileType<RetinDeathRay>(), npc.damage / 2, 0f, Main.myPlayer, 420f, npc.whoAmI);
 					}
 					npc.Center = new Vector2(Main.npc[brotherId].localAI[2], Main.npc[brotherId].localAI[3]);
 					HandleRotation(npc.rotation - 0.025f);
@@ -792,6 +794,55 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 					npc.netUpdate = true;
 				}
 			}
+			else if (npc.ai[1] == 9f)//laser rain
+			{
+                if (npc.ai[2] == 0)
+                {
+					if (npc.localAI[1] == 0)
+                    {
+						npc.localAI[1]++;
+						npc.ai[3] = Main.rand.Next(0, 4);
+                    }
+					Vector2 target = player.Center + Vector2.UnitX.RotatedBy(Math.PI / 2 * npc.ai[3])
+						* ((npc.ai[3] % 2 == 0) ? 1800 : 1350);
+                    if (npc.DistanceSQ(target) > 10000)
+                    {
+						npc.ai[2]--;
+						npc.FastMovement(target);
+                    }
+                    else
+                    {
+						npc.velocity = Vector2.Zero;
+						npc.Center = target;
+						npc.ai[3] = (npc.ai[3] + (Main.rand.NextBool() ? -1 : 1)) % 4;
+					}
+                }
+				Vector2 targetPos = player.Center + Vector2.UnitX.RotatedBy(Math.PI / 2 * npc.ai[3])
+						* ((npc.ai[3] % 2 == 0) ? 1800 : 1350);
+				npc.ai[2]++;
+				if (npc.ai[2] == 10)
+				{
+					npc.localAI[0] =
+						(player.Center - Vector2.Lerp(npc.Center, targetPos, 0.5f)).ToRotation();
+					npc.velocity = (targetPos - npc.Center).SafeNormalize(Vector2.Zero) * 25f;
+					SetRotation(npc.localAI[0].ToRotationVector2());
+				}
+				else if (npc.ai[2] >= 10 && npc.DistanceSQ(targetPos) > 10000)
+				{
+					npc.velocity = (targetPos - npc.Center).SafeNormalize(Vector2.Zero) * 30f;
+					if (npc.ai[2] % 20 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+					{
+						Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<LSLaserRain>(),
+							30, 0f, Main.myPlayer, 0, npc.localAI[0]);
+					}
+				}
+				else if (npc.ai[2] >= 10)
+                {
+					npc.ai[2] = 0;
+					npc.netUpdate = true;
+                }
+				return;
+			}
 			#endregion
 			else if (npc.ai[1] == Relaxed)
 			{
@@ -807,130 +858,166 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 					NewOrBoardcastText("OVERLOADED MODE ON", Color.Red);
 					if (Main.netMode != NetmodeID.MultiplayerClient)
 					{
-						int index = Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<GlowRing>(), 0, 0f, Main.myPlayer, npc.whoAmI);
-						(Main.projectile[index].modProjectile as GlowRing).color = Color.Red;
+						int index = Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<GlowRing>(), 0, 0f, Main.myPlayer, npc.whoAmI, -7);
 					}
 				}
-				if (npc.ai[2] >= 160)
+				if (npc.ai[2] >= 120)
 				{
 					if (npc.life > 1)
+					{
 						npc.dontTakeDamage = false;
-					npc.ai[1] = EnragedState;
+						npc.ai[1] = EnragedState;
+					}
+					else
+						npc.ai[1] = EnragedState + 2;
 					npc.ai[2] = 0;
 					npc.ai[3] = 0;
 				}
 			}
 			else if (npc.ai[1] == EnragedState)
             {
+				if (npc.ai[2] % 150 == 0)
+                {
+					npc.localAI[1] = 0;
+					npc.localAI[2] = Main.rand.NextBool() ? -1 : 1;
+					if (npc.ai[3] == 4) npc.ai[3] = 5;
+					else if (npc.ai[3] == 5) npc.ai[3] = 4;
+					else npc.ai[3] = Main.rand.NextBool() ? 4 : 5;
+                }
 				npc.ai[2]++;
-				Vector2 dist = player.Center + Vector2.Normalize(npc.Center - player.Center) * 600f;
-				HoverMovement(dist, 13.5f, 0.3f);
-				Vector2 vector40 = new Vector2(npc.position.X + (float)npc.width * 0.5f, npc.position.Y + (float)npc.height * 0.5f);
-				float num414 = Main.player[npc.target].position.X + (float)(Main.player[npc.target].width / 2) - vector40.X;
-				float num415 = Main.player[npc.target].position.Y + (float)(Main.player[npc.target].height / 2) - vector40.Y;
-				npc.rotation = (float)Math.Atan2(num415, num414) - 1.57f;
-				if (Main.netMode != NetmodeID.MultiplayerClient)
-				{
-					#region AttackRate
-					npc.localAI[1] += 1f;
-					if ((double)npc.life < (double)npc.lifeMax * 0.75)
-					{
-						npc.localAI[1] += 0.5f;
-					}
-					if ((double)npc.life < (double)npc.lifeMax * 0.5)
-					{
-						npc.localAI[1] += 0.75f;
-					}
-					if ((double)npc.life < (double)npc.lifeMax * 0.25)
-					{
-						npc.localAI[1] += 1f;
-					}
-					if ((double)npc.life < (double)npc.lifeMax * 0.1)
-					{
-						npc.localAI[1] += 1.5f;
-					}
-					if (Main.expertMode)
-					{
-						npc.localAI[1] += 1.5f;
-					}
-					#endregion
-					if (npc.localAI[1] > 60f && Collision.CanHit(npc.position, npc.width, npc.height, Main.player[npc.target].position, Main.player[npc.target].width, Main.player[npc.target].height))
-					{
-						npc.localAI[1] = 0f;
-						float num417 = 9f;
-						int damage = 28;
-						if (Main.expertMode)
-						{
-							damage = 25;
-						}
-						/*num416 = (float)Math.Sqrt(num414 * num414 + num415 * num415);
-						num416 = num417 / num416;
-						num414 *= num416;
-						num415 *= num416;
-						vector40.X += num414 * 15f;
-						vector40.Y += num415 * 15f;*/
-						Vector2 velocity = vecToPlayer;
-						velocity *= num417 / velocity.Length();
-						int num420 = Projectile.NewProjectile(npc.Center + velocity * 15f, velocity, ProjectileID.DeathLaser, damage, 0f, Main.myPlayer);
-					}
+				if (npc.ai[2] % 150 < 30)
+                {
+					npc.FastMovement(player.Center - Vector2.UnitY * 600 * npc.localAI[2]
+						+ Vector2.UnitX * 800 * Math.Sign(npc.Center.X - player.Center.X));
+					SetRotation(vecToPlayer);
 				}
-				if (npc.ai[2] >= 180f)
+                else
+                {
+					npc.velocity = Vector2.Zero;
+                }
+
+				if (Main.netMode != NetmodeID.MultiplayerClient && npc.ai[2] % 5 == 0 && npc.ai[2] % 150 >= 30)
+                {
+					int counter = (int)(npc.ai[2] / 5 % npc.ai[3]);
+					Vector2 velo = (player.Center - npc.Center).SafeNormalize(Vector2.Zero).RotatedBy(-npc.localAI[2] * MathHelper.Pi / 8);
+					velo = velo.RotatedBy(npc.localAI[2] * MathHelper.Pi / 4 / (npc.ai[3] - 1) * counter);
+					Projectile.NewProjectile(npc.Center + npc.width * vecToPlayer.SafeNormalize(Vector2.Zero), velo * 18, ProjectileID.DeathLaser,
+						36, 0f, Main.myPlayer);
+				}
+
+				if (npc.ai[2] >= 600)
 				{
-					npc.ai[1] = EnragedState + 1;
-					npc.ai[2] = 0f;
-					npc.ai[3] = 0f;
-					npc.localAI[1] = 0f;
-					npc.TargetClosest();
+					npc.ai[1] = EnragedState + 2;
+					npc.ai[2] = 0;
+					npc.ai[3] = 0;
+					npc.localAI[0] = EnragedState + 1;
 					npc.netUpdate = true;
+					Main.npc[brotherId].ai[1] = Main.npc[brotherId].localAI[0];
+					Main.npc[brotherId].netUpdate = true;
 				}
 				return;
 			}
-			else if (npc.ai[1] == EnragedState + 1)
+			else if (npc.ai[1] == EnragedState + 1)//[Master Spark]
             {
-                if (npc.ai[2] == 0)
-                {
-					npc.velocity = Vector2.Normalize(vecToPlayer) * 30f;
-                }
 				npc.ai[2]++;
-				if (npc.ai[2] < 0) SlowDown(0.98f);
-				if (npc.ai[2] % 5 == 0 && npc.ai[2] >= 0)
+                if (npc.ai[2] <= 180)
                 {
-					float speed = 9f;
-					int damage = 30;
-					if (Main.expertMode)
+					if (npc.ai[2] % 90 <= 10)
 					{
-						speed = 13.5f;
-						damage = 27;
+						npc.FastMovement(player.Center + Vector2.UnitX * Math.Sign(-vecToPlayer.X) * 500);
 					}
-					Vector2 velocity = vecToPlayer;
-					velocity *= speed / velocity.Length();
-					int num410 = Projectile.NewProjectile(npc.Center + velocity * 15f, velocity, ProjectileID.RocketSkeleton, damage, 0f, Main.myPlayer);
+					else if (npc.ai[2] % 90 <= 80)
+					{
+						if (npc.ai[2] % 90 <= 15)
+						{
+							npc.SlowDown(0.8f);
+							HandleRotation(distRotation);
+						}
+                        else
+                        {
+							SetRotation(npc.velocity);
+                        }
+						if (npc.ai[2] % 90 == 15) npc.velocity = Math.Sign(vecToPlayer.X) * Vector2.UnitX * 24f;
+
+						if (npc.ai[2] % 16 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+						{
+							var direct = Math.Sign(vecToPlayer.Y) * Vector2.UnitY;
+							Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<LSLaserRain>(),
+								30, 0f, Main.myPlayer, 0, direct.ToRotation());
+						}
+					}
 				}
-                if (npc.ai[2] == 50)
+                else
                 {
-                    if (npc.localAI[1] == 0)
+                    if (npc.ai[2] <= 200)
                     {
-						npc.localAI[1]++;
-						npc.ai[2] = -45;
+						npc.FastMovement(player.Center - Vector2.UnitY * 300);
+						HandleRotation(distRotation);
+					}
+                    else if (npc.ai[2] <= 300)
+                    {
+						npc.SlowDown(0.98f);
+						HandleRotation(distRotation, 0.02f);
+						if (npc.ai[2] % 16 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+                        {
+							Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<GlowRingLegacy>(),
+								0, 0f, Main.myPlayer, npc.whoAmI, -7);
+                        }
+                        if (npc.ai[2] == 300 && Main.netMode != NetmodeID.MultiplayerClient)
+                        {
+							Projectile proj = Projectile.NewProjectileDirect(npc.Center + Vector2.Normalize(vecToPlayer) * npc.width, Vector2.Zero,
+								ModContent.ProjectileType<RetinDeathRay>(), npc.damage * 5, 0f, Main.myPlayer, 280f, npc.whoAmI);
+							proj.localAI[1] = 2;
+							proj.netUpdate = true;
+						}
                     }
-                    else
+					else if (npc.ai[2] <= 600)
                     {
-						npc.localAI[1] = 0f;
-						npc.ai[2] = 0;
-						npc.ai[1] = EnragedState;
+						npc.velocity = -(npc.rotation + 1.57f).ToRotationVector2() * 2f;
+
+						if (npc.ai[2] % 160 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+                        {
+							for(int i = 0; i < 5; i++)
+                            {
+								Vector2 center = npc.Center - npc.velocity * 300 * (i + 1);
+								Projectile.NewProjectile(center, Vector2.Zero, ModContent.ProjectileType<LSLaserRain>(),
+									npc.damage * 2, 0f, Main.myPlayer, 1, npc.rotation);
+                            }
+                        }
                     }
                 }
-				SetRotation(npc.velocity);
+                if (npc.ai[2] >= 600)
+                {
+					npc.ai[1] = EnragedState + 2;
+					npc.ai[2] = 0;
+					npc.ai[3] = 0;
+					npc.localAI[0] = EnragedState;
+					npc.netUpdate = true;
+					Main.npc[brotherId].ai[1] = Main.npc[brotherId].localAI[0];
+					Main.npc[brotherId].netUpdate = true;
+				}
+
 				return;
             }
+			else if (npc.ai[1] == EnragedState + 2)
+            {
+				//idle
+				Vector2 dist = player.Center + Vector2.Normalize(npc.Center - player.Center) * 600f;
+				npc.FastMovement(dist);
+			}
 			#endregion
 			HandleRotation(distRotation);
 		}
+		public bool AllowDeathray()
+        {
+			return npc.ai[1] == 6 || npc.ai[1] == 7 || npc.ai[1] == 9 || npc.ai[1] == EnragedState || npc.ai[1] == EnragedState + 1;
+        }
 
         public override bool PreDraw(SpriteBatch spriteBatch, Color drawColor)
         {
 			if (npc.target != 255 && npc.target >= 0)
 			{
+				Player player = Main.player[npc.target];
 				if (npc.ai[1] == 7f)
 				{
 					if (npc.localAI[1] > 0)
@@ -960,6 +1047,22 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 					if (npc.ai[2] >= 90 && npc.localAI[1] == 0)
 					{
 						DrawAim(spriteBatch, (Main.player[npc.target].Center - npc.Center + Main.player[npc.target].velocity * 10) * 5 + npc.Center, Color.Red);
+					}
+				}
+                if (npc.ai[1] == EnragedState)
+                {
+					/*for(int i = 0; i < npc.ai[3]; i++)
+                    {
+						Vector2 velo = (npc.rotation + 1.57f).ToRotationVector2().RotatedBy(-npc.localAI[2] * MathHelper.Pi / 8);
+						velo = velo.RotatedBy(npc.localAI[2] * MathHelper.Pi / 4 / (npc.ai[3] - 1) * i);
+						npc.DrawAim(spriteBatch, npc.Center + npc.width * (player.Center - npc.Center).SafeNormalize(Vector2.Zero) + velo * 1800, Color.Red * 0.8f);
+					}*/
+				}
+                if (npc.ai[1] == EnragedState + 1)
+                {
+					if (npc.ai[2] >= 200 && npc.ai[2] <= 300)
+					{
+						DrawAim(spriteBatch, (npc.rotation + 1.57f).ToRotationVector2() * (Main.player[npc.target].Center - npc.Center).Length() * 3 + npc.Center, Color.Red);
 					}
 				}
 			}
@@ -997,8 +1100,12 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
             }
             return false;
         }
-
-        public override void DrawEffects(ref Color drawColor)
+		public override Color? GetAlpha(Color drawColor)
+		{
+			if (npc.ai[1] == EnragedState + 2) return Color.Lerp(drawColor, Color.Black, 0.3f);
+			return base.GetAlpha(drawColor);
+		}
+		public override void DrawEffects(ref Color drawColor)
         {
 			if (CheckBrother<LumiteSpazmatism>())
 			{
@@ -1048,7 +1155,11 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 
         public override bool CanHitPlayer(Player target, ref int cooldownSlot)
         {
-			return npc.ai[1] != 3f;
+			if (npc.ai[1] == 3f)
+				return false;
+			else if (npc.ai[1] == 6f && npc.ai[2] <= 60f)
+				return false;
+			return true;
         }
 
 		public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)

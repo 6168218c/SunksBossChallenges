@@ -140,4 +140,99 @@ namespace SunksBossChallenges.Projectiles
             return false;
         }
     }
+
+    public class GlowRingLegacy : ModProjectile
+    {
+        public Color color = Color.White;
+        public override string Texture => "Terraria/Projectile_" + ProjectileID.ShadowBeamHostile;
+        public override void SetStaticDefaults()
+        {
+            DisplayName.SetDefault("Legacy Glow Ring");
+            base.SetStaticDefaults();
+        }
+        public override void SetDefaults()
+        {
+            projectile.width = projectile.height = 4;
+            projectile.aiStyle = -1;
+            projectile.alpha = 255;
+            projectile.tileCollide = false;
+            projectile.ignoreWater = true;
+            projectile.penetrate = -1;
+
+            projectile.timeLeft = 20;
+        }
+        public override void AI()
+        {
+            float scale = 12f;
+            switch ((int)projectile.ai[1])
+            {
+                case -12: //nature shroomite blue
+                    color = new Color(0, 0, 255);
+                    break;
+
+                case -11: //nature chlorophyte green
+                    color = new Color(0, 255, 0);
+                    break;
+
+                case -10: //nature frost cyan
+                    color = new Color(0, 255, 255);
+                    break;
+
+                case -9: //nature rain yellow
+                    color = new Color(255, 255, 0);
+                    break;
+
+                case -8: //nature molten orange
+                    color = new Color(255, 127, 40);
+                    break;
+
+                case -7: //nature crimson red
+                    color = new Color(255, 0, 0);
+                    break;
+
+                case -6: //will, spirit champ yellow
+                    color = new Color(255, 255, 0);
+                    break;
+
+                case -5: //shadow champ purple
+                    color = new Color(200, 0, 255);
+                    break;
+
+                case -4: //life champ yellow
+                    color = new Color(255, 255, 0);
+                    break;
+
+                case -3: //earth champ orange
+                    color = new Color(255, 100, 0);
+                    scale = 16f;
+                    break;
+
+                case -2: //ml teal cyan
+                    color = new Color(51, 255, 191);
+                    scale = 16f;
+                    break;
+
+                case -1: //purple shadowbeam
+                    color = new Color(200, 0, 200);
+                    break;
+
+                default:
+                    break;
+            }
+
+            int veloFactor = 1;
+            if (projectile.ai[0] == 1) veloFactor = -1;
+            for(int i = 0; i < 22; i++)
+            {
+                var velo = -Vector2.UnitX.RotatedBy(MathHelper.TwoPi / 22 * i) * veloFactor;
+                int num = Dust.NewDust(projectile.Center + Vector2.UnitX.RotatedBy(MathHelper.TwoPi / 22 * i) * 120 * scale,
+                    projectile.width, projectile.height, DustID.Vortex, velo.X, velo.Y, 0, projectile.GetAlpha(color), scale);
+                Main.dust[num].noGravity = true;
+            }
+        }
+        public override Color? GetAlpha(Color lightColor)
+        {
+            return color * projectile.Opacity;
+        }
+    }
 }

@@ -11,7 +11,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 {
     public class LMStarSigil:ModProjectile
     {
-        protected int baseUnitLen => 750;
+        protected int baseUnitLen => 875;
         public override string Texture => "Terraria/Projectile_" + ProjectileID.ShadowBeamHostile;
         public override void SetStaticDefaults()
         {
@@ -35,6 +35,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             {
                 projectile.rotation += 0.015f;
                 projectile.localAI[0]++;
+                projectile.Center = player.Center;
             }
 
             /*if (projectile.localAI[0] == 200 && Main.netMode != NetmodeID.MultiplayerClient)

@@ -14,7 +14,7 @@ namespace SunksBossChallenges.Projectiles.LumiteTwins
         public override string Texture => "Terraria/Projectile_" + ProjectileID.ShadowBeamHostile;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Waypoint");
+            DisplayName.SetDefault("Waypoint Launcher");
             base.SetStaticDefaults();
         }
         public override void SetDefaults()
@@ -25,13 +25,13 @@ namespace SunksBossChallenges.Projectiles.LumiteTwins
             projectile.tileCollide = false;
             projectile.ignoreWater = true;
             projectile.penetrate = -1;
-
-            projectile.timeLeft = 600;
         }
         public override void AI()
         {
             Player player = Main.player[(int)projectile.ai[0]];
-            if (projectile.localAI[0] % 45 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+            projectile.Loomup();
+            //spawn 6 waypoints
+            if (projectile.localAI[0] % 45 == 0 && Main.netMode != NetmodeID.MultiplayerClient && projectile.localAI[0] / 45 < 6)
             {
                 if (projectile.localAI[0] == 0)
                 {
@@ -46,10 +46,10 @@ namespace SunksBossChallenges.Projectiles.LumiteTwins
                 }
                 projectile.netUpdate = true;
             }
-            if (Util.CheckProjAlive<LSWaypoint>((int)projectile.localAI[1]))
+            if (Util.CheckProjAlive<LSWaypoint>((int)projectile.localAI[1])&& projectile.localAI[0] / 45 <= 6)
             {
                 Projectile proj = Main.projectile[(int)projectile.localAI[1]];
-                proj.Center = player.Center + player.velocity * 20;
+                proj.Center = player.Center + player.velocity * 30;
             }
             projectile.localAI[0]++;
         }
@@ -82,12 +82,11 @@ namespace SunksBossChallenges.Projectiles.LumiteTwins
             projectile.tileCollide = false;
             projectile.ignoreWater = true;
             projectile.penetrate = -1;
-
-            projectile.timeLeft = 600;
         }
         public override void AI()
         {
             //ai[0]:prev,ai[1]:next
+            projectile.Loomup();
             if (projectile.ai[0] != -1 && Main.projectile[(int)projectile.ai[0]].active
                 && Main.projectile[(int)projectile.ai[0]].type == ModContent.ProjectileType<LSWaypoint>())
             {
@@ -96,18 +95,19 @@ namespace SunksBossChallenges.Projectiles.LumiteTwins
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
         {
-            Texture2D texture2D13 = Main.projectileTexture[projectile.type];
-            int num156 = Main.projectileTexture[projectile.type].Height / Main.projFrames[projectile.type]; //ypos of lower right corner of sprite to draw
-            int y3 = num156 * projectile.frame; //ypos of upper left corner of sprite to draw
-            Rectangle rectangle = new Rectangle(0, y3, texture2D13.Width, num156);
-            Vector2 origin2 = rectangle.Size() / 2f;
-            Main.spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle),
-                projectile.GetAlpha(lightColor), projectile.rotation, origin2, projectile.scale, SpriteEffects.None, 0f);
             if (projectile.ai[1] != -1 && Main.projectile[(int)projectile.ai[1]].active
                 && Main.projectile[(int)projectile.ai[1]].type == ModContent.ProjectileType<LSWaypoint>())
             {
                 projectile.DrawAim(spriteBatch, Main.projectile[(int)projectile.ai[1]].Center, Color.Green);
             }
+            Texture2D texture2D13 = Main.projectileTexture[projectile.type];
+            int num156 = Main.projectileTexture[projectile.type].Height / Main.projFrames[projectile.type]; //ypos of lower right corner of sprite to draw
+            int y3 = num156 * projectile.frame; //ypos of upper left corner of sprite to draw
+            Rectangle rectangle = new Rectangle(0, y3, texture2D13.Width, num156);
+            Vector2 origin2 = rectangle.Size() / 2f;
+            lightColor = Color.Lerp(lightColor, Color.Green, 0.5f);
+            Main.spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle),
+                projectile.GetAlpha(lightColor), projectile.rotation, origin2, projectile.scale, SpriteEffects.None, 0f);
             return false;
         }
     }

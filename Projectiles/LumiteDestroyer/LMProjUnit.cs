@@ -12,6 +12,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 {
     public abstract class LMProjUnit:ModProjectile
     {
+        protected Texture2D TrailTex;
         public override string Texture => "SunksBossChallenges/Projectiles/LumiteDestroyer/LMProjUnit";
         public abstract override void AI();
         public virtual bool NeedSyncLocalAI => false;
@@ -46,7 +47,8 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
         {
             Texture2D texture2D13 = Main.projectileTexture[projectile.type];
-            Texture2D TrailTex = mod.GetTexture("Projectiles/DeathLaserTrail");
+            if (TrailTex == null)
+                TrailTex = mod.GetTexture("Projectiles/DeathLaserTrail");
             int num156 = Main.projectileTexture[projectile.type].Height / Main.projFrames[projectile.type]; //ypos of lower right corner of sprite to draw
             int y3 = num156 * projectile.frame; //ypos of upper left corner of sprite to draw
             Rectangle rectangle = new Rectangle(0, y3, texture2D13.Width, num156);

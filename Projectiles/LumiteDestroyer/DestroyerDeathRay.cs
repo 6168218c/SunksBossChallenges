@@ -78,11 +78,29 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             {
                 projectile.velocity = -Vector2.UnitY;
             }
-            if (this.Timer == 0f)
-            {
-                Main.PlaySound(SoundID.Zombie, (int)projectile.position.X, (int)projectile.position.Y, 104, 1f, 0f);
-            }
             float num801 = 1f;
+            if (projectile.localAI[1] == 1)
+            {
+                if (this.Timer == 60f)
+                {
+                    Main.PlaySound(SoundID.Zombie, (int)projectile.position.X, (int)projectile.position.Y, 104, 1f, 0f);
+                }
+                if (this.Timer <= 60f)
+                {
+                    num801 = 0.1f;
+                }
+                else
+                {
+                    num801 = 1f;
+                }
+            }
+            else
+            {
+                if (this.Timer == 0f)
+                {
+                    Main.PlaySound(SoundID.Zombie, (int)projectile.position.X, (int)projectile.position.Y, 104, 1f, 0f);
+                }
+            }
             if (projectile.localAI[0] == 0f)
                 this.Timer += 1;
             if (this.Timer >= maxTime)
@@ -216,14 +234,21 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
-            if (projHitbox.Intersects(targetHitbox))
+            if (projectile.localAI[1] == 1 && Timer <= 60)
             {
-                return true;
+                return false;
             }
-            float num6 = 0f;
-            if (Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), projectile.Center, projectile.Center + projectile.velocity * this.length, 22f * projectile.scale, ref num6))
+            else
             {
-                return true;
+                if (projHitbox.Intersects(targetHitbox))
+                {
+                    return true;
+                }
+                float num6 = 0f;
+                if (Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), projectile.Center, projectile.Center + projectile.velocity * this.length, 22f * projectile.scale, ref num6))
+                {
+                    return true;
+                }
             }
             return false;
         }

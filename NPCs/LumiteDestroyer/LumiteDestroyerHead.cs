@@ -37,7 +37,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             npc.npcSlots = 1f;
             npc.width = npc.height = 50;
             npc.defense = 0;
-            npc.damage = 100;
+            npc.damage = 120;
             npc.lifeMax = 360000;
             npc.HitSound = SoundID.NPCHit4;
             npc.DeathSound = SoundID.NPCDeath14;
@@ -47,7 +47,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             npc.value = 0f;
             npc.netAlways = true;
             npc.alpha = 255;
-            npc.scale = LumiteDestroyerArguments.Scale * 1.1f;
+            npc.scale = LumiteDestroyerArguments.Scale;
             for (int i = 0; i < npc.buffImmune.Length; i++)
                 npc.buffImmune[i] = true;
             music = MusicID.Boss3;
@@ -75,7 +75,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         public bool AllowSpin()
         {
             return IsPhase3() && (npc.ai[1] < DivideAttackStart || npc.ai[1] > DivideAttackStart + DivideAILength) &&
-                (npc.ai[1] != 1) && (npc.ai[1] != 3) && (npc.ai[1] != 4);
+                (npc.ai[1] != ChronoDash) && (npc.ai[1] != StarDash) && (npc.ai[1] != StarFall);
         }
         void SwitchTo(float ai1, bool resetCounter = true, bool resetAllTimer = true)
         {
@@ -260,7 +260,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
 
                 if (npc.ai[2] == 720)
                 {
-                    npc.NewOrBoardcastText("LOW POWER", Color.BlueViolet);
+                    npc.NewOrBoardcastText("I'm not done with you...yet..", Color.BlueViolet);
                 }
                 if (npc.ai[2] >= 750)
                 {
@@ -355,6 +355,14 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 position = healBarPos;
             }
             return true;
+        }
+
+        public override void BossHeadSlot(ref int index)
+        {
+            if (CanBeTransparent()) 
+                index = -1;
+            else 
+                base.BossHeadSlot(ref index);
         }
 
         public override bool? CanBeHitByProjectile(Projectile projectile)

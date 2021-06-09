@@ -15,7 +15,9 @@ namespace SunksBossChallenges.Projectiles.LumiteTwins
 {
     public class RetinDeathRay : ModProjectile
     {
-        int maxTime { get; set; } = 480;
+        int Timer = 0;
+        float length = 0;
+        int maxTime { get; set; }
         float transparency => 0f;
         public override void SetStaticDefaults()
         {
@@ -42,15 +44,30 @@ namespace SunksBossChallenges.Projectiles.LumiteTwins
             {
                 projectile.velocity = -Vector2.UnitY;
             }
-            if (Main.npc[(int)projectile.ai[1]].active && Main.npc[(int)projectile.ai[1]].type == ModContent.NPCType<LumiteRetinazer>()
-                && (Main.npc[(int)projectile.ai[1]].ai[1] == 6 || Main.npc[(int)projectile.ai[1]].ai[1] == 7))
+            if (Util.CheckNPCAlive<LumiteRetinazer>((int)projectile.ai[1])&&
+                (Main.npc[(int)projectile.ai[1]].modNPC as LumiteRetinazer).AllowDeathray())
             {
                 //Vector2 value21 = new Vector2(27f, 59f);
                 //Vector2 fireFrom = new Vector2(Main.npc[(int)projectile.ai[1]].Center.X, Main.npc[(int)projectile.ai[1]].Center.Y);
                 //Vector2 value22 = Utils.Vector2FromElipse(Main.npc[(int)projectile.ai[1]].localAI[2].ToRotationVector2(), value21 * Main.npc[(int)projectile.ai[1]].localAI[3]);
                 //projectile.position = fireFrom + value22 - new Vector2(projectile.width, projectile.height) / 2f;
-                Vector2 offset = new Vector2(Main.npc[(int)projectile.ai[1]].width - 24, 0).RotatedBy(Main.npc[(int)projectile.ai[1]].rotation + 1.57079633);
-                projectile.Center = Main.npc[(int)projectile.ai[1]].Center + offset;
+                if (projectile.localAI[1] != 1f)
+                {
+                    if (projectile.localAI[1] == 0 || projectile.localAI[1] == 3)
+                    {
+                        Vector2 offset = new Vector2(Main.npc[(int)projectile.ai[1]].width - 24, 0).RotatedBy(Main.npc[(int)projectile.ai[1]].rotation + 1.57079633);
+                        projectile.Center = Main.npc[(int)projectile.ai[1]].Center + offset;
+                    }
+                    else if (projectile.localAI[1] == 2)
+                    {
+                        Vector2 offset = new Vector2(Main.npc[(int)projectile.ai[1]].width+36, 0).RotatedBy(Main.npc[(int)projectile.ai[1]].rotation + 1.57079633);
+                        projectile.Center = Main.npc[(int)projectile.ai[1]].Center + offset;
+                    }
+                }
+                else
+                {
+                    projectile.Center -= projectile.velocity;
+                }
             }
             else
             {
@@ -61,18 +78,24 @@ namespace SunksBossChallenges.Projectiles.LumiteTwins
             {
                 projectile.velocity = -Vector2.UnitY;
             }
-            if (projectile.localAI[0] == 0f)
+            if (this.Timer == 0f)
             {
                 Main.PlaySound(SoundID.Zombie, (int)projectile.position.X, (int)projectile.position.Y, 104, 1f, 0f);
             }
             float num801 = 1f;
-            projectile.localAI[0] += 1f;
-            if (projectile.localAI[0] >= maxTime)
+            if (projectile.localAI[1] == 2f)
+            {
+                if (Timer > 60)
+                    num801 = 8f;//for MASTER SPARK
+                else num801 = 0.2f;
+            }
+            this.Timer += 1;
+            if (this.Timer >= maxTime)
             {
                 projectile.Kill();
                 return;
             }
-            projectile.scale = (float)Math.Sin(projectile.localAI[0] * 3.14159274f / maxTime) * 10f * num801;
+            projectile.scale = (float)Math.Sin(this.Timer * 3.14159274f / maxTime) * 10f * num801;
             if (projectile.scale > num801)
             {
                 projectile.scale = num801;
@@ -81,9 +104,16 @@ namespace SunksBossChallenges.Projectiles.LumiteTwins
             //num804 += projectile.ai[0];
             //projectile.rotation = num804 - 1.57079637f;
             float num804 = Main.npc[(int)projectile.ai[1]].rotation;
-            projectile.rotation = num804;
-            num804 += 1.57079637f;
-            projectile.velocity = num804.ToRotationVector2();
+            if (projectile.localAI[1] != 1 && projectile.localAI[1] != 3)
+            {
+                projectile.rotation = num804;
+                num804 += 1.57079637f;
+                projectile.velocity = num804.ToRotationVector2();
+            }
+            else
+            {
+                projectile.rotation = projectile.velocity.ToRotation() - 1.57079637f;
+            }
             float num805 = 3f;
             float num806 = (float)projectile.width;
             Vector2 samplingPoint = projectile.Center;
@@ -92,7 +122,8 @@ namespace SunksBossChallenges.Projectiles.LumiteTwins
                 samplingPoint = vector78.Value;
             }
             float[] array3 = new float[(int)num805];
-            Collision.LaserScan(samplingPoint, projectile.velocity, num806 * projectile.scale, 2400f, array3);
+            //Collision.LaserScan(samplingPoint, projectile.velocity, num806 * projectile.scale, 2400f, array3);
+            for (int i = 0; i < array3.Length; i++) array3[i] = 2400f;
             float num807 = 0f;
             int num3;
             for (int num808 = 0; num808 < array3.Length; num808 = num3 + 1)
@@ -102,8 +133,8 @@ namespace SunksBossChallenges.Projectiles.LumiteTwins
             }
             num807 /= num805;
             float amount = 0.5f;
-            projectile.localAI[1] = MathHelper.Lerp(projectile.localAI[1], num807, amount);
-            Vector2 vector79 = projectile.Center + projectile.velocity * (projectile.localAI[1] - 14f);
+            this.length = MathHelper.Lerp(this.length, num807, amount);
+            Vector2 vector79 = projectile.Center + projectile.velocity * (this.length - 14f);
             for (int num809 = 0; num809 < 2; num809 = num3 + 1)
             {
                 float num810 = projectile.velocity.ToRotation() + ((Main.rand.Next(2) == 1) ? -1f : 1f) * 1.57079637f;
@@ -138,7 +169,7 @@ namespace SunksBossChallenges.Projectiles.LumiteTwins
             Texture2D texture2D19 = Main.projectileTexture[projectile.type];
             Texture2D texture2D20 = mod.GetTexture("Projectiles/LumiteTwins/RetinDeathRay2");
             Texture2D texture2D21 = mod.GetTexture("Projectiles/LumiteTwins/RetinDeathRay3");
-            float num223 = projectile.localAI[1];
+            float num223 = this.length;
             Microsoft.Xna.Framework.Color color44 = new Microsoft.Xna.Framework.Color(255, 255, 255, 0) * 0.8f;
             color44 = Color.Lerp(color44, Color.Transparent, transparency);
             SpriteBatch arg_ABD8_0 = Main.spriteBatch;
@@ -181,17 +212,18 @@ namespace SunksBossChallenges.Projectiles.LumiteTwins
         {
             DelegateMethods.tilecut_0 = TileCuttingContext.AttackProjectile;
             Vector2 unit = projectile.velocity;
-            Utils.PlotTileLine(projectile.Center, projectile.Center + unit * projectile.localAI[1], (float)projectile.width * projectile.scale, new Utils.PerLinePoint(DelegateMethods.CutTiles));
+            Utils.PlotTileLine(projectile.Center, projectile.Center + unit * this.length, (float)projectile.width * projectile.scale, new Utils.PerLinePoint(DelegateMethods.CutTiles));
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
+            if (projectile.localAI[1] == 2 && Timer <= 60) return false;
             if (projHitbox.Intersects(targetHitbox))
             {
                 return true;
             }
             float num6 = 0f;
-            if (Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), projectile.Center, projectile.Center + projectile.velocity * projectile.localAI[1], 22f * projectile.scale, ref num6))
+            if (Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), projectile.Center, projectile.Center + projectile.velocity * this.length, 22f * projectile.scale, ref num6))
             {
                 return true;
             }
@@ -201,6 +233,20 @@ namespace SunksBossChallenges.Projectiles.LumiteTwins
         public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
         {
             base.OnHitNPC(target, damage, knockback, crit);
+        }
+
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write(projectile.localAI[0]);
+            writer.Write(projectile.localAI[1]);
+            base.SendExtraAI(writer);
+        }
+
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            projectile.localAI[0] = reader.ReadSingle();
+            projectile.localAI[1] = reader.ReadSingle();
+            base.ReceiveExtraAI(reader);
         }
     }
 }

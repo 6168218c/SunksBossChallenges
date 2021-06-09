@@ -40,6 +40,10 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 }
                 return;
             }
+            if (NPC.FindFirstNPC(ModContent.NPCType<LumiteDestroyerHead>()) == -1)
+            {
+                projectile.localAI[1] = 1;
+            }
             Player player = Main.player[(int)projectile.ai[0]];
             projectile.Center = player.Center;
             projectile.rotation = MathHelper.WrapAngle(projectile.rotation + 0.015f);
@@ -72,7 +76,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 
             if (projectile.ai[1] == 1 && projectile.localAI[1] == 0)
             {
-                for (int i = 0; i < 5; i++)
+                for (int i = 1; i <= 5; i++)
                 {
                     if (projectile.localAI[0] < i * 20)
                         break;

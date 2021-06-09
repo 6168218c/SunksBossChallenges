@@ -32,7 +32,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             npc.npcSlots = 1f;
             npc.width = npc.height = 38;
             npc.defense = 0;
-            npc.damage = 60;
+            npc.damage = 100;
             npc.lifeMax = 360000;
             npc.HitSound = SoundID.NPCHit4;
             npc.DeathSound = SoundID.NPCDeath14;
@@ -260,7 +260,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 }
                                 else if(head.ai[1]==StarFall)
                                 {
-                                    Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<LMSigilStarUnit>(), npc.damage / 5, 0f, Main.myPlayer, npc.localAI[3], npc.localAI[2]);
+                                    Projectile.NewProjectile(npc.Center, (player.Center - npc.Center).SafeNormalize(Vector2.UnitY) * 18f,
+                                         ModContent.ProjectileType<LMSigilStarUnit>(), npc.damage / 5, 0f, Main.myPlayer, npc.localAI[3], npc.localAI[2]);
                                 }
                             }
                         }
@@ -464,7 +465,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 Vector2 target = npc.Center +
                                     Vector2.Lerp(direction, Vector2.UnitX * Math.Sign(player.Center.X - npc.Center.X), 0.8f) * Math.Max(1800, Math.Abs(player.Center.X - npc.Center.X));
                                 Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<Projectiles.DecimatorOfPlanets.LaserBarrage>(),
-                                    npc.damage / 6, 0f, Main.myPlayer, target.X, target.Y);
+                                    head.damage / 6, 0f, Main.myPlayer, target.X, target.Y);
 
                             }
                         }
@@ -486,7 +487,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         npc.HoverMovementEx(center, maxSpeed, 0.6f);
                         if (Main.netMode != NetmodeID.MultiplayerClient && npc.localAI[2]>=150 && npc.localAI[2] % 5 == 0)
                         {
-                            Projectile.NewProjectile(npc.Center, (fakeCenter - npc.Center).SafeNormalize(Vector2.Zero) * 5f, ModContent.ProjectileType<DeathLaserEx>(), npc.damage / 5, 0f, Main.myPlayer, 90f, -1);
+                            Projectile.NewProjectile(npc.Center, (fakeCenter - npc.Center).SafeNormalize(Vector2.Zero) * 5f, ModContent.ProjectileType<DeathLaserEx>(), head.damage / 5, 0f, Main.myPlayer, 90f, -1);
                         }
                     }
                     else if (npc.localAI[0] == DivideAttackStart + DivideAILength)
@@ -512,7 +513,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 mod.GetTexture("NPCs/LumiteDestroyer/LumiteDestroyerBody_Glow") 
                 : mod.GetTexture("NPCs/LumiteDestroyer/LumiteDestroyerTail_Glow");
             NPC head = Main.npc[npc.realLife];
-            Color glowColor = head.ai[1] != 1 ? Color.White : Color.Lerp(Color.White, Color.Black, (float)Math.Sin(MathHelper.Pi / 14 * npc.localAI[2]));
+            Color glowColor = Color.White;
             SpriteEffects effects = (npc.direction < 0) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             var mainColor = drawColor;
             /*if (head.ai[1] == 3)

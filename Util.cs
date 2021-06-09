@@ -334,6 +334,12 @@ namespace SunksBossChallenges
                 }
             }
         }
+
+        public static void Loomup(this Projectile projectile,int rate = 25)
+        {
+            projectile.alpha -= rate;
+            if (projectile.alpha < 0) projectile.alpha = 0;
+        }
         public static void DrawAim(this Entity entity,SpriteBatch spriteBatch, Vector2 endpoint, Color color)
         {
             Texture2D aimTexture = SunksBossChallenges.Instance.GetTexture("Projectiles/AimLine");

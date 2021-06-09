@@ -6,6 +6,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using SunksBossChallenges.NPCs.LumiteDestroyer;
+using Terraria.Graphics.Effects;
 
 namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 {
@@ -32,18 +33,39 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             projectile.alpha -= 25;
             if (projectile.alpha < 0) projectile.alpha = 0;
             float intensity = projectile.scale;
-            if (intensity < 2.5f)
+            if (intensity < 6f && projectile.localAI[0] == 0)
             {
+                if (Main.netMode != NetmodeID.Server)
+                {
+                    if (!Filters.Scene["BlackHoleDistort"].IsActive())
+                        Filters.Scene.Activate("BlackHoleDistort", projectile.Center)
+                            .GetShader()
+                            .UseTargetPosition(projectile.Center);
+                    Filters.Scene["BlackHoleDistort"].GetShader().UseIntensity(intensity);
+                }
+                Vector2 offset = Main.rand.NextVector2Circular(1000, 1000);
+                Dust dust = Main.dust[Dust.NewDust(projectile.Center + offset, 0, 0, DustID.Clentaminator_Purple, 0, 0, 100, Color.White)];
+                dust.velocity = -offset * 1000 / offset.LengthSquared();
+                if (Main.rand.Next(3) == 0)
+                    dust.velocity += Vector2.Normalize(offset) * 5f;
+                dust.noGravity = true;
                 for (int i = 0; i < Main.player.Length; i++)
                 {
                     if (Main.player[i].active && projectile.DistanceSQ(Main.player[i].Center) <= 600 * 600)
                     {
                         var distanceSQ = projectile.DistanceSQ(Main.player[i].Center);
                         if (distanceSQ == 0) continue;
-                        if (distanceSQ <= 1000 * 1000 && distanceSQ > 900)
+                        if (distanceSQ <= 900 * 900 && distanceSQ > 900)
                         {
                             var accle = projectile.DirectionFrom(Main.player[i].Center)
-                                * Math.Min(9000 * intensity / distanceSQ, 1f);//need further testing
+                                * Math.Min(9000 * intensity / distanceSQ, 0.9f);//need further testing
+
+                            Main.player[i].velocity += accle;
+                        }
+                        else if (distanceSQ <= 1800 * 1800)
+                        {
+                            var accle = projectile.DirectionFrom(Main.player[i].Center)
+                                * Math.Min(16000 * intensity / distanceSQ, 0.9f);//need further testing
 
                             Main.player[i].velocity += accle;
                         }
@@ -51,6 +73,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 }
                 intensity += 0.01f;
                 projectile.scale = intensity;
+                if (intensity >= 6f) projectile.localAI[0]++;
             }
             else
             {
@@ -60,12 +83,14 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     NPC head = Main.npc[(int)projectile.ai[0]];
                     if (projectile.ai[1] == 45)
                     {
-                        Projectile ray = Projectile.NewProjectileDirect(projectile.Center, -Vector2.UnitY, ModContent.ProjectileType<DestroyerDeathRay>(),
-                        projectile.damage * 2, 0f, projectile.owner, 135, projectile.ai[0]);
+                        Projectile ray = Projectile.NewProjectileDirect(projectile.Center,
+                            (Main.player[head.target].Center - projectile.Center).SafeNormalize(-Vector2.UnitY).RotatedBy(-Math.PI / 3),
+                            ModContent.ProjectileType<DestroyerDeathRay>(),
+                        projectile.damage * 3, 0f, projectile.owner, 270, projectile.ai[0]);
                         ray.localAI[1] = 1f;
                         ray.netUpdate = true;
                     }
-                    if (projectile.ai[1] >= 210)
+                    if (projectile.ai[1] >= 300)
                     {
                         projectile.scale -= 0.08f;
                         if (projectile.scale < 0.05f)
@@ -86,6 +111,14 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 projectile.ai[1]++;
             }
         }
+        public override void Kill(int timeLeft)
+        {
+            if (Main.netMode != NetmodeID.Server)
+            {
+                Filters.Scene["BlackHoleDistort"].Deactivate();
+            }
+            base.Kill(timeLeft);
+        }
         public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
         {
             spriteBatch.End();
@@ -97,11 +130,11 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             Rectangle rectangle = new Rectangle(0, y3, texture2D13.Width, num156);
             Vector2 origin2 = rectangle.Size() / 2f;
             Color color = Color.Black;
-            Main.spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), color, projectile.rotation, origin2, projectile.scale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), projectile.GetAlpha(Color.Orange), projectile.rotation, origin2, projectile.scale, SpriteEffects.None, 0f);
 
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
-            Main.spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), projectile.GetAlpha(lightColor), projectile.rotation, origin2, projectile.scale*1.1f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), projectile.GetAlpha(color), projectile.rotation, origin2, projectile.scale*1.1f, SpriteEffects.None, 0f);
 
             return false;
         }
