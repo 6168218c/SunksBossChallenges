@@ -1,4 +1,4 @@
-displayName = SunK's Boss Challenges
+displayName = Rise of the Sunkens
 author = 6168218c
 version = 0.0.1.0
 hideCode = true

@@ -103,14 +103,14 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             var color = Color.Yellow * projectile.Opacity;
             Main.spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY),
                 new Microsoft.Xna.Framework.Rectangle?(rectangle), color, projectile.rotation, origin2, projectile.scale * 1.25f, SpriteEffects.None, 0f);
-            Texture2D bkgTexture = mod.GetTexture("Projectiles/GlowRing");
+            /*Texture2D bkgTexture = mod.GetTexture("Projectiles/GlowRing");
             num156 = bkgTexture.Height;
             y3 = num156;
             rectangle = new Rectangle(0, y3, bkgTexture.Width, num156);
             origin2 = rectangle.Size() / 2f;
             Main.spriteBatch.Draw(bkgTexture, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle),
-                color, projectile.rotation, origin2, projectile.scale * 2f, SpriteEffects.None, 0f);
-            Texture2D aimTexture = SunksBossChallenges.Instance.GetTexture("Projectiles/AimLine");;
+                color, projectile.rotation, origin2, projectile.scale * 2f, SpriteEffects.None, 0f);*/
+            Texture2D aimTexture = SunksBossChallenges.Instance.GetTexture("Projectiles/AimLine");
             for(int i = 0; i < 750; i++)//draw the circle
             {
                 float rotation = i * MathHelper.TwoPi / 750;

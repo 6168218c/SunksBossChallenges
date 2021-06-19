@@ -86,7 +86,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 					}
 				}
 			}
-			if (Main.dayTime || targetDead)
+			/*if (Main.dayTime || targetDead)
 			{
 				npc.velocity.Y -= 0.04f;
 				if (npc.timeLeft > 10)
@@ -95,7 +95,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 				}
 				HandleRotation(distRotation);
 				return;
-			}
+			}*/
             #endregion
             #region Phase 1
             if (this.Phase == 0f)

@@ -75,7 +75,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         public bool AllowSpin()
         {
             return IsPhase3() && (npc.ai[1] < DivideAttackStart || npc.ai[1] > DivideAttackStart + DivideAILength) &&
-                (npc.ai[1] != ChronoDash) && (npc.ai[1] != StarDash) && (npc.ai[1] != StarFall);
+                (npc.ai[1] != ChronoDash) && (npc.ai[1] != BlackHole) && (npc.ai[1] != StarFall);
         }
         void SwitchTo(float ai1, bool resetCounter = true, bool resetAllTimer = true)
         {
@@ -126,6 +126,16 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
 
                 if (npc.ai[2] >= 200)
                 {
+                    for(int i = 0; i < Main.projectile.Length; i++)
+                    {
+                        if (Main.projectile[i].active && (Main.projectile[i].hostile
+                            || Main.projectile[i].type == ModContent.ProjectileType<LMSigilStar>()
+                            || Main.projectile[i].type == ModContent.ProjectileType<LMDoublePlanet>()))
+                        {
+                            Main.projectile[i].active = false;
+                        }
+                    }
+
                     Vector2 dist = Main.rand.NextVector2Unit() * 1000;
                     npc.Center = player.Center + player.velocity * 60f + dist;
                     npc.velocity = Vector2.Normalize(player.Center - npc.Center) * maxSpeed / 3;
@@ -222,6 +232,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 {
                     var target = spinCenter;
                     Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<Projectiles.DecimatorOfPlanets.LaserBarrage>(),
+                        npc.damage / 3, 0f, Main.myPlayer, target.X, target.Y);
+					Projectile.NewProjectile((npc.Center - target).RotatedBy(Math.PI / 2) + target, Vector2.Zero, ModContent.ProjectileType<Projectiles.DecimatorOfPlanets.LaserBarrage>(),
                         npc.damage / 3, 0f, Main.myPlayer, target.X, target.Y);
                 }
 

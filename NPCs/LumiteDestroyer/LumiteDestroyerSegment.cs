@@ -45,7 +45,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         public static int LaserMatrix => 0;
         public static int StarSigilEx => 1;
         public static int HalfCircleDash => 2;
-        public static int StarDash => 3;
+        public static int BlackHole => 3;
         public static int ChronoDash => 4;
         public static int StarFall => 5;
 

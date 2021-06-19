@@ -84,7 +84,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 					}
 				}
 			}
-			if (Main.dayTime || targetDead)
+			/*if (Main.dayTime || targetDead)
 			{
 				npc.velocity.Y -= 0.04f;
 				if (npc.timeLeft > 10)
@@ -93,7 +93,7 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 				}
 				HandleRotation(distRotation);
 				return;
-			}
+			}*/
             #endregion
             #region Phase 1
             if (this.Phase == 0f)//phase 1
@@ -1051,12 +1051,12 @@ namespace SunksBossChallenges.NPCs.LumiteTwins
 				}
                 if (npc.ai[1] == EnragedState)
                 {
-					/*for(int i = 0; i < npc.ai[3]; i++)
+					for(int i = 0; i < npc.ai[3]; i++)
                     {
 						Vector2 velo = (npc.rotation + 1.57f).ToRotationVector2().RotatedBy(-npc.localAI[2] * MathHelper.Pi / 8);
 						velo = velo.RotatedBy(npc.localAI[2] * MathHelper.Pi / 4 / (npc.ai[3] - 1) * i);
 						npc.DrawAim(spriteBatch, npc.Center + npc.width * (player.Center - npc.Center).SafeNormalize(Vector2.Zero) + velo * 1800, Color.Red * 0.8f);
-					}*/
+					}
 				}
                 if (npc.ai[1] == EnragedState + 1)
                 {

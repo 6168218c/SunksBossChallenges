@@ -30,6 +30,12 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 
         public override void AI()
         {
+			if (!NPC.AnyNPCs(ModContent.NPCType<LumiteDestroyerHead>()))
+			{
+				projectile.Kill();
+				return;
+			}
+			
             Player player = Main.player[(int)projectile.ai[0]];
             if (projectile.localAI[0] < 120)
             {
