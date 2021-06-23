@@ -37,11 +37,11 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             {
                 if (Main.netMode != NetmodeID.Server)
                 {
-                    if (!Filters.Scene["BlackHoleDistort"].IsActive())
+                    /*if (!Filters.Scene["BlackHoleDistort"].IsActive())
                         Filters.Scene.Activate("BlackHoleDistort", projectile.Center)
                             .GetShader()
                             .UseTargetPosition(projectile.Center);
-                    Filters.Scene["BlackHoleDistort"].GetShader().UseIntensity(intensity);
+                    Filters.Scene["BlackHoleDistort"].GetShader().UseIntensity(intensity / 10);*/
                 }
                 Vector2 offset = Main.rand.NextVector2Circular(1000, 1000);
                 Dust dust = Main.dust[Dust.NewDust(projectile.Center + offset, 0, 0, DustID.Clentaminator_Purple, 0, 0, 100, Color.White)];
@@ -71,7 +71,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                         }
                     }
                 }
-                intensity += 0.01f;
+                intensity += 0.1f;
                 projectile.scale = intensity;
                 if (intensity >= 6f) projectile.localAI[0]++;
             }
@@ -81,17 +81,47 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 if (Util.CheckNPCAlive<LumiteDestroyerHead>((int)projectile.ai[0]))
                 {
                     NPC head = Main.npc[(int)projectile.ai[0]];
-                    if (projectile.ai[1] == 45)
+                    if (projectile.ai[1] >= 45 && projectile.ai[1] <= 600 && Main.netMode != NetmodeID.MultiplayerClient)
                     {
-                        Projectile ray = Projectile.NewProjectileDirect(projectile.Center,
-                            (Main.player[head.target].Center - projectile.Center).SafeNormalize(-Vector2.UnitY).RotatedBy(-Math.PI / 3),
-                            ModContent.ProjectileType<DestroyerDeathRay>(),
-                        projectile.damage * 3, 0f, projectile.owner, 270, projectile.ai[0]);
-                        ray.localAI[1] = 1f;
-                        ray.netUpdate = true;
+                        if (projectile.ai[1] == 45)
+                            projectile.localAI[1] = 0.005f;
+
+                        projectile.localAI[1] += 0.001f;
+                        projectile.rotation = MathHelper.WrapAngle(projectile.rotation + projectile.localAI[1]);
+
+                        if (projectile.ai[1] % 8 == 0)
+                        {
+                            Vector2 unit = projectile.rotation.ToRotationVector2();
+                            for (int i = 0; i < 5; i++)
+                            {
+                                Projectile star = Projectile.NewProjectileDirect(projectile.Center + unit*LumiteDestroyerArguments.R, -unit*6, ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(),
+                                    projectile.damage/3, 0f, projectile.owner);
+                                star.timeLeft = (int)(LumiteDestroyerArguments.R / 6);
+                                star.scale = 0.5f;
+                                star.netUpdate = true;
+                                unit = unit.RotatedBy(-MathHelper.TwoPi / 5);
+                            }
+                        }
                     }
-                    if (projectile.ai[1] >= 300)
+                    else if(projectile.ai[1]==640 && Main.netMode != NetmodeID.MultiplayerClient)
                     {
+                        Vector2 unit = Main.rand.NextVector2Unit();
+                        for (int i = 0; i < 5; i++)
+                        {
+                            Projectile ray = Projectile.NewProjectileDirect(projectile.Center + unit, unit, ModContent.ProjectileType<DestroyerDeathRay>(),
+                                projectile.damage * 2, 0f, projectile.owner, 480, projectile.ai[0]);
+                            ray.localAI[1] = 1f;
+                            ray.netUpdate = true;
+                            unit = unit.RotatedBy(-MathHelper.TwoPi / 5);
+                        }
+                    }
+                    else if (projectile.ai[1] >= 1120)
+                    {
+                        /*if (!Filters.Scene["BlackHoleDistort"].IsActive())
+                            Filters.Scene.Activate("BlackHoleDistort", projectile.Center)
+                                .GetShader()
+                                .UseTargetPosition(projectile.Center);
+                        Filters.Scene["BlackHoleDistort"].GetShader().UseIntensity(intensity / 10);*/
                         projectile.scale -= 0.08f;
                         if (projectile.scale < 0.05f)
                         {
@@ -101,6 +131,11 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 }
                 else
                 {
+                    /*if (!Filters.Scene["BlackHoleDistort"].IsActive())
+                        Filters.Scene.Activate("BlackHoleDistort", projectile.Center)
+                            .GetShader()
+                            .UseTargetPosition(projectile.Center);
+                    Filters.Scene["BlackHoleDistort"].GetShader().UseIntensity(intensity / 10);*/
                     projectile.scale -= 0.08f;
                     if (projectile.scale < 0.05f)
                     {

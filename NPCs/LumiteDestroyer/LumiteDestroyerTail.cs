@@ -46,6 +46,11 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             if (npc.alpha > 0 || npc.ai[2] >= 11)
                 damage *= (1 - 0.99);
+            if (npc.realLife != -1 && Main.npc[npc.realLife].type == ModContent.NPCType<LumiteDestroyerHead>())
+            {
+                NPC head = Main.npc[npc.realLife];
+                damage *= (1 - (head.modNPC as LumiteDestroyerHead).DynDR);
+            }
             return base.StrikeNPC(ref damage, defense, ref knockback, hitDirection, ref crit);
         }
 

@@ -39,7 +39,7 @@ namespace SunksBossChallenges.Projectiles
 			{
 				if (Main.netMode != NetmodeID.Server && !Filters.Scene["Shockwave"].IsActive())
 				{
-					Filters.Scene.Activate("Shockwave", projectile.Center).GetShader().UseColor(10, 5, 15).UseTargetPosition(projectile.Center);
+					Filters.Scene.Activate("Shockwave", projectile.Center).GetShader().UseColor(2, 5, 15).UseTargetPosition(projectile.Center);
 				}
 				boom = true;
 			}

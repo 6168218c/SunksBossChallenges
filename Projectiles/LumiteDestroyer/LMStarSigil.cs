@@ -35,13 +35,41 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 				projectile.Kill();
 				return;
 			}
-			
+            projectile.rotation += 0.015f;
+            if (projectile.localAI[1] == 1)
+            {
+                projectile.scale -= 0.06f;
+                if (projectile.scale < 0.05f)
+                {
+                    projectile.Kill();
+                }
+                return;
+            }
+
             Player player = Main.player[(int)projectile.ai[0]];
+            projectile.localAI[0]++;
             if (projectile.localAI[0] < 120)
             {
-                projectile.rotation += 0.015f;
-                projectile.localAI[0]++;
                 projectile.Center = player.Center;
+            }
+
+            if (player.DistanceSQ(projectile.Center) > baseUnitLen * baseUnitLen)
+            {
+                player.Center = projectile.Center + player.DirectionFrom(projectile.Center) * baseUnitLen;
+            }
+
+            var pivot = projectile.Center;
+            for (int i = 0; i < 20; i++)
+            {
+                Vector2 offset = new Vector2();
+                double angle = Main.rand.NextDouble() * 2 * Math.PI;
+                offset.X += (float)(Math.Cos(angle) * baseUnitLen);
+                offset.Y += (float)(Math.Sin(angle) * baseUnitLen);
+                Dust dust = Main.dust[Dust.NewDust(pivot + offset, 0, 0, DustID.Clentaminator_Purple, 0, 0, 100, Color.White)];
+                dust.velocity = Vector2.Zero;
+                if (Main.rand.Next(3) == 0)
+                    dust.velocity += Vector2.Normalize(offset) * 5f;
+                dust.noGravity = true;
             }
 
             /*if (projectile.localAI[0] == 200 && Main.netMode != NetmodeID.MultiplayerClient)
@@ -62,12 +90,33 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 }
                 projectile.Kill();
             }*/
+
+            if (projectile.localAI[0] >= 120 && projectile.localAI[0] % 180 <= 60 && Main.netMode != NetmodeID.MultiplayerClient) 
+            {
+                if (projectile.localAI[0] % 3 == 0)
+                {
+                    float angleCenterDist = baseUnitLen * projectile.scale;
+                    float lineHalfLen = angleCenterDist * (float)Math.Sin(Math.PI / 2.5);
+                    Vector2 baseUnit = projectile.rotation.ToRotationVector2();
+                    Vector2 baseVector = baseUnit * angleCenterDist * Math.Abs((float)Math.Cos(Math.PI / 2.5));
+
+                    for (int i = 0; i < 5; i++)
+                    {
+                        var start = projectile.Center + baseVector + baseUnit.RotatedBy(Math.PI / 2) * lineHalfLen;
+                        Projectile.NewProjectile(start, (projectile.Center - start).SafeNormalize(Vector2.Zero) * 18f, ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(),
+                            projectile.damage, 0f, projectile.owner);
+                        
+                        baseVector = baseVector.RotatedBy(Math.PI / 2.5);
+                        baseUnit = baseUnit.RotatedBy(Math.PI / 2.5);
+                    }
+                }
+            }
         }
 
         public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
         {
             Texture2D aimTexture = mod.GetTexture("Projectiles/AimLine");
-            float angleCenterDist = baseUnitLen;
+            float angleCenterDist = baseUnitLen * projectile.scale;
             float lineHalfLen = angleCenterDist * (float)Math.Sin(Math.PI / 2.5);
             Vector2 baseUnit = projectile.rotation.ToRotationVector2();
             Vector2 baseVector = baseUnit * angleCenterDist * Math.Abs((float)Math.Cos(Math.PI / 2.5));

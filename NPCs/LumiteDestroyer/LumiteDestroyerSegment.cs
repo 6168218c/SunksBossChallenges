@@ -31,6 +31,15 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             get
             {
                 double Speed = Math.PI * 2f / 180;
+                int iHead = NPC.FindFirstNPC(ModContent.NPCType<LumiteDestroyerHead>());
+                if (iHead != -1)
+                {
+                    NPC head = Main.npc[iHead];
+                    if (head.ai[1] >= LumiteDestroyerSegment.DeathStruggleStart)
+                    {
+                        Speed /= 1.2f;
+                    }
+                }
                 return Speed;
             }
         }
@@ -43,23 +52,22 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
     public abstract class LumiteDestroyerSegment:ModNPC
     {
         public static int LaserMatrix => 0;
-        public static int StarSigilEx => 1;
+        public static int StarFall => 1;
         public static int HalfCircleDash => 2;
         public static int BlackHole => 3;
         public static int ChronoDash => 4;
-        public static int StarFall => 5;
+        public static int SigilStar => 5;
 
         // should have used Split,but used it in order not to confuse with SpinAttack
-        protected int DivideAttackStart => 10;
-        protected int DivideAILength => 8;
-        protected int SpinAttackStart => 101;
-        protected int DeathStruggleStart => 200;
+        public static int DivideAttackStart => 10;
+        public static int DivideAILength => 8;
+        public static int SpinAttackStart => 101;
+        public static int DeathStruggleStart => 200;
         /// <summary>
         /// Sync attack state ai,shouldn't be used on head if head.ai[1]!=<see cref="DivideAttackStart"/>+1
         /// </summary>
         protected float SyncAttackState { get => npc.localAI[0]; set => npc.localAI[0] = value; }
         protected float SyncAttackTimer { get => npc.localAI[1]; set => npc.localAI[1] = value; }
-        internal int ImmuneTimer = 0;
 
         protected void ForeachSegment(Action<NPC,int> actionIdCount)
         {
@@ -145,17 +153,17 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         }
         public override void SendExtraAI(BinaryWriter writer)
         {
-            writer.Write(ImmuneTimer);
+            //writer.Write(DynDRTimer);
             base.SendExtraAI(writer);
         }
         public override void ReceiveExtraAI(BinaryReader reader)
         {
-            ImmuneTimer = reader.ReadInt32();
+            //DynDRTimer = reader.ReadInt32();
             base.ReceiveExtraAI(reader);
         }
         public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
         {
-            if (ImmuneTimer != 0) damage *= (1 - 0.99);
+            //if (DynDRTimer != 0) damage *= (1 - 0.99);
             return true;
         }
         public override bool CheckActive()

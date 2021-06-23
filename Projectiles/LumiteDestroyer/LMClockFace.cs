@@ -11,7 +11,8 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 {
     public class LMClockFace:ModProjectile
     {
-        public int ClockR => 640;
+        public static int ClockR => 640;
+        protected float lastLaserRotation = float.MinValue;
         public override string Texture => "SunksBossChallenges/Projectiles/LumiteDestroyer/ClockFace";
         public override void SetStaticDefaults()
         {
@@ -30,7 +31,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         public override void AI()
         {
             NPC head = Main.npc[(int)projectile.ai[0]];
-            if (!head.active || head.type != ModContent.NPCType<LumiteDestroyerHead>())//this will heavily affect the head's behavior so we used it
+            if (!head.active || head.type != ModContent.NPCType<LumiteDestroyerHead>() || head.ai[1] >= LumiteDestroyerSegment.DeathStruggleStart)//this will heavily affect the head's behavior so we used it
             {
                 projectile.Kill();
                 return;
@@ -42,30 +43,49 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             {
                 if(head.ai[2] <= 180)
                     projectile.Center = (player.Center + projectile.Center * 64) / 65;
-                if (head.ai[2] == 270 && Main.netMode != NetmodeID.MultiplayerClient)
+                if (head.ai[2] == 270 && head.ai[3] < 5 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
+                    Vector2 unit;
                     if (Main.rand.NextBool())
                     {
-                        Vector2 unit = -Vector2.UnitY;
+                        /*Vector2 unit = -Vector2.UnitY;
                         for (int i = 0; i < 12; i += 2)
                         {
                             Vector2 projPos = projectile.Center + unit * ClockR;
                             Projectile.NewProjectile(projPos, unit * 8f, ModContent.ProjectileType<DeathLaserEx>(),
                                 projectile.damage /5, 0f, projectile.owner, 36f, head.target);
                             unit = unit.RotatedBy(-MathHelper.Pi / 6);
+                        }*/
+						unit = -Vector2.UnitY;
+                        for (int i = 1; i < 12; i += 2)
+                        {
+                            Vector2 projPos = projectile.Center + unit * ClockR;
+                            Projectile.NewProjectile(projPos, Vector2.Zero, ModContent.ProjectileType<DecimatorOfPlanets.LaserBarrage>(),
+                                projectile.damage / 3, 0f, projectile.owner, projectile.Center.X, projectile.Center.Y);
+                            unit = unit.RotatedBy(-MathHelper.Pi / 6);
                         }
                     }
                     else
                     {
-                        Vector2 unit = -Vector2.UnitY;
+                        unit = -Vector2.UnitY;
                         for (int i = 0; i < 12; i += 2)
                         {
                             Vector2 projPos = projectile.Center + unit * ClockR;
                             Projectile.NewProjectile(projPos, Vector2.Zero, ModContent.ProjectileType<DecimatorOfPlanets.LaserBarrage>(),
-                                projectile.damage / 3, 0f, projectile.owner, Main.player[head.target].Center.X, Main.player[head.target].Center.Y);
+                                projectile.damage / 3, 0f, projectile.owner, projectile.Center.X, projectile.Center.Y);
                             unit = unit.RotatedBy(-MathHelper.Pi / 6);
                         }
                     }
+                    unit = lastLaserRotation.ToRotationVector2();
+                    Projectile ray = Projectile.NewProjectileDirect(projectile.Center, unit, ModContent.ProjectileType<DestroyerDeathRay>(),
+                        projectile.damage * 2, 0f, projectile.owner, 135, projectile.ai[0]);
+                    ray.localAI[1] = 2f;
+                    ray.netUpdate = true;
+                    ray = Projectile.NewProjectileDirect(projectile.Center, -unit, ModContent.ProjectileType<DestroyerDeathRay>(),
+                        projectile.damage * 2, 0f, projectile.owner, 135, projectile.ai[0]);
+                    ray.localAI[1] = 2f;
+                    ray.netUpdate = true;
+                    lastLaserRotation = projectile.localAI[0];
                 }
                 //head.localAI[0] = projectile.whoAmI;
             }
@@ -83,8 +103,12 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             float minHand = (float)(fullTime % 3600 / 3600 * MathHelper.TwoPi);
             projectile.localAI[0] = MathHelper.WrapAngle(hourHand - MathHelper.PiOver2);
             projectile.localAI[1] = MathHelper.WrapAngle(minHand - MathHelper.PiOver2);
+            if (lastLaserRotation == float.MinValue)
+            {
+                lastLaserRotation = projectile.localAI[0];
+            }
         }
-        protected double GetTime()
+        protected static double GetTime()
         {
             double FullTime = Main.dayTime ? Main.time + 3600 * 4.5 : Main.time + 54000 + 3600 * 4.5;
             double timeMax = 3600 * 24;
@@ -154,6 +178,30 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     spriteBatch.Draw(aimTexture, drawPos, null, alphaCenter, k, new Vector2(2, 2), 1f, SpriteEffects.None, 0f);
                 }
             }*/
+            if (Util.CheckNPCAlive<LumiteDestroyerHead>((int)projectile.ai[0]))
+            {
+                NPC head = Main.npc[(int)projectile.ai[0]];
+                if (head.ai[1] == LumiteDestroyerSegment.ChronoDash)
+                {
+                    if (head.ai[2] >= 225 && head.ai[2] <= 270)
+                    {
+                        float timer = head.ai[2] - 225;
+                        Color alpha = Color.BlueViolet * projectile.Opacity;
+                        if (timer <= 10)
+                        {
+                            alpha *= timer / 10f;
+                        }
+                        else if (timer >= 30 && timer <= 45)
+                        {
+                            alpha *= (45 - timer) / 15f;
+                        }
+                        projectile.DrawAim(spriteBatch, projectile.Center + lastLaserRotation.ToRotationVector2() * 1000, alpha);
+                    }
+                    //head.localAI[0] = projectile.whoAmI;
+                }
+            }
+            
+
             return false;
         }
 

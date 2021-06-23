@@ -41,18 +41,22 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             if (projectile.localAI[0] % 15 == 5 && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 var startPos = projectile.Center;
-                startPos += unitVect.RotatedBy(-MathHelper.PiOver2) * 8;
+                startPos += unitVect.RotatedBy(-MathHelper.PiOver2) * 11;
                 //move to the new center
                 startPos += unitVect.RotatedBy(MathHelper.PiOver2);
-                for (int i = 0; i < 9; i++)
+                for (int i = 0; i < 12; i++)
                 {
                     startPos += unitVect.RotatedBy(MathHelper.PiOver2) * 2;
 
                     var target = startPos + unitVect;
-                    Projectile.NewProjectile(startPos + unitVect.RotatedBy(-MathHelper.PiOver2), Vector2.Zero,
+                    Projectile proj = Projectile.NewProjectileDirect(startPos + unitVect.RotatedBy(-MathHelper.PiOver2), Vector2.Zero,
                         ModContent.ProjectileType<DecimatorOfPlanets.LaserBarrage>(), projectile.damage, 0f, Main.myPlayer, target.X, target.Y);
-                    Projectile.NewProjectile(startPos + unitVect.RotatedBy(MathHelper.PiOver2), Vector2.Zero,
+                    proj.timeLeft = 90;
+                    proj.netUpdate = true;
+                    proj = Projectile.NewProjectileDirect(startPos + unitVect.RotatedBy(MathHelper.PiOver2), Vector2.Zero,
                         ModContent.ProjectileType<DecimatorOfPlanets.LaserBarrage>(), projectile.damage, 0f, Main.myPlayer, target.X, target.Y);
+                    proj.timeLeft = 90;
+                    proj.netUpdate = true;
                 }
             }
 

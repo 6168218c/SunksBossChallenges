@@ -20,18 +20,20 @@ float uSaturation;
 float4 uSourceRect;
 float2 uZoom;
 
-float4 Main(float4 position : SV_POSITION, float2 coords : TEXCOORD0) : COLOR0
+float4 Main(float2 coords : TEXCOORD0) : COLOR0
 {
-    float2 targetCoords = (uTargetPosition - uScreenPosition) / uScreenResolution;
+    //float2 targetCoords = (uTargetPosition - uScreenPosition) / uScreenResolution;
+	float2 targetCoords = float2(0.5,0.5);
     float2 centreCoords = (coords - targetCoords) * (uScreenResolution / uScreenResolution.y);
 	float length = sqrt(dot(centreCoords, centreCoords));
-    float2 sampleCoords = coords;
+    float4 color = tex2D(uImage0, coords);
+    float4 reversedColor = float4(color.a - color.r, color.a - color.g, color.a - color.b, color.a);
 	
-    if (length < uIntensity && length != 0) {
-        sampleCoords = sampleCoords + (((uIntensity / (length * 10)) * uOpacity / uScreenResolution) * centreCoords);
+    if (length < uIntensity) {
+        color = lerp(color, reversedColor, 1 - length / uIntensity);
     }
 
-    return tex2D(uImage0, sampleCoords);
+    return color;
 }
 
 technique Technique1

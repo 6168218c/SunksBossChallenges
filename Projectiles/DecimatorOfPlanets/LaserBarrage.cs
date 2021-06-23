@@ -24,7 +24,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
         {
             projectile.width = 4;
             projectile.height = 12;
-            projectile.timeLeft = 135;
+            projectile.timeLeft = 180;
             projectile.penetrate = -1;
             projectile.hostile = true;
             projectile.tileCollide = false;
@@ -40,6 +40,11 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
             ///localAI:
             ///  [0]:timer
             ///  [1]:reserved
+			if (projectile.timeLeft <= 30)
+			{
+				projectile.alpha += 9;
+				if (projectile.alpha > 255) projectile.alpha = 255;
+			}
             if (projectile.localAI[0]++ == 0)
             {
                 projectile.alpha = 255;
@@ -128,7 +133,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
 
         public override bool CanHitPlayer(Player target)
         {
-            if (projectile.localAI[0] < 75) 
+            if (projectile.localAI[0] < 75 || projectile.timeLeft <= 30) 
             {
                 return false;
             }

@@ -29,6 +29,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             projectile.hostile = true;
             projectile.ignoreWater = true;
             projectile.tileCollide = false;
+            projectile.alpha = 255;
 
             projectile.timeLeft = 450;
             projectile.extraUpdates = 0;
@@ -44,8 +45,18 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             ///     ai[0]:should die
             ///     ai[1]:weight
 
-            if (projectile.ai[0] == 1) projectile.Kill();
+            if (projectile.ai[0] == 1)
+            {
+                projectile.localAI[0]++;
+                projectile.SlowDown(0.8f);
+                if (projectile.localAI[0] >= 15)
+                {
+                    projectile.Kill();
+                }
+                return;
+            }
 
+            projectile.Loomup();
             bool othersLeft = false;
             projectile.rotation += 0.015f * projectile.velocity.Length();
 
@@ -126,12 +137,12 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 
         public override void SendExtraAI(BinaryWriter writer)
         {
-            //writer.Write(projectile.localAI[0]);
+            writer.Write(projectile.localAI[0]);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
         {
-            //projectile.localAI[0] = reader.ReadSingle();
+            projectile.localAI[0] = reader.ReadSingle();
         }
 
         public override void Kill(int timeLeft)

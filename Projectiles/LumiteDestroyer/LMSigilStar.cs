@@ -173,14 +173,14 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                         hasBeenLaunched = true;
                         projectile.localAI[0] = 0;
                         if (parent.active && parent.type == ModContent.ProjectileType<LMSigilStar>())
-                            projectile.velocity = -(parent.Center - projectile.Center) / 60f;
+                            projectile.velocity = (parent.Center - projectile.Center) / 60f;
                     }
                     projectile.localAI[0]++;
                     if (projectile.velocity.Compare(60f) < 0)
                     {
-                        projectile.velocity *= 1.1f;
+                        projectile.velocity *= 1.035f;
                     }
-                    if (projectile.localAI[0] >= 120)
+                    if (projectile.localAI[0] >= 150)
                     {
                         DeathAnimationTimer = 15;
                         return;

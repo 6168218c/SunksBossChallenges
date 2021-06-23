@@ -49,12 +49,14 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             projectile.rotation = MathHelper.WrapAngle(projectile.rotation + 0.015f);
             if (projectile.localAI[0] == 0 && Main.netMode != NetmodeID.MultiplayerClient)
             {
+                projectile.rotation = Main.rand.NextFloatDirection();
                 for (int i = 0; i < 3; i++)
                 {
                     float rotate = MathHelper.Pi * 2 / 3 * i;
                     Projectile.NewProjectile(projectile.Center + rotate.ToRotationVector2() * LumiteDestroyerArguments.TeleportDistance,
                         Vector2.Zero, ModContent.ProjectileType<LMSubDivideSigil>(), 0, 0f, projectile.owner, rotate, projectile.whoAmI);
                 }
+                projectile.netUpdate = true;
             }
             projectile.localAI[0]++;
         }

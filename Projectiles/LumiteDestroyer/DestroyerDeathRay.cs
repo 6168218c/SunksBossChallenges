@@ -52,7 +52,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 //Vector2 value22 = Utils.Vector2FromElipse(Main.npc[(int)projectile.ai[1]].localAI[2].ToRotationVector2(), value21 * Main.npc[(int)projectile.ai[1]].localAI[3]);
                 //projectile.position = fireFrom + value22 - new Vector2(projectile.width, projectile.height) / 2f;
                 Vector2 offset = new Vector2(Main.npc[(int)projectile.ai[1]].width, 0).RotatedBy(Main.npc[(int)projectile.ai[1]].rotation);
-                if (projectile.localAI[1] != 1f)
+                if (projectile.localAI[1] != 1f && projectile.localAI[1] != 2f) 
                     projectile.Center = Main.npc[(int)projectile.ai[1]].Center + offset;
                 else
                     projectile.Center -= projectile.velocity;
@@ -64,7 +64,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 //Vector2 value22 = Utils.Vector2FromElipse(Main.npc[(int)projectile.ai[1]].localAI[2].ToRotationVector2(), value21 * Main.npc[(int)projectile.ai[1]].localAI[3]);
                 //projectile.position = fireFrom + value22 - new Vector2(projectile.width, projectile.height) / 2f;
                 Vector2 offset = new Vector2(Main.npc[(int)projectile.ai[1]].width, 0).RotatedBy(Main.npc[(int)projectile.ai[1]].rotation);
-                if (projectile.localAI[1] != 1f)
+                if (projectile.localAI[1] != 1f && projectile.localAI[1] != 2f)
                     projectile.Center = Main.npc[(int)projectile.ai[1]].Center + offset;
                 else
                     projectile.Center -= projectile.velocity;

@@ -29,14 +29,16 @@ namespace SunksBossChallenges
             //Shaders
             if (Main.netMode != NetmodeID.Server)
             {
-                Ref<Effect> screenRef = new Ref<Effect>(GetEffect("Effects/ShockwaveEffect")); // The path to the compiled shader file.
+                Ref<Effect> screenRef = new Ref<Effect>(GetEffect("Effects/Content/ShockwaveEffect")); // The path to the compiled shader file.
                 Filters.Scene["Shockwave"] = new Filter(new ScreenShaderData(screenRef, "Shockwave"), EffectPriority.VeryHigh);
                 Filters.Scene["Shockwave"].Load();
+
+                Ref<Effect> blackHoleRef = new Ref<Effect>(GetEffect("Effects/Content/BlackHoleDistort"));
+                Filters.Scene["BlackHoleDistort"] = new Filter(new ScreenShaderData(blackHoleRef, "BlackHoleDistort"), EffectPriority.VeryHigh);
+                Filters.Scene["BlackHoleDistort"].Load();
             }
 
-            Ref<Effect> blackHoleRef = new Ref<Effect>(GetEffect("Effects/BlackHoleDistort"));
-            Filters.Scene["BlackHoleDistort"] = new Filter(new ScreenShaderData(blackHoleRef, "BlackHoleDistort"), EffectPriority.VeryHigh);
-            Filters.Scene["BlackHoleDistort"].Load();
+            
 
             base.Load();
         }

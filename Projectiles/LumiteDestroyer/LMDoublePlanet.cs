@@ -46,6 +46,25 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     projectile.Kill();
                 }
             }
+            projectile.rotation = projectile.velocity.ToRotation();
+        }
+        public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
+        {
+            float timer = projectile.ai[1];
+            if (timer <= 45)
+            {
+                Color alpha = Color.BlueViolet;
+                if (timer <= 10)
+                {
+                    alpha *= timer / 10f;
+                }
+                else if (timer >= 30 && timer <= 45)
+                {
+                    alpha *= (45 - timer) / 15f;
+                }
+                projectile.DrawAim(spriteBatch, projectile.Center + projectile.rotation.ToRotationVector2() * 3600, alpha);
+            }
+            return base.PreDraw(spriteBatch, lightColor);
         }
     }
     public class LMPlanetMoon : ModProjectile

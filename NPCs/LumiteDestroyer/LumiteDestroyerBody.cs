@@ -135,7 +135,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 dust.noLight = true;
                                 dust.color = Color.LightBlue;
                             }
-                            ImmuneTimer = 300;
+                            //ImmuneTimer = 300;
                         }
                         npc.alpha -= 42;
                         if (npc.alpha < 0)
@@ -155,7 +155,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             dust.noLight = true;
                             dust.color = Color.LightBlue;
                         }
-                        ImmuneTimer = 300;
+                        //ImmuneTimer = 300;
                     }
                     npc.alpha -= 42;
                     if (npc.alpha < 0)
@@ -164,7 +164,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     }
                 }
             }
-            if (ImmuneTimer > 0) --ImmuneTimer;
+            //if (ImmuneTimer > 0) --ImmuneTimer;
             #endregion
             #region Music
             if (head.ai[1] >= 0)
@@ -190,7 +190,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             {
                 if (npc.ai[1] >= 0f && npc.ai[1] < Main.npc.Length)
                 {
-                    if ((head.ai[1] == HalfCircleDash&&head.ai[2]>=180) || (head.ai[1] >= SpinAttackStart && head.ai[1] < DeathStruggleStart) || (head.ai[1] >= DeathStruggleStart + 2 && head.ai[1] <= DeathStruggleStart + 3))//spinning or preparing spinning
+                    if ((head.ai[1] == HalfCircleDash && head.ai[2] >= 180)
+                        || (head.ai[1] >= SpinAttackStart && head.ai[1] < DeathStruggleStart) 
+                        || (head.ai[1] >= DeathStruggleStart + 2 && head.ai[1] <= DeathStruggleStart + 4))//spinning or preparing spinning
                     {
                         npc.chaseable = false;
                         Vector2 pivot = (head.modNPC as LumiteDestroyerHead).spinCenter;
@@ -224,7 +226,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 if (head.ai[1] == HalfCircleDash)
                                 {
                                     Projectile.NewProjectile(npc.Center, (player.Center - npc.Center).SafeNormalize(Vector2.Zero)
-                                        , ModContent.ProjectileType<DeathLaserEx>(), npc.damage / 5, 0f, Main.myPlayer, 36f, -1);
+                                        , ModContent.ProjectileType<LaserBarrage>(), npc.damage / 5, 0f, Main.myPlayer, pivot.X, pivot.Y);
                                 }
                             }
                         }
@@ -258,7 +260,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 {
                                     Projectile.NewProjectile(npc.Center, npc.localAI[0].ToRotationVector2() * 20, ModContent.ProjectileType<DarkStar>(), npc.damage / 5, 0f, Main.myPlayer);
                                 }
-                                else if(head.ai[1]==StarFall)
+                                else if(head.ai[1]==SigilStar)
                                 {
                                     Projectile.NewProjectile(npc.Center, (player.Center - npc.Center).SafeNormalize(Vector2.UnitY) * 18f,
                                          ModContent.ProjectileType<LMSigilStarUnit>(), npc.damage / 5, 0f, Main.myPlayer, npc.localAI[3], npc.localAI[2]);
@@ -440,7 +442,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             Projectile aim = Main.projectile[(int)npc.localAI[1]];
                             Vector2 endpoint = new Vector2(aim.ai[0], aim.ai[1]);
                             npc.Center = aim.Center;
-                            npc.velocity = (endpoint - npc.Center).SafeNormalize(Vector2.Zero) * maxSpeed / 3;
+                            npc.velocity = (endpoint - npc.Center).SafeNormalize(Vector2.Zero) * maxSpeed;
                             int i = npc.whoAmI;
                             int counter = 0;
                             while (i != -1)
@@ -612,7 +614,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             if (npc.realLife != -1 && Main.npc[npc.realLife].type == ModContent.NPCType<LumiteDestroyerHead>())
             {
-                return !(Main.npc[npc.realLife].modNPC as LumiteDestroyerHead).CanBeTransparent();
+                return !(Main.npc[npc.realLife].modNPC as LumiteDestroyerHead).CanBeTransparent() 
+                    && (Main.npc[npc.realLife].ai[1] != DeathStruggleStart + 5);
             }
             return true;
         }
@@ -623,7 +626,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 if (npc.realLife != -1 && Main.npc[npc.realLife].type == ModContent.NPCType<LumiteDestroyerHead>())
                 {
                     NPC head = Main.npc[npc.realLife];
-                    if (head.life <= head.lifeMax * LumiteDestroyerArguments.Phase2HealthFactor)
+                    /*if (head.life <= head.lifeMax * LumiteDestroyerArguments.Phase2HealthFactor)
                     {
                         if (head.ai[1] >= DivideAttackStart && head.ai[1] <= DivideAttackStart + DivideAILength)
                         {
@@ -633,7 +636,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         {
                             damage *= (1 - 0.75);
                         }
-                    }
+                    }*/
+                    damage *= (1 - (head.modNPC as LumiteDestroyerHead).DynDR);
                     if (npc.alpha > 0 || Main.npc[npc.realLife].ai[1] >= SpinAttackStart)
                         damage *= (1 - 0.99);
                 }
