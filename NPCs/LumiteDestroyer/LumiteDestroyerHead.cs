@@ -68,17 +68,17 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         }
         public bool IsPhase3()
         {
-            return npc.life < npc.lifeMax * 0.5f;
+            return npc.life < npc.lifeMax * 0.7f;
         }
         public bool CanBeTransparent()
         {
             return (npc.ai[1] == -1 || npc.ai[1] == DivideAttackStart || npc.ai[1] == DivideAttackStart + DivideAILength
-                || npc.ai[1] == DeathStruggleStart);
+                || npc.ai[1] == DeathStruggleStart || npc.ai[1] == DeathStruggleStart + 5);
         }
         public bool AllowSpin()
         {
             return IsPhase3() && (npc.ai[1] < DivideAttackStart || npc.ai[1] > DivideAttackStart + DivideAILength) &&
-                (npc.ai[1] != ChronoDash) && (npc.ai[1] != BlackHole) && (npc.ai[1] != SigilStar);
+                (npc.ai[1] != ChronoDash) && (npc.ai[1] != StarCard) && (npc.ai[1] != SigilStar);
         }
         void SwitchTo(float ai1, bool resetCounter = true, bool resetAllTimer = true)
         {
@@ -99,7 +99,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         void SwitchToRandomly(float normalAI1, float randomAI1, float possibility)
         {
             randomCorrecter++;
-            if ((Main.rand.NextFloat() < possibility && randomCorrecter > 2) || randomCorrecter == 8)//at least one divide attack every 6 attacks
+            if ((Main.rand.NextFloat() < possibility && randomCorrecter > 3) || randomCorrecter == 9)//at least one divide attack every 9 attacks
             {
                 randomCorrecter = 0;
                 SwitchTo(randomAI1);
@@ -159,13 +159,13 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             else if (npc.ai[1] == DeathStruggleStart + 1)
             {
                 npc.ai[2]++;
-                if (npc.ai[2] == 120 || npc.ai[2] == 480 && Main.netMode != NetmodeID.MultiplayerClient)
+                if (npc.ai[2] == 120 || npc.ai[2] == 500 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     int direction = Main.rand.Next(4);
                     if (npc.ai[2] == 120)
                         Projectile.NewProjectile(player.Center, Vector2.Zero, ModContent.ProjectileType<LMStarSigilEx>(),
                             npc.damage / 8, 0f, Main.myPlayer, 0f, npc.target);
-                    if (npc.ai[2] == 480)
+                    if (npc.ai[2] == 500)
                         Projectile.NewProjectile(player.Center - Vector2.UnitX.RotatedBy(Math.PI / 2 * direction) * 1080,
                             Vector2.Zero, ModContent.ProjectileType<LMLaserMatrix>(),
                             npc.damage / 6, 0f, Main.myPlayer, 180, direction);
@@ -334,19 +334,26 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             }
             #endregion
         }
-        public override bool PreAI()
+        public override void PostAI()
         {
-            if (DynDRTimer == 0)
+            if (DynDRTimer == 0 && npc.ai[1] >= 0)
             {
-                if (npc.life < lastHealth - npc.lifeMax / 180f)
+                if (npc.life < lastHealth - npc.lifeMax / 10800)
                 {
-                    DynDR = 1 - npc.lifeMax / 180f / (lastHealth - npc.life);
+                    DynDR = Math.Max(DynDR - 0.01f, 1 - ((float)npc.lifeMax / 10800 / (lastHealth - npc.life)));
+                    DynDR = Math.Max(DynDR, 0.6f);
+                }
+                else
+                {
+                    DynDR = Math.Max(DynDR - 0.0075f, 0.6f);
                 }
                 lastHealth = npc.life;
             }
+            DynDR = Math.Max(DynDR, 0.35f);
             DynDRTimer++;
-            if (DynDRTimer > 60) DynDRTimer = 0;
-            return base.PreAI();
+            if (DynDRTimer > 3) DynDRTimer = 0;
+            //Main.NewText(DynDR.ToString());
+            base.PostAI();
         }
         #endregion
         public override void SendExtraAI(BinaryWriter writer)
@@ -459,7 +466,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             if (npc.ai[1] < DeathStruggleStart)
             {
-                if (npc.ai[1] == 3)//chrono dash
+                if (npc.ai[1] == ChronoDash)//chrono dash
                 {
                     Projectile clock = Main.projectile[(int)npc.localAI[0]];
                     Main.fastForwardTime = false;

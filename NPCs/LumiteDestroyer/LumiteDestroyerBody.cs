@@ -14,7 +14,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
 {
     public class LumiteDestroyerBody : LumiteDestroyerSegment
     {
-        readonly int segDistance = 44;
+        readonly int segDistance = 38;
         int PreviousIndex => (int)npc.ai[1];
 
         public override void SetStaticDefaults()
@@ -225,8 +225,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 npc.localAI[1] = 0;
                                 if (head.ai[1] == HalfCircleDash)
                                 {
-                                    Projectile.NewProjectile(npc.Center, (player.Center - npc.Center).SafeNormalize(Vector2.Zero)
-                                        , ModContent.ProjectileType<LaserBarrage>(), npc.damage / 5, 0f, Main.myPlayer, pivot.X, pivot.Y);
+                                    var target = (npc.Center - pivot) * 3 + pivot;
+                                    Projectile.NewProjectile(pivot, (player.Center - npc.Center).SafeNormalize(Vector2.Zero)
+                                        , ModContent.ProjectileType<LaserBarrage>(), npc.damage / 5, 0f, Main.myPlayer, target.X, target.Y);
                                 }
                             }
                         }

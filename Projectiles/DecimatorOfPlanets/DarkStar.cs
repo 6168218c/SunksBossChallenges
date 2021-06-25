@@ -45,8 +45,13 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
 
             if (projectile.ai[0] == 1f)
             {
+                if (projectile.localAI[1] == 0)
+                {
+                    projectile.timeLeft = 180;
+                }
+                projectile.localAI[1]++;
                 if (projectile.velocity.Compare(projectile.ai[1]) < 0)
-                    projectile.velocity *= 1.1f;
+                    projectile.velocity *= 1.05f;
             }
 
             if (projectile.localAI[0] == 0)
@@ -122,6 +127,24 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
                 Vector2 value4 = projectile.oldPos[i] - (projectile.velocity.SafeNormalize(Vector2.UnitX) * 14);
                 Main.spriteBatch.Draw(glow, value4 + projectile.Size / 2f - Main.screenPosition + new Vector2(0, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(glowrectangle), color27,
                     projectile.velocity.ToRotation() + MathHelper.PiOver2, gloworigin2, scale, SpriteEffects.None, 0f);
+            }
+
+            if (projectile.ai[0] == 1)
+            {
+                int timer = (int)projectile.localAI[1];
+                if (timer <= 45)
+                {
+                    Color alpha = Color.BlueViolet;
+                    if (timer <= 10)
+                    {
+                        alpha *= timer / 10f;
+                    }
+                    else if (timer >= 30 && timer <= 45)
+                    {
+                        alpha *= (45 - timer) / 15f;
+                    }
+                    projectile.DrawAim(spriteBatch, projectile.Center + projectile.velocity.SafeNormalize(Vector2.Zero) * 3600, alpha);
+                }
             }
 
             return false;

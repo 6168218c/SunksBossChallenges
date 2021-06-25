@@ -40,7 +40,7 @@ namespace SunksBossChallenges.Projectiles
             }
             projectile.localAI[0]++;
 
-            if (projectile.localAI[0] % 10 == 0)
+            if (projectile.localAI[0] % 6 == 0)
             {
                 projectile.alpha = 255 - projectile.alpha;
             }

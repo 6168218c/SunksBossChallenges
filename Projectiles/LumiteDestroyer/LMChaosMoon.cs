@@ -49,7 +49,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             {
                 projectile.localAI[0]++;
                 projectile.SlowDown(0.8f);
-                if (projectile.localAI[0] >= 15)
+                if (projectile.localAI[0] >= 6)
                 {
                     projectile.Kill();
                 }
@@ -247,12 +247,12 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 
             if (Main.netMode != NetmodeID.MultiplayerClient)
             {
-                const int max = 18;
+                const int max = 6;
                 const float rotationInterval = 2f * (float)Math.PI / max;
-                Vector2 speed = new Vector2(0f, 8f + 4f).RotatedBy(projectile.rotation);
+                Vector2 speed = new Vector2(0f, 2f).RotatedBy(projectile.rotation);
                 for (int i = 0; i < max; i++)
                     Projectile.NewProjectile(projectile.Center, speed.RotatedBy(rotationInterval * i),
-                        ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(), projectile.damage / 3, 0f, Main.myPlayer);
+                        ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(), projectile.damage / 3, 0f, Main.myPlayer, 1, 36f);
             }
         }
     }

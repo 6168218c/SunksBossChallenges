@@ -117,7 +117,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             maxSpeed = maxSpeed * 0.9f + maxSpeed * ((npc.lifeMax - npc.life) / (float)npc.lifeMax) * 0.2f;
             maxSpeed = Math.Max(player.velocity.Length() * 1.5f, maxSpeed);
             bool isPhase2 = npc.life <= npc.lifeMax * LumiteDestroyerArguments.Phase2HealthFactor;
-            bool specialAttacks = npc.life <= npc.lifeMax * 0.5;
+            //bool specialAttacks = npc.life <= npc.lifeMax * 0.6;
 
             #region CommonHelper
             void CrawlipedeMove(int offset = 200)
@@ -423,7 +423,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     if ((npc.ai[2] + 60) % 180 == 0)
                     {
                         int direction = Main.rand.Next(4);
-                        Projectile.NewProjectile(player.Center - Vector2.UnitX.RotatedBy(Math.PI / 2 * direction) * 1080,
+                        Projectile.NewProjectile(player.Center - Vector2.UnitX.RotatedBy(Math.PI / 2 * direction) * 1440,
                             Vector2.Zero, ModContent.ProjectileType<LMLaserMatrix>(),
                             npc.damage / 6, 0f, Main.myPlayer, 180, direction);
                     }
@@ -439,7 +439,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 }
                 else if (npc.ai[1] == StarFall)//star fall
                 {
-                    npc.ai[2]++;
+                    //npc.ai[2]++;
 
                     if (npc.ai[2] % 270 <= 135)
                     {
@@ -493,7 +493,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             0f, Main.myPlayer);
                     }
 
-                    if (npc.ai[2] >= 600)
+                    if (npc.ai[2] >= 540)
                     {
                         SwitchToRandomly(HalfCircleDash, DivideAttackStart, 0.3f);
                     }
@@ -502,26 +502,26 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 {
                     if (npc.ai[2] < 180)
                     {
-                        if (npc.velocity.Compare(maxSpeed * 1.5f) > 0) npc.SlowDown(0.98f);
-                        npc.WormMovementEx(player.Center + npc.DirectionFrom(player.Center) * LumiteDestroyerArguments.R * 1.5f,
+                        //if (npc.velocity.Compare(maxSpeed * 1.5f) > 0) npc.SlowDown(0.98f);
+                        npc.WormMovementEx(player.Center + npc.DirectionFrom(player.Center) * LumiteDestroyerArguments.R * 2f,
                            maxSpeed, turnAcc, ramAcc, radiusSpeed: 0.08f, distLimit: 1200, angleLimit: MathHelper.Pi / 2);
-                        spinCenter = player.Center + player.velocity * 10;
+                        spinCenter = player.Center + npc.DirectionFrom(player.Center) * LumiteDestroyerArguments.R * 1.2f;
                         npc.ai[2]++;
 
-                        if (npc.ai[2] == 180)
+                        /*if (npc.ai[2] == 180)
                         {
                             if (Main.netMode != NetmodeID.MultiplayerClient)
                             {
                                 Projectile.NewProjectile(spinCenter, Vector2.Zero, ModContent.ProjectileType<WarningMark>(),
                                     0, 0f, Main.myPlayer, 90);
                             }
-                        }
+                        }*/
                     }
                     else
                     {
                         if (npc.localAI[0] == 0)
                         {
-                            npc.WormMovement(player.Center + player.velocity * 10, maxSpeed * 5f, turnAcc * 5f);
+                            npc.WormMovement(spinCenter, maxSpeed * 5f, turnAcc * 5f);
                             if (npc.DistanceSQ(spinCenter) <= LumiteDestroyerArguments.R * LumiteDestroyerArguments.R)
                             {
                                 npc.localAI[0] = 1;
@@ -535,41 +535,49 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         else//have set up
                         {
                             npc.ai[2]++;
-                            if (npc.ai[2] < 255)
+                            if (npc.ai[2] < 295)
                             {
                                 npc.velocity = npc.velocity.RotatedBy(LumiteDestroyerArguments.SpinRadiusSpeed * 1.5f * npc.direction);
-                                if (npc.ai[2] == 240)
+                                if (npc.ai[2] == 280)
                                 {
                                     int i = npc.whoAmI;
-                                    int counter = 0;
+                                    int counter = 1;
                                     while (i != -1)
                                     {
-                                        counter++;
                                         NPC tmpNPC = Main.npc[i];
                                         if (i != npc.whoAmI &&
                                             tmpNPC.DistanceSQ(spinCenter)
                                             <= LumiteDestroyerArguments.R * LumiteDestroyerArguments.R)
                                         {
-                                            tmpNPC.localAI[1] = 2;
+                                            if (counter % 3 == 0)
+                                                tmpNPC.localAI[1] = 2;
+                                            counter++;
                                         }
                                         i = (int)Main.npc[i].ai[0];
                                     }
                                 }
                             }
-                            else if (npc.ai[2] < 375)
+                            else if (npc.ai[2] < 540)
                             {
                                 npc.WormMovementEx(player.Center + player.velocity * 10, maxSpeed * 0.8f, turnAcc, ramAcc);
+                                if (npc.ai[2] >= 400 && npc.ai[2] < 520 && npc.ai[2] % 10 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+                                {
+                                    int counter = ((int)npc.ai[2] / 10) % 5;
+                                    Vector2 offset = Vector2.UnitY.RotatedBy(counter * MathHelper.TwoPi / 5) * LumiteDestroyerArguments.R * 1.2f;
+                                    Projectile.NewProjectile((player.Center - player.velocity * 10) + offset, Vector2.Zero, ModContent.ProjectileType<LaserBarrage>(),
+                                        npc.damage / 8, 0f, Main.myPlayer, player.Center.X, player.Center.Y);
+                                }
                             }
-                            else if (npc.ai[2] >= 375)
+                            else if (npc.ai[2] >= 540)
                             {
-                                SwitchTo(BlackHole);
+                                SwitchTo(StarCard);
                             }
                         }
                     }
                 }
-                else if (npc.ai[1] == BlackHole)
+                else if (npc.ai[1] == StarCard)
                 {
-                    int baseUnitLen = 900;
+                    //int baseUnitLen = 900;
                     if (npc.localAI[2] == 0 && npc.ai[2] == 0)
                     {
                         npc.ai[3] = Projectile.NewProjectile(player.Center, Vector2.Zero, ModContent.ProjectileType<LMStarSigil>(),
@@ -602,13 +610,16 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         if (npc.ai[2] <= 600)
                         {
                             npc.WormMovementEx(player.Center, maxSpeed, turnAcc, ramAcc);
+                            if (npc.ai[2] >= 500)
+                            {
+                                if (Util.CheckProjAlive<LMStarSigil>((int)npc.ai[3]))
+                                {
+                                    Main.projectile[(int)npc.ai[3]].localAI[1] = 1;
+                                }
+                            }
                         }
                         else
                         {
-                            if (Util.CheckProjAlive<LMStarSigil>((int)npc.ai[3]))
-                            {
-                                Main.projectile[(int)npc.ai[3]].localAI[1] = 1;
-                            }
                             SwitchToRandomly(IsPhase3() ? ChronoDash : LaserMatrix, DivideAttackStart, 0.3f);
                         }
                     }
@@ -639,6 +650,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         {
                             var proj = Projectile.NewProjectileDirect(clock.Center, Vector2.Zero, ModContent.ProjectileType<GlowRing>(), 0, 0, Main.myPlayer, -1, -4);
                             proj.scale = 2f;
+                            proj.netUpdate = true;
                         }
                         if (npc.ai[3] == 5)
                         {
@@ -727,9 +739,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             ModContent.ProjectileType<LMSigilStarUnit>(), npc.damage / 5, 0f, Main.myPlayer, 1, parent);
                     }*/
 
-                    if (npc.ai[3] % 3 == 0)
+                    if (npc.ai[3] == 0)
                     {
-                        var target = player.Center + npc.DirectionFrom(player.Center) * LumiteDestroyerArguments.R * 1.5f;
+                        var target = player.Center + npc.DirectionFrom(player.Center) * LumiteDestroyerArguments.R * 2.5f;
                         npc.WormMovementEx(target, maxSpeed, turnAcc, ramAcc, radiusSpeed: 0.06f);
                         if (npc.DistanceSQ(target) <= 300 * 300)
                         {
@@ -739,9 +751,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             npc.netUpdate = true;
                         }
                     }
-                    else if (npc.ai[3] % 3 == 1)
+                    else if (npc.ai[3] == 1)
                     {
-                        if (npc.ai[2] == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+                        if (npc.ai[2] == 30 && Main.netMode != NetmodeID.MultiplayerClient)
                         {
                             var unitY = npc.localAI[0].ToRotationVector2();
                             var unitX = unitY.RotatedBy(MathHelper.PiOver2);
@@ -772,9 +784,20 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             Projectile.NewProjectile(npc.Center, (player.Center - npc.Center).SafeNormalize(Vector2.UnitY) * 18f,
                                 ModContent.ProjectileType<LMSigilStarUnit>(), npc.damage / 5, 0f, Main.myPlayer, 1, parent);
                         }
+                        if(npc.ai[2]==0 && Main.netMode != NetmodeID.MultiplayerClient)
+                        {
+                            var proj = Projectile.NewProjectileDirect(player.Center, Vector2.Zero, ModContent.ProjectileType<GlowRing>(), 0, 0, Main.myPlayer, -1, -5);
+                            proj.scale = 2f;
+                            proj.netUpdate = true;
+                        }
                         npc.ai[2]++;
 
-                        npc.WormMovementEx(npc.Center + npc.localAI[0].ToRotationVector2() * 200, maxSpeed * 2, turnAcc, ramAcc * 5);
+                        if (npc.ai[2] <= 15)
+                        {
+                            npc.WormMovementEx(Vector2.Lerp(player.Center, npc.Center + npc.localAI[0].ToRotationVector2() * 200, 0.6f), maxSpeed, turnAcc, ramAcc);
+                        }
+                        else
+                            npc.WormMovementEx(Vector2.Lerp(player.Center, npc.Center + npc.localAI[0].ToRotationVector2() * 200, 0.6f), maxSpeed * 1.5f, turnAcc, ramAcc * 5);
 
                         if (npc.ai[2] >= 75)
                         {
@@ -783,11 +806,11 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             npc.netUpdate = true;
                         }
                     }
-                    else if (npc.ai[3] % 3 == 2)
+                    else if (npc.ai[3] == 2)
                     {
                         npc.ai[2]++;
                         var target = player.Center + npc.DirectionFrom(player.Center) * LumiteDestroyerArguments.R * 2f;
-                        npc.WormMovementEx(target, maxSpeed * 0.8f, turnAcc, ramAcc, radiusSpeed: 0.06f);
+                        npc.WormMovementEx(target, maxSpeed * 0.9f, turnAcc, ramAcc, radiusSpeed: 0.06f);
                         if (npc.velocity.Compare(maxSpeed) > 1)
                         {
                             npc.SlowDown(0.9f);
@@ -800,9 +823,113 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             npc.netUpdate = true;
                         }
                     }
-
-                    npc.WormMovementEx(player.Center + npc.DirectionFrom(player.Center) * LumiteDestroyerArguments.R * 1.5f,
-                            maxSpeed, turnAcc, ramAcc, radiusSpeed: 0.06f);
+                    else if (npc.ai[3] == 3)
+                    {
+                        npc.ai[2]++;
+                        npc.WormMovementEx(player.Center + npc.DirectionFrom(player.Center) * LumiteDestroyerArguments.R * 1.5f,
+                                maxSpeed, turnAcc, ramAcc, radiusSpeed: 0.06f);
+                        if (npc.ai[2] >= 180)
+                        {
+                            npc.ai[2] = 0;
+                            npc.ai[3]++;
+                            npc.netUpdate = true;
+                        }
+                    }
+                    else if (npc.ai[3] == 4)
+                    {
+                        npc.WormMovementEx(player.Center + Vector2.UnitY * 1800, maxSpeed, turnAcc, ramAcc, 0.08f, 300, MathHelper.Pi / 6);
+                        if(npc.DistanceSQ(player.Center + Vector2.UnitY * 1800) <= 300 * 300)
+                        {
+                            npc.ai[3]++;
+                            npc.ai[2] = 0;
+                            npc.Center = player.Center + Vector2.UnitY * 1800;
+                            npc.netUpdate = true;
+                        }
+                    }
+                    else if (npc.ai[3] == 5)
+                    {
+                        if (npc.ai[2] == 0)
+                        {
+                            npc.velocity = -Vector2.UnitY;
+                            Vector2 target = npc.Center - Vector2.UnitY * 4500;
+                            Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<LMAimLine>(),
+                                0, 0f, Main.myPlayer, target.X, target.Y);
+                        }
+                        npc.ai[2]++;
+                        if (npc.ai[2] >= 25)
+                        {
+                            if (npc.velocity.Compare(maxSpeed * 1.2f) < 0) npc.velocity *= 1.08f;
+                            if (Main.netMode != NetmodeID.MultiplayerClient && npc.ai[2] % 10 == 0)
+                            {
+                                Vector2 offset = Vector2.UnitX * 1800;
+                                Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<LaserBarrage>(),
+                                        npc.damage / 8, 0f, Main.myPlayer, (npc.Center + offset).X, (npc.Center + offset).Y);
+                                Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<LaserBarrage>(),
+                                        npc.damage / 8, 0f, Main.myPlayer, (npc.Center - offset).X, (npc.Center - offset).Y);
+                            }
+                        }
+                        if (npc.ai[2] >= 90 && npc.ai[2] < 135)
+                        {
+                            npc.SlowDown(0.98f);
+                            if (npc.ai[2] == 90 && Main.netMode != NetmodeID.MultiplayerClient)
+                            {
+                                int wave = Projectile.NewProjectile(new Vector2(npc.Center.X, player.Center.Y),
+                                    Vector2.UnitX * Math.Sign(player.Center.X - npc.Center.X) * 8f,
+                                    ModContent.ProjectileType<LMSigilStarWave>(),
+                                    0, 0f, Main.myPlayer, 1f);
+                                int parent = Projectile.NewProjectile(npc.Center,
+                                    Vector2.Zero, ModContent.ProjectileType<LMSigilStar>(),
+                                    0, 0f, Main.myPlayer, 2f, wave);
+                                int parent2 = Projectile.NewProjectile(npc.Center,
+                                    Vector2.Zero, ModContent.ProjectileType<LMSigilStar>(),
+                                    0, 0f, Main.myPlayer, 2f, -wave);
+                                npc.netUpdate = true;
+                                int i = npc.whoAmI;
+                                int counter = 0;
+                                while (i != -1)
+                                {
+                                    counter++;
+                                    if (i != npc.whoAmI)
+                                    {
+                                        Main.npc[i].localAI[1] = (counter - 1) % 36 + 1;//timer
+                                        Main.npc[i].localAI[2] = counter <= 36 ? parent : parent2;
+                                        Main.npc[i].localAI[3] = (counter - 1) % 36 + 1;
+                                        if (counter >= 72)
+                                        {
+                                            break;
+                                        }
+                                    }
+                                    i = (int)Main.npc[i].ai[0];
+                                }
+                                Projectile.NewProjectile(npc.Center, (player.Center - npc.Center).SafeNormalize(Vector2.UnitY) * 18f,
+                                    ModContent.ProjectileType<LMSigilStarUnit>(), npc.damage / 5, 0f, Main.myPlayer, 1, parent);
+                            }
+                        }
+                        else if (npc.ai[2] >= 135)
+                        {
+                            npc.ai[2] = 0;
+                            npc.ai[3]++;
+                            npc.netUpdate = true;
+                        }
+                    }
+                    else if (npc.ai[3] == 6)
+                    {
+                        CrawlipedeMove();
+                        npc.ai[2]++;
+                        if (npc.ai[2] == 90 && Main.netMode != NetmodeID.MultiplayerClient)
+                        {
+                            for(int i = -8; i <= 8; i++)
+                            {
+                                Vector2 target = player.Center + Vector2.UnitX * 360 * i + Vector2.UnitY * 900;
+                                Projectile.NewProjectile(target - Vector2.UnitY * 1800, Vector2.Zero, ModContent.ProjectileType<LaserBarrage>(),
+                                        npc.damage / 8, 0f, Main.myPlayer, target.X, target.Y);
+                            }
+                        }
+                        if (npc.ai[2] >= 270)
+                        {
+                            npc.ai[3]++;
+                        }
+                    }
 
                     if (npc.ai[3] > 6)
                     {
@@ -864,6 +991,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         {
                             var proj = Projectile.NewProjectileDirect(player.Center, Vector2.Zero, ModContent.ProjectileType<GlowRing>(), 0, 0, Main.myPlayer, -1, -5);
                             proj.scale = 2f;
+                            proj.netUpdate = true;
                         }
                         SwitchTo(DivideAttackStart + 1);
                         npc.localAI[1] = (-dist).ToRotation();
@@ -1016,9 +1144,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             {
                                 int ydirFactor = Main.rand.NextBool() ? -1 : 1;
                                 int xdirFactor = Main.rand.NextBool() ? -1 : 1;
-                                var start = player.Center + Vector2.UnitY * ydirFactor * 1000
+                                var start = player.Center + Vector2.UnitY * ydirFactor * 1200
                                     + Main.rand.NextVector2Circular(900, 100) * xdirFactor;
-                                var end = player.Center - Vector2.UnitY * ydirFactor * 1000
+                                var end = player.Center - Vector2.UnitY * ydirFactor * 1200
                                     + Main.rand.NextVector2Circular(900, 100) * xdirFactor;
                                 if ((end - start).Compare(1200) < 0)
                                 {
@@ -1040,9 +1168,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             {
                                 int ydirFactor = Main.rand.NextBool() ? -1 : 1;
                                 int xdirFactor = Main.rand.NextBool() ? -1 : 1;
-                                var start = player.Center + Vector2.UnitY * ydirFactor * 1000
+                                var start = player.Center + Vector2.UnitY * ydirFactor * 1200
                                     + Main.rand.NextVector2Circular(900, 100) * xdirFactor;
-                                var end = player.Center - Vector2.UnitY * ydirFactor * 1000
+                                var end = player.Center - Vector2.UnitY * ydirFactor * 1200
                                     + Main.rand.NextVector2Circular(900, 100) * xdirFactor;
                                 if ((end - start).Compare(1200) < 0)
                                 {
@@ -1154,7 +1282,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             tmpNPC.frame.Y = 0;
                             tmpNPC.netUpdate = true;
                         });
-                        SwitchTo(IsPhase3() ? Main.rand.Next(2, 6) : Main.rand.Next(0, 3));
+                        SwitchTo(IsPhase3() ? Main.rand.Next(1, 6) : Main.rand.Next(0, 3));
                     }
                 }
                 #endregion
@@ -1214,38 +1342,14 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         player.Center = center + Vector2.Normalize(player.Center - center) * LumiteDestroyerArguments.R;
                     }
 
-                    if (spinTimer < spinMaxTime + 180)
+                    if (spinTimer == spinMaxTime + 120 && Main.netMode != NetmodeID.MultiplayerClient)
                     {
                         for (int i = 0; i < chaosPlanets.Length; i++) chaosPlanets[i] = -1;
                         Vector2 offset = new Vector2(450, 0);
                         for (int i = 0; i < chaosPlanetsCount; i++)
                         {
-                            Vector2 size = new Vector2(40, 40);
-                            Vector2 spawnPos = center + offset;
-                            spawnPos.X -= size.X / 2;
-                            spawnPos.Y -= size.Y / 2;
-                            for (int num617 = 0; num617 < 60; num617++)
-                            {
-                                int num618 = Dust.NewDust(spawnPos, (int)size.X, (int)size.Y, DustID.Vortex, 0f, 0f, 100, default(Color), 3.5f);
-                                Main.dust[num618].noGravity = true;
-                                Main.dust[num618].velocity *= 7f;
-                                num618 = Dust.NewDust(spawnPos, (int)size.X, (int)size.Y, DustID.Vortex, 0f, 0f, 100, default(Color), 1.5f);
-                                Main.dust[num618].velocity *= 3f;
-                            }
-
-                            for (int k = 0; k < 40; k++) //make visual dust
-                            {
-                                Vector2 dustPos = spawnPos;
-                                dustPos.X += Main.rand.Next((int)size.X);
-                                dustPos.Y += Main.rand.Next((int)size.Y);
-
-                                for (int m = 0; m < 20; m++)
-                                {
-                                    int dust = Dust.NewDust(dustPos, 32, 32, DustID.Vortex, 0f, 0f, 100, default(Color), 3.5f);
-                                    Main.dust[dust].noGravity = true;
-                                    Main.dust[dust].velocity *= 7f;
-                                }
-                            }
+                            Projectile.NewProjectile(center + offset, Vector2.Zero, ModContent.ProjectileType<WarningMark>(),
+                                0, 0f, Main.myPlayer, 30);
                             offset = offset.RotatedBy(MathHelper.TwoPi / chaosPlanetsCount);
                         }
                     }

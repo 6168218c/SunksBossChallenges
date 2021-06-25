@@ -45,8 +45,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         }
 
         public static float R => (float)(SpinSpeed / SpinRadiusSpeed);
-        public static float Scale => 1.35f;
-        public static float Phase2HealthFactor => 0.75f;
+        public static float Scale => 1.5f;
+        public static float Phase2HealthFactor => 0.9f;
         public static int TeleportDistance => 750;
     }
     public abstract class LumiteDestroyerSegment:ModNPC
@@ -54,7 +54,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         public static int LaserMatrix => 0;
         public static int StarFall => 1;
         public static int HalfCircleDash => 2;
-        public static int BlackHole => 3;
+        public static int StarCard => 3;
         public static int ChronoDash => 4;
         public static int SigilStar => 5;
 
@@ -89,7 +89,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             }
             if (npc.realLife != -1 && Main.npc[npc.realLife].type == ModContent.NPCType<LumiteDestroyerHead>() && Main.npc[npc.realLife].active)
             {
-                if (Main.npc[npc.realLife].ai[1] < DeathStruggleStart + 5)
+                if (Main.npc[npc.realLife].ai[1] <= DeathStruggleStart + 5)
                 {
                     //prevent from dying
                     npc.life = 1;
@@ -170,12 +170,30 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             return false;
         }
-        public override void OnHitByProjectile(Projectile projectile, int damage, float knockback, bool crit)
+        public override void ModifyHitByProjectile(Projectile projectile, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
         {
-            base.OnHitByProjectile(projectile, damage, knockback, crit);
+            base.ModifyHitByProjectile(projectile, ref damage, ref knockback, ref crit, ref hitDirection);
+            /*if (projectile.type == ProjectileID.DD2BetsyArrow)
+            {
+                if(this is LumiteDestroyerHead head)
+                {
+                    head.DynDR = Math.Max(head.DynDR, 0.8f);
+                }
+                else if (Util.CheckNPCAlive<LumiteDestroyerHead>(npc.realLife))
+                {
+                    var npchead = (Main.npc[npc.realLife].modNPC as LumiteDestroyerHead);
+                    npchead.DynDR = Math.Max(npchead.DynDR, 0.8f);
+                }
+            }*/
             if (!projectile.minion)
             {
-                projectile.Kill();
+                //projectile.penetrate = 0;
+                if (projectile.penetrate == -1) damage = (int)(damage * 0.6f);
+                if (projectile.type == ProjectileID.DD2BetsyArrow) damage = (int)(damage * 0.6f);
+                if (projectile.type == ProjectileID.StardustDragon1) damage = (int)(damage * 0.25f);
+                if (projectile.type == ProjectileID.StardustDragon2) damage = (int)(damage * 0.25f);
+                if (projectile.type == ProjectileID.StardustDragon3) damage = (int)(damage * 0.25f);
+                if (projectile.type == ProjectileID.StardustDragon4) damage = (int)(damage * 0.25f);
             }
         }
     }
