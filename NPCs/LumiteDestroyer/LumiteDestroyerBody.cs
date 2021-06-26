@@ -135,7 +135,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 dust.noLight = true;
                                 dust.color = Color.LightBlue;
                             }
-                            //ImmuneTimer = 300;
+                            ImmuneTimer = 180;
                         }
                         npc.alpha -= 42;
                         if (npc.alpha < 0)
@@ -155,7 +155,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             dust.noLight = true;
                             dust.color = Color.LightBlue;
                         }
-                        //ImmuneTimer = 300;
+                        ImmuneTimer = 180;
                     }
                     npc.alpha -= 42;
                     if (npc.alpha < 0)
@@ -164,7 +164,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     }
                 }
             }
-            //if (ImmuneTimer > 0) --ImmuneTimer;
+            if (ImmuneTimer > 0) --ImmuneTimer;
             #endregion
             #region Music
             if (head.ai[1] >= 0)
@@ -275,7 +275,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             {
                 if (npc.localAI[0] >= DivideAttackStart)//acting as head
                 {
-                    var maxSpeed = 18f + player.velocity.Length() / 2;
+                    var maxSpeed = 15f + player.velocity.Length() / 3;
                     float turnAcc = 0.15f;
                     float ramAcc = 0.15f;
                     if (Main.expertMode)

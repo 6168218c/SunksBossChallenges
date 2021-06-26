@@ -31,7 +31,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         public override void AI()
         {
             projectile.ai[1]++;
-            if (projectile.ai[1] >= 150)
+            if (projectile.ai[1] >= 175)
             {
                 projectile.SlowDown(0.8f);
                 if (projectile.velocity == Vector2.Zero || projectile.velocity.Compare(projectile.ai[0]) < 0)
@@ -139,15 +139,19 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             }
             else if (projectile.ai[0] == 2)
             {
-                float Omega = 0.1f;
+                float Omega = MathHelper.TwoPi / 60;
                 int direction = Math.Sign(projectile.ai[1]);
                 Projectile parent = Main.projectile[Math.Abs((int)projectile.ai[1])];//Wave
                 projectile.localAI[0]++;
+                if (projectile.localAI[0] > 60 && projectile.localAI[0] < LaunchTime - 45)
+                {
+                    projectile.localAI[0] = 0;
+                }
 
                 if (parent.active && parent.type == ModContent.ProjectileType<LMSigilStarWave>())
                 {
                     projectile.Center = parent.Center
-                        + parent.velocity.RotatedBy(MathHelper.PiOver2 * direction) * (float)Math.Sin(projectile.localAI[0] * Omega) * 30;
+                        + parent.velocity.RotatedBy(MathHelper.PiOver2 * direction) * (float)Math.Sin(projectile.localAI[0] * Omega) * 50;
                 }
                 else
                 {
@@ -277,7 +281,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                         if (parent.active && parent.type == ModContent.ProjectileType<LMSigilStar>())
                             projectile.velocity = -(parent.Center - projectile.Center) / 60f;
                     }
-                    if (Util.CheckProjAlive<LMSigilStar>((int)projectile.localAI[1]))
+                    if (Util.CheckProjAlive<LMSigilStar>((int)projectile.ai[1]))
                     {
                         launchRotation = (Main.player[Math.Abs((int)projectile.localAI[1])].Center - parent.Center).ToRotation();
                     }

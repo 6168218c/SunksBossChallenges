@@ -22,6 +22,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         internal int DynDRTimer = 0;
         internal int lastHealth = 0;
         internal float DynDR;
+        internal bool DivideChooser = false;
 
         internal Vector2 healBarPos;//this one doesn't need to be synchronized.
         int Length => 80;
@@ -68,7 +69,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         }
         public bool IsPhase3()
         {
-            return npc.life < npc.lifeMax * 0.7f;
+            return npc.life < npc.lifeMax * 0.65f;
         }
         public bool CanBeTransparent()
         {
@@ -338,9 +339,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             if (DynDRTimer == 0 && npc.ai[1] >= 0)
             {
-                if (npc.life < lastHealth - npc.lifeMax / 10800)
+                if (npc.life < lastHealth - npc.lifeMax / 5400)
                 {
-                    DynDR = Math.Max(DynDR - 0.01f, 1 - ((float)npc.lifeMax / 10800 / (lastHealth - npc.life)));
+                    DynDR = Math.Max(DynDR - 0.01f, 1 - ((float)npc.lifeMax / 5400 / (lastHealth - npc.life)));
                     DynDR = Math.Max(DynDR, 0.6f);
                 }
                 else

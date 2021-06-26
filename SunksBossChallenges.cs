@@ -17,9 +17,9 @@ namespace SunksBossChallenges
         {
             Instance = this;
 
-            SkyManager.Instance["SunksBossChallenges:DecimatorOfPlanetsAggressive"] = new Sky.DecimatorOfPlanets.AggressiveSky();
+            /*SkyManager.Instance["SunksBossChallenges:DecimatorOfPlanetsAggressive"] = new Sky.DecimatorOfPlanets.AggressiveSky();
             SkyManager.Instance["SunksBossChallenges:DecimatorOfPlanetsPassive"] = new Sky.DecimatorOfPlanets.PassiveSky();
-            SkyManager.Instance["SunksBossChallenges:DecimatorOfPlanetsLastPhase"] = new Sky.DecimatorOfPlanets.LastPhaseSky();
+            SkyManager.Instance["SunksBossChallenges:DecimatorOfPlanetsLastPhase"] = new Sky.DecimatorOfPlanets.LastPhaseSky();*/
             SkyManager.Instance["SunksBossChallenges:LumiteDestroyer"] = new Sky.LumiteDestroyer.LumiteDestroyerSky();
 
             //Boss heads

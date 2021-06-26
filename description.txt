@@ -1,2 +1,7 @@
 Rise of the Sunkens is a small content mod mainly targeting on adding some new bosses.
 Current progress : Lumite Mechs.
+
+Credits to:
+	@Sakuzyo for composing the music
+	@Darkpuppey for spriting Nova Annihilator
+	@Fargowilta for using some of his techque

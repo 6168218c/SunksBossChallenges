@@ -5,7 +5,6 @@ using System.IO;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using SunksBossChallenges.NPCs.DecimatorOfPlanets;
 
 namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
 {

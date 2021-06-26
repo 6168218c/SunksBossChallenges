@@ -49,7 +49,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             {
                 projectile.localAI[0]++;
                 projectile.SlowDown(0.8f);
-                if (projectile.localAI[0] >= 6)
+                if (projectile.localAI[0] >= 2)
                 {
                     projectile.Kill();
                 }
@@ -96,7 +96,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     }
                 }
             }
-            if (projectile.velocity.Compare(3) < 0) projectile.velocity = projectile.velocity.SafeNormalize(Vector2.UnitY) * 3;
+            if (projectile.velocity.Compare(1.5f) < 0) projectile.velocity = projectile.velocity.SafeNormalize(Vector2.UnitY) * 1.5f;
             if (!othersLeft)
                 projectile.velocity = Vector2.Normalize(projectile.velocity) * maxSpeed;
 
@@ -247,7 +247,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 
             if (Main.netMode != NetmodeID.MultiplayerClient)
             {
-                const int max = 6;
+                const int max = 12;
                 const float rotationInterval = 2f * (float)Math.PI / max;
                 Vector2 speed = new Vector2(0f, 2f).RotatedBy(projectile.rotation);
                 for (int i = 0; i < max; i++)

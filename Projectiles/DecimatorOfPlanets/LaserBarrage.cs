@@ -6,7 +6,6 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
-using SunksBossChallenges.NPCs.DecimatorOfPlanets;
 
 namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
 {
@@ -18,13 +17,16 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
         public override void SetStaticDefaults()
         {
             DisplayName.SetDefault("Laser Barrage");
+
+            ProjectileID.Sets.TrailCacheLength[projectile.type] = 6;
+            ProjectileID.Sets.TrailingMode[projectile.type] = 2;
         }
 
         public override void SetDefaults()
         {
             projectile.width = 4;
             projectile.height = 12;
-            projectile.timeLeft = 180;
+            projectile.timeLeft = 240;
             projectile.penetrate = -1;
             projectile.hostile = true;
             projectile.tileCollide = false;
