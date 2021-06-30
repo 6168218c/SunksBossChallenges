@@ -6,7 +6,7 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
-using SunksBossChallenges.Projectiles.DecimatorOfPlanets;
+using SunksBossChallenges.Projectiles.LumiteDestroyer;
 
 namespace SunksBossChallenges.Items
 {
@@ -44,6 +44,8 @@ namespace SunksBossChallenges.Items
 				Vector2 pos = Main.rand.NextVector2Unit(MathHelper.Pi / 3, MathHelper.Pi / 3) * length;
 				Projectile.NewProjectile(player.Center + pos, Vector2.Zero, ModContent.ProjectileType<LaserBarrage>(), 60, 0f, Main.myPlayer, player.Center.X, player.Center.Y);
 			}*/
+			Projectile.NewProjectile(player.Center - Vector2.UnitX * 600, Vector2.Zero, ModContent.ProjectileType<LMEllipseMoonAim>(),
+				10, 0f, Main.myPlayer, player.whoAmI);
 			return true;
 		}
 

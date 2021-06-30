@@ -24,8 +24,8 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
 
         public override void SetDefaults()
         {
-            projectile.width = 4;
-            projectile.height = 12;
+            projectile.width = 16;
+            projectile.height = 16;
             projectile.timeLeft = 240;
             projectile.penetrate = -1;
             projectile.hostile = true;
@@ -135,7 +135,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
 
         public override bool CanHitPlayer(Player target)
         {
-            if (projectile.localAI[0] < 75 || projectile.timeLeft <= 30) 
+            if (projectile.localAI[0] < 65 || projectile.timeLeft <= 5) 
             {
                 return false;
             }

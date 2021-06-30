@@ -37,24 +37,24 @@ namespace SunksBossChallenges.Projectiles
 		{
 			if (!boom)
 			{
-				if (Main.netMode != NetmodeID.Server && !Filters.Scene["Shockwave"].IsActive())
+				if (Main.netMode != NetmodeID.Server && !Filters.Scene["SunksBossChallenges:Shockwave"].IsActive())
 				{
-					Filters.Scene.Activate("Shockwave", projectile.Center).GetShader().UseColor(2, 5, 15).UseTargetPosition(projectile.Center);
+					Filters.Scene.Activate("SunksBossChallenges:Shockwave", projectile.Center).GetShader().UseColor(2, 5, 15).UseTargetPosition(projectile.Center);
 				}
 				boom = true;
 			}
-			if (Main.netMode != NetmodeID.Server && Filters.Scene["Shockwave"].IsActive())
+			if (Main.netMode != NetmodeID.Server && Filters.Scene["SunksBossChallenges:Shockwave"].IsActive())
 			{
 				float progress = (180 - projectile.timeLeft) / 60f; // Will range from -3 to 3, 0 being the point where the bomb explodes.
-				Filters.Scene["Shockwave"].GetShader().UseProgress(progress).UseOpacity(distortStrength * (1 - progress / 8f));
+				Filters.Scene["SunksBossChallenges:Shockwave"].GetShader().UseProgress(progress).UseOpacity(distortStrength * (1 - progress / 8f));
 			}
 			return false;
 		}
 		public override void Kill(int timeLeft)
 		{
-			if (Main.netMode != NetmodeID.Server && Filters.Scene["Shockwave"].IsActive())
+			if (Main.netMode != NetmodeID.Server && Filters.Scene["SunksBossChallenges:Shockwave"].IsActive())
 			{
-				Filters.Scene["Shockwave"].Deactivate();
+				Filters.Scene["SunksBossChallenges:Shockwave"].Deactivate();
 			}
 		}
 	}

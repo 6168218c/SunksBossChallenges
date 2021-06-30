@@ -43,9 +43,10 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             {
                 if(head.ai[2] <= 180)
                     projectile.Center = (player.Center + projectile.Center * 64) / 65;
-                if (head.ai[2] == 270 && head.ai[3] < 5 && Main.netMode != NetmodeID.MultiplayerClient)
+                if (head.ai[2] == 251 && head.ai[3] < 5 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     Vector2 unit;
+                    int direction = Main.rand.NextBool() ? -1 : 1;
                     if (Main.rand.NextBool())
                     {
                         /*Vector2 unit = -Vector2.UnitY;
@@ -59,7 +60,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 						unit = -Vector2.UnitY;
                         for (int i = 1; i < 12; i += 2)
                         {
-                            Vector2 projPos = projectile.Center + unit * ClockR;
+                            Vector2 projPos = projectile.Center + unit * ClockR * direction;
                             Projectile.NewProjectile(projPos, Vector2.Zero, ModContent.ProjectileType<DecimatorOfPlanets.LaserBarrage>(),
                                 projectile.damage / 3, 0f, projectile.owner, projectile.Center.X, projectile.Center.Y);
                             unit = unit.RotatedBy(-MathHelper.Pi / 6);
@@ -70,7 +71,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                         unit = -Vector2.UnitY;
                         for (int i = 0; i < 12; i += 2)
                         {
-                            Vector2 projPos = projectile.Center + unit * ClockR;
+                            Vector2 projPos = projectile.Center + unit * ClockR * direction;
                             Projectile.NewProjectile(projPos, Vector2.Zero, ModContent.ProjectileType<DecimatorOfPlanets.LaserBarrage>(),
                                 projectile.damage / 3, 0f, projectile.owner, projectile.Center.X, projectile.Center.Y);
                             unit = unit.RotatedBy(-MathHelper.Pi / 6);
@@ -78,11 +79,11 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     }
                     unit = lastLaserRotation.ToRotationVector2();
                     Projectile ray = Projectile.NewProjectileDirect(projectile.Center, unit, ModContent.ProjectileType<DestroyerDeathRay>(),
-                        projectile.damage * 2, 0f, projectile.owner, 135, projectile.ai[0]);
+                        projectile.damage, 0f, projectile.owner, 135, projectile.ai[0]);
                     ray.localAI[1] = 2f;
                     ray.netUpdate = true;
                     ray = Projectile.NewProjectileDirect(projectile.Center, -unit, ModContent.ProjectileType<DestroyerDeathRay>(),
-                        projectile.damage * 2, 0f, projectile.owner, 135, projectile.ai[0]);
+                        projectile.damage, 0f, projectile.owner, 135, projectile.ai[0]);
                     ray.localAI[1] = 2f;
                     ray.netUpdate = true;
                     lastLaserRotation = projectile.localAI[0];
@@ -183,7 +184,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 NPC head = Main.npc[(int)projectile.ai[0]];
                 if (head.ai[1] == LumiteDestroyerSegment.ChronoDash)
                 {
-                    if (head.ai[2] >= 225 && head.ai[2] <= 270)
+                    /*if (head.ai[2] >= 225 && head.ai[2] <= 270)
                     {
                         float timer = head.ai[2] - 225;
                         Color alpha = Color.BlueViolet * projectile.Opacity;
@@ -195,8 +196,8 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                         {
                             alpha *= (45 - timer) / 15f;
                         }
-                        projectile.DrawAim(spriteBatch, projectile.Center + lastLaserRotation.ToRotationVector2() * 1000, alpha);
-                    }
+                        projectile.DrawAim(spriteBatch, projectile.Center + projectile.localAI[0].ToRotationVector2() * 1000, alpha);
+                    }*/
                     //head.localAI[0] = projectile.whoAmI;
                 }
             }

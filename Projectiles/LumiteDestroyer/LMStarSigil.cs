@@ -103,7 +103,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     for (int i = 0; i < 5; i++)
                     {
                         var start = projectile.Center + baseVector + baseUnit.RotatedBy(Math.PI / 2) * lineHalfLen;
-                        Projectile.NewProjectile(start, (projectile.Center - start).SafeNormalize(Vector2.Zero) * 16f, ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(),
+                        Projectile.NewProjectile(start, (projectile.Center - start).SafeNormalize(Vector2.Zero) * 10f, ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(),
                             projectile.damage / 2, 0f, projectile.owner);
                         
                         baseVector = baseVector.RotatedBy(Math.PI / 2.5);

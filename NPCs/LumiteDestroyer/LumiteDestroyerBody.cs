@@ -14,7 +14,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
 {
     public class LumiteDestroyerBody : LumiteDestroyerSegment
     {
-        readonly int segDistance = 38;
+        readonly int segDistance = 42;
         int PreviousIndex => (int)npc.ai[1];
 
         public override void SetStaticDefaults()
@@ -190,7 +190,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             {
                 if (npc.ai[1] >= 0f && npc.ai[1] < Main.npc.Length)
                 {
-                    if ((head.ai[1] == HalfCircleDash && head.ai[2] >= 180)
+                    if ((head.ai[1] == PlanetAurora && head.ai[2] >= 180 && head.ai[2] <= 300)
                         || (head.ai[1] >= SpinAttackStart && head.ai[1] < DeathStruggleStart) 
                         || (head.ai[1] >= DeathStruggleStart + 2 && head.ai[1] <= DeathStruggleStart + 4))//spinning or preparing spinning
                     {
@@ -223,7 +223,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             if (npc.localAI[1] <= 0 && Main.netMode != NetmodeID.MultiplayerClient)
                             {
                                 npc.localAI[1] = 0;
-                                if (head.ai[1] == HalfCircleDash)
+                                if (head.ai[1] == PlanetAurora)
                                 {
                                     var target = (npc.Center - pivot) * 3 + pivot;
                                     Projectile.NewProjectile(pivot, (player.Center - npc.Center).SafeNormalize(Vector2.Zero)
@@ -295,6 +295,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     }
                     else if (npc.localAI[0] == DivideAttackStart + 3)
                     {
+						maxSpeed *= 0.75f;
                         var targetPos = player.Center;
                         int playerTileX = (int)(targetPos.X / 16f);
                         int playerTileY = (int)(targetPos.Y / 16f);
@@ -361,6 +362,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     }
                     else if (npc.localAI[0] == DivideAttackStart + 4)
                     {
+						maxSpeed *= 0.75f;
                         var targetPos = player.Center;
                         int playerTileX = (int)(targetPos.X / 16f);
                         int playerTileY = (int)(targetPos.Y / 16f);

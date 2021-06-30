@@ -79,7 +79,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         public bool AllowSpin()
         {
             return IsPhase3() && (npc.ai[1] < DivideAttackStart || npc.ai[1] > DivideAttackStart + DivideAILength) &&
-                (npc.ai[1] != ChronoDash) && (npc.ai[1] != StarCard) && (npc.ai[1] != SigilStar);
+                (npc.ai[1] != ChronoDash) && (npc.ai[1] != StarCard) && (npc.ai[1] != SigilStar) && (npc.ai[1] != PlanetAurora);
         }
         void SwitchTo(float ai1, bool resetCounter = true, bool resetAllTimer = true)
         {
@@ -100,7 +100,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         void SwitchToRandomly(float normalAI1, float randomAI1, float possibility)
         {
             randomCorrecter++;
-            if ((Main.rand.NextFloat() < possibility && randomCorrecter > 3) || randomCorrecter == 9)//at least one divide attack every 9 attacks
+            if ((Main.rand.NextFloat() < possibility && randomCorrecter > 3) || randomCorrecter == 8)//at least one divide attack every 9 attacks
             {
                 randomCorrecter = 0;
                 SwitchTo(randomAI1);
@@ -141,7 +141,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         }
                     }
 
-                    Vector2 dist = Main.rand.NextVector2Unit() * 1000;
+                    Vector2 dist = Main.rand.NextVector2Unit() * LumiteDestroyerArguments.R * 1.8f;
                     npc.Center = player.Center + player.velocity * 60f + dist;
                     npc.velocity = Vector2.Normalize(player.Center - npc.Center) * maxSpeed / 3;
                     ForeachSegment((tmpNPC, counter) =>
@@ -154,7 +154,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         tmpNPC.frame.Y = 0;
                         tmpNPC.netUpdate = true;
                     });
-                    SwitchTo(DeathStruggleStart + 1);
+                    SwitchTo(DeathStruggleStart + 2);
                 }
             }
             else if (npc.ai[1] == DeathStruggleStart + 1)
@@ -163,9 +163,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 if (npc.ai[2] == 120 || npc.ai[2] == 500 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     int direction = Main.rand.Next(4);
-                    if (npc.ai[2] == 120)
+                    /*if (npc.ai[2] == 120)
                         Projectile.NewProjectile(player.Center, Vector2.Zero, ModContent.ProjectileType<LMStarSigilEx>(),
-                            npc.damage / 8, 0f, Main.myPlayer, 0f, npc.target);
+                            npc.damage / 8, 0f, Main.myPlayer, 0f, npc.target);*/
                     if (npc.ai[2] == 500)
                         Projectile.NewProjectile(player.Center - Vector2.UnitX.RotatedBy(Math.PI / 2 * direction) * 1080,
                             Vector2.Zero, ModContent.ProjectileType<LMLaserMatrix>(),
@@ -339,9 +339,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             if (DynDRTimer == 0 && npc.ai[1] >= 0)
             {
-                if (npc.life < lastHealth - npc.lifeMax / 5400)
+                if (npc.life < lastHealth - npc.lifeMax / 4800)
                 {
-                    DynDR = Math.Max(DynDR - 0.01f, 1 - ((float)npc.lifeMax / 5400 / (lastHealth - npc.life)));
+                    DynDR = Math.Max(DynDR - 0.01f, 1 - ((float)npc.lifeMax / 4800 / (lastHealth - npc.life)));
                     DynDR = Math.Max(DynDR, 0.6f);
                 }
                 else
@@ -476,6 +476,13 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         clock.active = false;
                         Main.dayTime = false;
                         Main.time = 16200;
+                    }
+                }
+                if (npc.ai[1] == PlanetAurora)
+                {
+                    if (Util.CheckProjAlive<LMDoublePlanetAurora>((int)npc.ai[3]))
+                    {
+                        Main.projectile[(int)npc.ai[3]].localAI[1] = 1;
                     }
                 }
                 npc.life = 1;

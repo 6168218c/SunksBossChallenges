@@ -49,28 +49,31 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 if (Main.rand.Next(3) == 0)
                     dust.velocity += Vector2.Normalize(offset) * 5f;
                 dust.noGravity = true;
-                for (int i = 0; i < Main.player.Length; i++)
-                {
-                    if (Main.player[i].active && projectile.DistanceSQ(Main.player[i].Center) <= 600 * 600)
-                    {
-                        var distanceSQ = projectile.DistanceSQ(Main.player[i].Center);
-                        if (distanceSQ == 0) continue;
-                        if (distanceSQ <= 900 * 900 && distanceSQ > 900)
-                        {
-                            var accle = projectile.DirectionFrom(Main.player[i].Center)
-                                * Math.Min(9000 * intensity / distanceSQ, 0.9f);//need further testing
+				if (Util.CheckNPCAlive<LumiteDestroyerHead>((int)projectile.ai[0]))
+				{
+					for (int i = 0; i < Main.player.Length; i++)
+					{
+						if (Main.player[i].active && projectile.DistanceSQ(Main.player[i].Center) <= 600 * 600)
+						{
+							var distanceSQ = projectile.DistanceSQ(Main.player[i].Center);
+							if (distanceSQ == 0) continue;
+							if (distanceSQ <= 900 * 900 && distanceSQ > 900)
+							{
+								var accle = projectile.DirectionFrom(Main.player[i].Center)
+									* Math.Min(9000 * intensity / distanceSQ, 0.9f);//need further testing
 
-                            Main.player[i].velocity += accle;
-                        }
-                        else if (distanceSQ <= 1800 * 1800)
-                        {
-                            var accle = projectile.DirectionFrom(Main.player[i].Center)
-                                * Math.Min(16000 * intensity / distanceSQ, 0.9f);//need further testing
+								Main.player[i].velocity += accle;
+							}
+							else if (distanceSQ <= 1800 * 1800)
+							{
+								var accle = projectile.DirectionFrom(Main.player[i].Center)
+									* Math.Min(16000 * intensity / distanceSQ, 0.9f);//need further testing
 
-                            Main.player[i].velocity += accle;
-                        }
-                    }
-                }
+								Main.player[i].velocity += accle;
+							}
+						}
+					}
+				}
                 intensity += 0.045f;
                 projectile.scale = intensity;
                 if (intensity >= 6f) projectile.localAI[0]++;
@@ -94,8 +97,8 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                             Vector2 unit = projectile.rotation.ToRotationVector2();
                             for (int i = 0; i < 5; i++)
                             {
-                                Projectile star = Projectile.NewProjectileDirect(projectile.Center + unit*LumiteDestroyerArguments.R, -unit*6, ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(),
-                                    projectile.damage/3, 0f, projectile.owner);
+                                Projectile star = Projectile.NewProjectileDirect(projectile.Center + unit * LumiteDestroyerArguments.R, -unit * 6, ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(),
+                                    projectile.damage / 9, 0f, projectile.owner);
                                 star.timeLeft = (int)(LumiteDestroyerArguments.R / 6);
                                 star.scale = 0.5f;
                                 star.netUpdate = true;
@@ -146,6 +149,14 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 projectile.ai[1]++;
             }
         }
+		public override bool CanHitPlayer(Player target)
+        {
+            if (projectile.localAI[0] == 1) 
+            {
+                return false;
+            }
+            return true;
+        }
         public override void Kill(int timeLeft)
         {
             if (Main.netMode != NetmodeID.Server)
@@ -169,7 +180,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
-            Main.spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), projectile.GetAlpha(color), projectile.rotation, origin2, projectile.scale*1.1f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), projectile.GetAlpha(color), projectile.rotation, origin2, projectile.scale * 1.35f, SpriteEffects.None, 0f);
 
             return false;
         }

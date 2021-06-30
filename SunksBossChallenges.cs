@@ -30,12 +30,18 @@ namespace SunksBossChallenges
             if (Main.netMode != NetmodeID.Server)
             {
                 Ref<Effect> screenRef = new Ref<Effect>(GetEffect("Effects/Content/ShockwaveEffect")); // The path to the compiled shader file.
-                Filters.Scene["Shockwave"] = new Filter(new ScreenShaderData(screenRef, "Shockwave"), EffectPriority.VeryHigh);
-                Filters.Scene["Shockwave"].Load();
+                Filters.Scene["SunksBossChallenges:Shockwave"] = new Filter(new ScreenShaderData(screenRef, "Shockwave"), EffectPriority.VeryHigh);
+                Filters.Scene["SunksBossChallenges:Shockwave"].Load();
 
                 Ref<Effect> blackHoleRef = new Ref<Effect>(GetEffect("Effects/Content/BlackHoleDistort"));
                 Filters.Scene["BlackHoleDistort"] = new Filter(new ScreenShaderData(blackHoleRef, "BlackHoleDistort"), EffectPriority.VeryHigh);
                 Filters.Scene["BlackHoleDistort"].Load();
+
+                Ref<Effect> colorizeRef = new Ref<Effect>(GetEffect("Effects/Content/Colorize"));
+                Filters.Scene["SunksBossChallenges:Colorize"] = new Filter(new ScreenShaderData(colorizeRef, "Colorize"), EffectPriority.VeryHigh);
+                Filters.Scene["SunksBossChallenges:Colorize"].Load();
+
+                Trail = GetEffect("Effects/Trail");
             }
 
             
@@ -43,12 +49,14 @@ namespace SunksBossChallenges
             base.Load();
         }
 
+        public static Effect Trail { get; set; }
         public override void Unload()
         {
             Instance = null;
-            SkyManager.Instance.Deactivate("SunksBossChallenges:DecimatorOfPlanetsAggressive");
+            /*SkyManager.Instance.Deactivate("SunksBossChallenges:DecimatorOfPlanetsAggressive");
             SkyManager.Instance.Deactivate("SunksBossChallenges:DecimatorOfPlanetsPassive");
-            SkyManager.Instance.Deactivate("SunksBossChallenges:DecimatorOfPlanetsLastPhase");
+            SkyManager.Instance.Deactivate("SunksBossChallenges:DecimatorOfPlanetsLastPhase");*/
+            SkyManager.Instance.Deactivate("SunksBossChallenges:LumiteDestroyer");
             base.Unload();
         }
     }

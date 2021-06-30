@@ -26,7 +26,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
             projectile.width = 16;
             projectile.height = 16;
             projectile.aiStyle = -1;
-            projectile.alpha = 50;
+            projectile.alpha = 255;
             //projectile.light = 1f;
             projectile.tileCollide = false;
             projectile.ignoreWater = true;
@@ -36,7 +36,7 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
 
         public override void AI()
         {
-            if (projectile.soundDelay == 0)
+            if (projectile.soundDelay == 0 && projectile.ai[0] != 2f)
             {
                 projectile.soundDelay = 60 + Main.rand.Next(60);
                 Main.PlaySound(SoundID.Item9, projectile.position);
@@ -77,6 +77,8 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
 
         public override void Kill(int timeLeft)
         {
+            if (projectile.ai[0] == 2f)
+                return;
             Main.PlaySound(SoundID.Item10, projectile.position);
             int num1 = 10;
             int num2 = 3;
