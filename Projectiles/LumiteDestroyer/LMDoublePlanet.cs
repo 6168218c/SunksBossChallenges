@@ -215,7 +215,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 Vector2 speed = new Vector2(0f, 8f + 4f).RotatedBy(projectile.rotation);
                 for (int i = 0; i < max; i++)
                     Projectile.NewProjectile(projectile.Center, speed.RotatedBy(rotationInterval * i),
-                        ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(), projectile.damage / 3, 0f, Main.myPlayer);
+                        ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(), projectile.damage / 2, 0f, Main.myPlayer);
             }
         }
 		public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
@@ -288,12 +288,23 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             projectile.Loomup();
             if (projectile.localAI[0] == 0)
             {
+                Vector2 closest = new Vector2(999999, 999999);
+                foreach(NPC nPC in Main.npc)
+                {
+                    if (nPC.type == ModContent.NPCType<LumiteDestroyerBody>())
+                    {
+                        if ((nPC.Center - projectile.Center).LengthSquared() < (closest - projectile.Center).LengthSquared())
+                        {
+                            closest = nPC.Center;
+                        }
+                    }
+                }
                 for(int i = 0; i < 3; i++)
                 {
                     var velo = (player.Center - projectile.Center).SafeNormalize(-Vector2.UnitY).RotatedBy(-MathHelper.Pi / 9) * 8;
-                    Projectile.NewProjectile(projectile.Center + velo * 50,
+                    Projectile.NewProjectile(closest,
                     velo, ModContent.ProjectileType<LMPlanetMoonEx>(),
-                    projectile.damage, 0f, projectile.owner, i, projectile.whoAmI);
+                    projectile.damage / 3, 0f, projectile.owner, i, projectile.whoAmI);
                 }
                 projectile.direction = Main.rand.NextBool() ? -1 : 1;
             }

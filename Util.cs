@@ -361,11 +361,18 @@ namespace SunksBossChallenges
             }
             return false;
         }
-        public static bool CheckProjAlive<T>(int index) where T : ModProjectile
+        public static bool CheckProjAlive<T>(int index, bool localAI1isDeathAnimation = false) where T : ModProjectile
         {
             if (Main.projectile.IndexInRange(index) && Main.projectile[index].active && Main.projectile[index].type == ModContent.ProjectileType<T>())
             {
-                return true;
+                if (localAI1isDeathAnimation)
+                {
+                    if (Main.projectile[index].localAI[1] == 0) return true;
+                }
+                else
+                {
+                    return true;
+                }
             }
             return false;
         }

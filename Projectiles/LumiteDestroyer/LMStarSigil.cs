@@ -26,6 +26,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             projectile.tileCollide = false;
             projectile.ignoreWater = true;
             projectile.penetrate = -1;
+            projectile.scale = 0.02f;
         }
 
         public override void AI()
@@ -50,6 +51,8 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             projectile.localAI[0]++;
             if (projectile.localAI[0] < 120)
             {
+                projectile.scale += 0.03f;
+                if (projectile.scale > 1f) projectile.scale = 1f;
                 projectile.Center = player.Center;
             }
 

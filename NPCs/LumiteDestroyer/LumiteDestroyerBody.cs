@@ -436,11 +436,11 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     else if (npc.localAI[0] == DivideAttackStart + 6)
                     {
                         npc.localAI[2]++;//the head will create the aim
-                        if (npc.localAI[2] < 144)
+                        if (npc.localAI[2] < 108)
                         {
                             npc.WormMovementEx(player.Center + targetModifier, maxSpeed * 0.6f, turnAcc * 1.25f, ramAcc);
                         }
-                        else if (npc.localAI[2] == 144)
+                        else if (npc.localAI[2] == 108)
                         {
                             Projectile aim = Main.projectile[(int)npc.localAI[1]];
                             Vector2 endpoint = new Vector2(aim.ai[0], aim.ai[1]);
@@ -456,12 +456,13 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 {
                                     break;
                                 }
-                                tmpNPC.Center = aim.Center;
+                                //tmpNPC.Center = aim.Center;
+                                tmpNPC.Blink(aim.Center);
                                 i = (int)Main.npc[i].ai[0];
                             }
                             aim.Kill();
                         }
-                        else if (npc.localAI[2] > 144)
+                        else if (npc.localAI[2] > 108)
                         {
                             if (npc.velocity.Compare(maxSpeed * 1.5f) < 0) npc.velocity *= 1.2f;
                             if (npc.localAI[2] % 6 == 2 && Main.netMode != NetmodeID.MultiplayerClient)

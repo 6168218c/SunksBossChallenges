@@ -79,7 +79,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         public bool AllowSpin()
         {
             return IsPhase3() && (npc.ai[1] < DivideAttackStart || npc.ai[1] > DivideAttackStart + DivideAILength) &&
-                (npc.ai[1] != ChronoDash) && (npc.ai[1] != StarCard) && (npc.ai[1] != SigilStar) && (npc.ai[1] != PlanetAurora);
+                (npc.ai[1] != ChronoDash) && (npc.ai[1] != StarCard) && (npc.ai[1] != SigilStar) && (npc.ai[1] != PlanetAurora) && (npc.ai[1] != StarFall);
         }
         void SwitchTo(float ai1, bool resetCounter = true, bool resetAllTimer = true)
         {
@@ -159,6 +159,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             }
             else if (npc.ai[1] == DeathStruggleStart + 1)
             {
+                //wasted
                 npc.ai[2]++;
                 if (npc.ai[2] == 120 || npc.ai[2] == 500 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
@@ -339,14 +340,14 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             if (DynDRTimer == 0 && npc.ai[1] >= 0)
             {
-                if (npc.life < lastHealth - npc.lifeMax / 4800)
+                if (npc.life < lastHealth - npc.lifeMax / 3750)
                 {
-                    DynDR = Math.Max(DynDR - 0.01f, 1 - ((float)npc.lifeMax / 4800 / (lastHealth - npc.life)));
-                    DynDR = Math.Max(DynDR, 0.6f);
+                    DynDR = Math.Max(DynDR - 0.01f, 1 - ((float)npc.lifeMax / 3750 / (lastHealth - npc.life)));
+                    DynDR = Math.Max(DynDR, 0.45f);
                 }
                 else
                 {
-                    DynDR = Math.Max(DynDR - 0.0075f, 0.6f);
+                    DynDR = Math.Max(DynDR - 0.0075f, 0.5f);
                 }
                 lastHealth = npc.life;
             }

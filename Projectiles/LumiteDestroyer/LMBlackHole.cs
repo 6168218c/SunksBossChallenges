@@ -98,7 +98,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                             for (int i = 0; i < 5; i++)
                             {
                                 Projectile star = Projectile.NewProjectileDirect(projectile.Center + unit * LumiteDestroyerArguments.R, -unit * 6, ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(),
-                                    projectile.damage / 9, 0f, projectile.owner);
+                                    projectile.damage / 9, 0f, projectile.owner, 2);
                                 star.timeLeft = (int)(LumiteDestroyerArguments.R / 6);
                                 star.scale = 0.5f;
                                 star.netUpdate = true;
@@ -176,11 +176,11 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             Rectangle rectangle = new Rectangle(0, y3, texture2D13.Width, num156);
             Vector2 origin2 = rectangle.Size() / 2f;
             Color color = Color.Black;
-            Main.spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), projectile.GetAlpha(Color.Orange), projectile.rotation, origin2, projectile.scale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), projectile.GetAlpha(Color.Orange), projectile.rotation, origin2, projectile.scale * 1.35f, SpriteEffects.None, 0f);
 
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
-            Main.spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), projectile.GetAlpha(color), projectile.rotation, origin2, projectile.scale * 1.35f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), projectile.GetAlpha(color), projectile.rotation, origin2, projectile.scale * 1.2f, SpriteEffects.None, 0f);
 
             return false;
         }

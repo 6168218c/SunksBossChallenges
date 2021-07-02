@@ -48,6 +48,17 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         public static float Scale => 1.5f;
         public static float Phase2HealthFactor => 0.75f;
         public static int TeleportDistance => 750;
+        public static void Blink(this NPC npc,Vector2 dest)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                Dust dust = Dust.NewDustDirect(new Vector2(npc.position.X, npc.position.Y), npc.width, npc.height, DustID.Vortex, 0f, 0f, 100, default, 2f);
+                dust.noGravity = true;
+                dust.noLight = true;
+                dust.color = Color.LightBlue;
+            }
+            npc.Center = dest;
+        }
     }
     public abstract class LumiteDestroyerSegment:ModNPC
     {

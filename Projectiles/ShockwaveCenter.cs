@@ -45,7 +45,9 @@ namespace SunksBossChallenges.Projectiles
 			}
 			if (Main.netMode != NetmodeID.Server && Filters.Scene["SunksBossChallenges:Shockwave"].IsActive())
 			{
-				float progress = (180 - projectile.timeLeft) / 60f; // Will range from -3 to 3, 0 being the point where the bomb explodes.
+				float progress = (180 - projectile.timeLeft) / 60f;// Will range from -3 to 3, 0 being the point where the bomb explodes.
+				if (projectile.ai[0] == 1)
+					progress = projectile.timeLeft / 60f;  //reversed
 				Filters.Scene["SunksBossChallenges:Shockwave"].GetShader().UseProgress(progress).UseOpacity(distortStrength * (1 - progress / 8f));
 			}
 			return false;

@@ -11,6 +11,9 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 {
     public class LMClockFace:ModProjectile
     {
+        protected int selectedArea = 0;
+        protected int lastArea = -1;
+        protected int areaTimer;
         public static int ClockR => 640;
         protected float lastLaserRotation = float.MinValue;
         public override string Texture => "SunksBossChallenges/Projectiles/LumiteDestroyer/ClockFace";
@@ -88,6 +91,57 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     ray.netUpdate = true;
                     lastLaserRotation = projectile.localAI[0];
                 }
+                if(head.ai[2]==270 && head.ai[3] < 5 && Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    Vector2 baseUnit;
+                    switch (selectedArea)
+                    {
+                        case 0:
+                            baseUnit = (player.Center - projectile.Center).SafeNormalize(Vector2.Zero).RotatedBy(-MathHelper.Pi / 9);
+                            for(int i = 0; i < 3; i++)
+                            {
+                                Projectile.NewProjectile(projectile.Center,
+                                baseUnit * 12f,
+                                ProjectileID.CultistBossFireBall,
+                                projectile.damage / 8, 0f, Main.myPlayer);
+                                baseUnit = baseUnit.RotatedBy(MathHelper.Pi / 18);
+                            }
+                            break;
+                        case 1:
+                            baseUnit = Vector2.UnitY.RotatedBy(Math.PI / 12);
+                            for (int i = 0; i < 12; i++)
+                            {
+                                Projectile.NewProjectile(projectile.Center,
+                                baseUnit * 18f,
+                                ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(),
+                                projectile.damage / 8, 0f, Main.myPlayer);
+                                baseUnit = baseUnit.RotatedBy(MathHelper.Pi / 6);
+                            }
+                            break;
+                        case 2:
+                            baseUnit = -Vector2.UnitY;
+                            for(int i = 0; i < 6; i++)
+                            {
+                                Projectile.NewProjectile(projectile.Center,
+                                baseUnit * 36f,
+                                ProjectileID.NebulaSphere,
+                                projectile.damage / 8, 0f, Main.myPlayer, player.whoAmI);
+                                baseUnit = baseUnit.RotatedBy(MathHelper.Pi / 3);
+                            }
+                            break;
+                        case 3:
+                            baseUnit = -Vector2.UnitY;
+                            for (int i = 0; i < 8; i++)
+                            {
+                                Projectile.NewProjectile(projectile.Center,
+                                baseUnit*18f,
+                                ProjectileID.CultistBossLightningOrbArc,
+                                projectile.damage / 8, 0f, Main.myPlayer, baseUnit.ToRotation());
+                                baseUnit = baseUnit.RotatedBy(MathHelper.Pi / 4);
+                            }
+                            break;
+                    }
+                }
                 //head.localAI[0] = projectile.whoAmI;
             }
             /*projectile.alpha -= 25;
@@ -98,8 +152,30 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 player.Center = projectile.Center + player.DirectionFrom(projectile.Center) * ClockR;
             }
 
+            
             //update timer rotations
             double fullTime = GetTime();
+            selectedArea = (int)(fullTime / 3600 % 12) / 3;
+            //visuals
+            if (head.ai[3] >= 5)
+            {
+                selectedArea = -1;
+                areaTimer++;
+                if (areaTimer > 45)
+                {
+                    areaTimer = 45;
+                }
+            }
+            else if (selectedArea != lastArea)
+            {
+                areaTimer++;
+                if (areaTimer > 45)
+                {
+                    lastArea = selectedArea;
+                    areaTimer = 0;
+                }
+            }
+
             float hourHand = (float)(fullTime / (3600 * 24) * MathHelper.TwoPi * 2);
             float minHand = (float)(fullTime % 3600 / 3600 * MathHelper.TwoPi);
             projectile.localAI[0] = MathHelper.WrapAngle(hourHand - MathHelper.PiOver2);
@@ -116,16 +192,67 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             if (FullTime >= timeMax) FullTime -= timeMax;
             return FullTime;
         }
+        protected Color ColorByArea(int area)
+        {
+            switch (area)
+            {
+                case 0:return Color.Orange;
+                case 1:return Color.DeepSkyBlue;
+                case 2:return Color.HotPink;
+                case 3:return Color.LightSeaGreen;
+                default:return Color.White;
+            }
+        }
+        public override Color? GetAlpha(Color lightColor)
+        {
+            Color color = Color.White;
+            if (Util.CheckNPCAlive<LumiteDestroyerHead>((int)projectile.ai[0]))
+            {
+                NPC head = Main.npc[(int)projectile.ai[0]];
+                if (head.ai[1] == LumiteDestroyerSegment.ChronoDash)
+                {
+                    if (head.ai[3] < 5)
+                    {
+                        color = Color.Lerp(ColorByArea(lastArea), ColorByArea(selectedArea), (float)areaTimer / 45);
+                    }
+                    else
+                    {
+                        color = Color.Lerp(ColorByArea(lastArea), Color.White, (float)areaTimer / 45);
+                    }
+                }
+            }
+            return color * projectile.Opacity;
+        }
         public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
         {
+            int num156;
+            int y3;
+            Rectangle rectangle;
+            Vector2 origin2;
+            var color = projectile.GetAlpha(lightColor);
             //maybe ForceField?
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
+            //draw minute hand
+            Texture2D minuteTexture = mod.GetTexture("Projectiles/LumiteDestroyer/MinuteHand");
+            rectangle = new Rectangle(0, 0, minuteTexture.Width, minuteTexture.Height);
+            origin2 = new Vector2(minuteTexture.Width / 2, 223f);
+            Main.spriteBatch.Draw(minuteTexture, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle),
+                color, projectile.localAI[1] - MathHelper.PiOver2, origin2, projectile.scale * 1.1f, SpriteEffects.None, 0f);
 
+            //draw hour hand
+            Texture2D hourTexture = mod.GetTexture("Projectiles/LumiteDestroyer/HourHand");
+            rectangle = new Rectangle(0, 0, hourTexture.Width, hourTexture.Height);
+            origin2 = new Vector2(hourTexture.Width / 2, 22f);
+            Main.spriteBatch.Draw(hourTexture, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle),
+                color, projectile.localAI[0] - MathHelper.PiOver2, origin2, projectile.scale * 1.1f, SpriteEffects.None, 0f);
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
             Texture2D texture2D13 = Main.projectileTexture[projectile.type];
-            int num156 = Main.projectileTexture[projectile.type].Height / Main.projFrames[projectile.type]; //ypos of lower right corner of sprite to draw
-            int y3 = num156 * projectile.frame; //ypos of upper left corner of sprite to draw
-            Rectangle rectangle = new Rectangle(0, y3, texture2D13.Width, num156);
-            Vector2 origin2 = rectangle.Size() / 2f;
-            var color = Color.Yellow * projectile.Opacity;
+            num156 = Main.projectileTexture[projectile.type].Height / Main.projFrames[projectile.type]; //ypos of lower right corner of sprite to draw
+            y3 = num156 * projectile.frame; //ypos of upper left corner of sprite to draw
+            rectangle = new Rectangle(0, y3, texture2D13.Width, num156);
+            origin2 = rectangle.Size() / 2f;
             Main.spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY),
                 new Microsoft.Xna.Framework.Rectangle?(rectangle), color, projectile.rotation, origin2, projectile.scale * 1.25f, SpriteEffects.None, 0f);
             /*Texture2D bkgTexture = mod.GetTexture("Projectiles/GlowRing");
@@ -143,19 +270,6 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     new Rectangle(0, 0, 1, 1), color, rotation, Vector2.Zero, 3, SpriteEffects.None, 0);
             }
             
-            //draw minute hand
-            Texture2D minuteTexture = mod.GetTexture("Projectiles/LumiteDestroyer/MinuteHand");
-            rectangle = new Rectangle(0, 0, minuteTexture.Width, minuteTexture.Height);
-            origin2 = new Vector2(minuteTexture.Width / 2, 223f);
-            Main.spriteBatch.Draw(minuteTexture, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle),
-                projectile.GetAlpha(color), projectile.localAI[1]-MathHelper.PiOver2, origin2, projectile.scale*1.1f, SpriteEffects.None, 0f);
-
-            //draw hour hand
-            Texture2D hourTexture = mod.GetTexture("Projectiles/LumiteDestroyer/HourHand");
-            rectangle = new Rectangle(0, 0, hourTexture.Width, hourTexture.Height);
-            origin2 = new Vector2(hourTexture.Width / 2, 22f);
-            Main.spriteBatch.Draw(hourTexture, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle),
-                projectile.GetAlpha(color), projectile.localAI[0] - MathHelper.PiOver2, origin2, projectile.scale*1.1f, SpriteEffects.None, 0f);
             /*Vector2 unit = Vector2.UnitY;
             for (int i = 0; i < 12; i++)//draw the face 
             {
