@@ -98,7 +98,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                             for (int i = 0; i < 5; i++)
                             {
                                 Projectile star = Projectile.NewProjectileDirect(projectile.Center + unit * LumiteDestroyerArguments.R, -unit * 6, ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(),
-                                    projectile.damage / 9, 0f, projectile.owner, 2);
+                                    projectile.damage * 9 / 40, 0f, projectile.owner, 2);
                                 star.timeLeft = (int)(LumiteDestroyerArguments.R / 6);
                                 star.scale = 0.5f;
                                 star.netUpdate = true;

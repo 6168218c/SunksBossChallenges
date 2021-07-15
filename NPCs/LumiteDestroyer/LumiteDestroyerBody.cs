@@ -111,6 +111,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 {
                     npc.WormMovement(npc.Center + new Vector2(0, -900f), 25f);
                     npc.rotation = npc.velocity.ToRotation();
+                    return;
                 }
             }
             Player player = Main.player[npc.target];
@@ -184,14 +185,13 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 Main.dust[num].velocity = Main.rand.NextVector2Unit(npc.rotation - 0.001f, npc.rotation + 0.001f) * 9f;
             }
 
-            npc.dontTakeDamage = (head.modNPC as LumiteDestroyerHead).CanBeTransparent()
+            npc.dontTakeDamage = (head.modNPC as LumiteDestroyerHead).CanBeInvincible()
                 || (head.modNPC as LumiteDestroyerHead).IsDeathStruggling();
             if (npc.localAI[0] < DivideAttackStart)//normal state
             {
                 if (npc.ai[1] >= 0f && npc.ai[1] < Main.npc.Length)
                 {
-                    if ((head.ai[1] == PlanetAurora && head.ai[2] >= 180 && head.ai[2] <= 300)
-                        || (head.ai[1] >= SpinAttackStart && head.ai[1] < DeathStruggleStart) 
+                    if ((head.ai[1] >= SpinAttackStart && head.ai[1] < DeathStruggleStart) 
                         || (head.ai[1] >= DeathStruggleStart + 2 && head.ai[1] <= DeathStruggleStart + 4))//spinning or preparing spinning
                     {
                         npc.chaseable = false;
@@ -251,6 +251,29 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             npc.position += offset;
                         }
 
+                        if (head.ai[1] == ChronoDash)
+                        {
+                            if (head.ai[2] >= 230)
+                            {
+                                if (Util.CheckProjAlive<LMSubDivideSigil>((int)head.localAI[2]))
+                                {
+                                    Projectile proj = Main.projectile[(int)head.localAI[2]];
+                                    if (npc.DistanceSQ(proj.Center) <= segDistance * segDistance)
+                                    {
+                                        npc.alpha = 255;
+                                    }
+                                    else
+                                    {
+                                        npc.alpha = 0;
+                                        if (npc.type == ModContent.NPCType<LumiteDestroyerTail>())
+                                        {
+                                            proj.localAI[0] = 125;//let it disappear
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         if (npc.localAI[1] > 0)
                         {
                             npc.localAI[1]--;
@@ -264,7 +287,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 else if(head.ai[1]==SigilStar)
                                 {
                                     Projectile.NewProjectile(npc.Center, (player.Center - npc.Center).SafeNormalize(Vector2.UnitY) * 18f,
-                                         ModContent.ProjectileType<LMSigilStarUnit>(), npc.damage / 5, 0f, Main.myPlayer, npc.localAI[3], npc.localAI[2]);
+                                         ModContent.ProjectileType<LMSigilStarUnit>(), head.damage / 4, 0f, Main.myPlayer, npc.localAI[3], npc.localAI[2]);
                                 }
                             }
                         }
@@ -295,7 +318,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     }
                     else if (npc.localAI[0] == DivideAttackStart + 3)
                     {
-						maxSpeed *= 0.75f;
+						maxSpeed *= 0.7f;
                         var targetPos = player.Center;
                         int playerTileX = (int)(targetPos.X / 16f);
                         int playerTileY = (int)(targetPos.Y / 16f);
@@ -362,7 +385,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     }
                     else if (npc.localAI[0] == DivideAttackStart + 4)
                     {
-						maxSpeed *= 0.75f;
+						maxSpeed *= 0.7f;
                         var targetPos = player.Center;
                         int playerTileX = (int)(targetPos.X / 16f);
                         int playerTileY = (int)(targetPos.Y / 16f);
@@ -431,9 +454,14 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     #region CoAttack Pattern2
                     else if (npc.localAI[0] == DivideAttackStart + 5)
                     {
-                        npc.WormMovementEx(player.Center + targetModifier, maxSpeed * 0.6f, turnAcc * 1.25f, ramAcc);
+                        npc.WormMovementEx(player.Center + npc.DirectionFrom(player.Center) * LumiteDestroyerArguments.R * 2.5f,
+                            maxSpeed * 0.6f, turnAcc * 1.25f, ramAcc);
                     }
                     else if (npc.localAI[0] == DivideAttackStart + 6)
+                    {
+                        npc.WormMovementEx(player.Center + targetModifier, maxSpeed * 0.6f, turnAcc * 1.25f, ramAcc);
+                    }
+                    else if (npc.localAI[0] == DivideAttackStart + 7)
                     {
                         npc.localAI[2]++;//the head will create the aim
                         if (npc.localAI[2] < 108)
@@ -458,6 +486,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 }
                                 //tmpNPC.Center = aim.Center;
                                 tmpNPC.Blink(aim.Center);
+                                tmpNPC.alpha = 0;
                                 i = (int)Main.npc[i].ai[0];
                             }
                             aim.Kill();
@@ -471,7 +500,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 Vector2 target = npc.Center +
                                     Vector2.Lerp(direction, Vector2.UnitX * Math.Sign(player.Center.X - npc.Center.X), 0.8f) * Math.Max(1800, Math.Abs(player.Center.X - npc.Center.X));
                                 Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<Projectiles.DecimatorOfPlanets.LaserBarrage>(),
-                                    head.damage / 6, 0f, Main.myPlayer, target.X, target.Y);
+                                    head.damage / 5, 0f, Main.myPlayer, target.X, target.Y);
 
                             }
                         }
@@ -572,7 +601,17 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             if (npc.localAI[0] >= DivideAttackStart && npc.localAI[0] <= DivideAttackStart + DivideAILength)
             {
-                index = ModContent.GetModBossHeadSlot("SunksBossChallenges/NPCs/LumiteDestroyer/LumiteDestroyerHead_Head_Boss");
+                if (Util.CheckNPCAlive<LumiteDestroyerHead>(npc.realLife))
+                {
+                    if (!(Main.npc[npc.realLife].modNPC as LumiteDestroyerHead).CanBeTransparent())
+                    {
+                        index = ModContent.GetModBossHeadSlot("SunksBossChallenges/NPCs/LumiteDestroyer/LumiteDestroyerHead_Head_Boss");
+                    }
+                    else
+                        index = -1;
+                }
+                else
+                    index = -1;
             }
             else
             {
@@ -609,8 +648,6 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
 
         public override bool? CanBeHitByProjectile(Projectile projectile)
         {
-            if (npc.alpha > 0)
-                return false;
             return null;
         }
 
@@ -618,8 +655,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             if (npc.realLife != -1 && Main.npc[npc.realLife].type == ModContent.NPCType<LumiteDestroyerHead>())
             {
-                return !(Main.npc[npc.realLife].modNPC as LumiteDestroyerHead).CanBeTransparent() 
-                    && (Main.npc[npc.realLife].ai[1] != DeathStruggleStart + 5);
+                return !(Main.npc[npc.realLife].modNPC as LumiteDestroyerHead).CanBeTransparent()
+                    || (npc.localAI[0] == DivideAttackStart + 7 && npc.localAI[2] >= 108);
             }
             return true;
         }
@@ -642,14 +679,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         }
                     }*/
                     damage *= (1 - (head.modNPC as LumiteDestroyerHead).DynDR);
-                    if (npc.alpha > 0 || Main.npc[npc.realLife].ai[1] >= SpinAttackStart)
+                    if (Main.npc[npc.realLife].ai[1] >= SpinAttackStart)
                         damage *= (1 - 0.99);
                 }
-            }
-            else
-            {
-                if (npc.alpha > 0)
-                    damage *= (1 - 0.99);
             }
             return base.StrikeNPC(ref damage, defense, ref knockback, hitDirection, ref crit);
         }

@@ -12,7 +12,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
     public class LMChaosMoon:ModProjectile
     {
         float planetDistance = 24;
-        readonly float GFactor = 4200;
+        readonly float GFactor = 3200;
         float maxSpeed = 20f;
         public override void SetStaticDefaults()
         {
@@ -56,7 +56,17 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 return;
             }
 
-            projectile.Loomup();
+            projectile.Loomup(3);
+			if (projectile.alpha != 0)
+			{
+				for (int i = 0; i < 2; i++)
+				{
+					Dust dust = Dust.NewDustDirect(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, DustID.Vortex, 0f, 0f, 100, default, 2f);
+					dust.noGravity = true;
+					dust.noLight = true;
+					dust.color = Color.Pink;
+				}
+			}
             bool othersLeft = false;
             projectile.rotation += 0.015f * projectile.velocity.Length();
 
@@ -112,7 +122,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             Rectangle rectangle = new Rectangle(0, y3, texture2D13.Width, num156);
             Vector2 origin2 = rectangle.Size() / 2f;
             Color glow = new Color(Main.DiscoR + 210, Main.DiscoG + 210, Main.DiscoB + 210);
-            Color glow2 = new Color(Main.DiscoR + 50, Main.DiscoG + 50, Main.DiscoB + 50);
+            Color glow2 = new Color(Main.DiscoR + 50, Main.DiscoG + 50, Main.DiscoB + 50) * projectile.Opacity;
 
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
@@ -124,7 +134,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             }
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
-            spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), Color.White, projectile.rotation, origin2, projectile.scale, SpriteEffects.None, 0f);
+            spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), Color.White * projectile.Opacity, projectile.rotation, origin2, projectile.scale, SpriteEffects.None, 0f);
 
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
@@ -252,7 +262,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 Vector2 speed = new Vector2(0f, 2f).RotatedBy(projectile.rotation);
                 for (int i = 0; i < max; i++)
                     Projectile.NewProjectile(projectile.Center, speed.RotatedBy(rotationInterval * i),
-                        ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(), projectile.damage / 3, 0f, Main.myPlayer, 1, 36f);
+                        ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(), projectile.damage * 2 / 3, 0f, Main.myPlayer, 1, 36f);
             }
         }
     }

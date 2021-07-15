@@ -40,11 +40,13 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 }
                 return;
             }
-            if (NPC.FindFirstNPC(ModContent.NPCType<LumiteDestroyerHead>()) == -1)
+            if (!Util.CheckNPCAlive<LumiteDestroyerHead>((int)projectile.ai[0]))
             {
                 projectile.localAI[1] = 1;
+                return;
             }
-            Player player = Main.player[(int)projectile.ai[0]];
+            NPC head = Main.npc[(int)projectile.ai[0]];
+            Player player = Main.player[head.target];
             projectile.Center = player.Center;
             projectile.rotation = MathHelper.WrapAngle(projectile.rotation + 0.015f);
             if (projectile.localAI[0] == 0 && Main.netMode != NetmodeID.MultiplayerClient)

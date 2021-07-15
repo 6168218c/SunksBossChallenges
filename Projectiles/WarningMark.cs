@@ -24,7 +24,7 @@ namespace SunksBossChallenges.Projectiles
             projectile.ignoreWater = true;
             projectile.penetrate = -1;
             projectile.timeLeft = 180;
-            projectile.scale = 0.2f;
+            projectile.scale = 0.125f;
         }
         public override void AI()
         {

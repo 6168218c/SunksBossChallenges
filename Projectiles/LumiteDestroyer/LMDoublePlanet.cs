@@ -85,6 +85,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             projectile.hostile = true;
             projectile.ignoreWater = true;
             projectile.tileCollide = false;
+			projectile.alpha = 255;
 
             //projectile.timeLeft = 450;
             projectile.extraUpdates = 0;
@@ -95,6 +96,17 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         }
         public override void AI()
         {
+			projectile.Loomup(3);
+			if (projectile.alpha != 0)
+			{
+				for (int i = 0; i < 2; i++)
+				{
+					Dust dust = Dust.NewDustDirect(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, DustID.Vortex, 0f, 0f, 100, default, 2f);
+					dust.noGravity = true;
+					dust.noLight = true;
+					dust.color = Color.Pink;
+				}
+			}
             Projectile parent = Main.projectile[(int)projectile.ai[1]];
             if (parent.active && parent.type == ModContent.ProjectileType<LMDoublePlanet>())
             {
@@ -226,7 +238,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             Rectangle rectangle = new Rectangle(0, y3, texture2D13.Width, num156);
             Vector2 origin2 = rectangle.Size() / 2f;
             Color glow = new Color(Main.DiscoR + 210, Main.DiscoG + 210, Main.DiscoB + 210);
-            Color glow2 = new Color(Main.DiscoR + 50, Main.DiscoG + 50, Main.DiscoB + 50);
+            Color glow2 = new Color(Main.DiscoR + 50, Main.DiscoG + 50, Main.DiscoB + 50) * projectile.Opacity;
 
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
@@ -238,7 +250,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             }
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
-            spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), Color.White, projectile.rotation, origin2, projectile.scale, SpriteEffects.None, 0f);
+            spriteBatch.Draw(texture2D13, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle), Color.White * projectile.Opacity, projectile.rotation, origin2, projectile.scale, SpriteEffects.None, 0f);
 
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
@@ -304,7 +316,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     var velo = (player.Center - projectile.Center).SafeNormalize(-Vector2.UnitY).RotatedBy(-MathHelper.Pi / 9) * 8;
                     Projectile.NewProjectile(closest,
                     velo, ModContent.ProjectileType<LMPlanetMoonEx>(),
-                    projectile.damage / 3, 0f, projectile.owner, i, projectile.whoAmI);
+                    projectile.damage, 0f, projectile.owner, i, projectile.whoAmI);
                 }
                 projectile.direction = Main.rand.NextBool() ? -1 : 1;
             }
@@ -347,7 +359,17 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         public override void AI()
         {
             projectile.localAI[0]++;
-
+			projectile.Loomup(3);
+			if (projectile.alpha != 0)
+			{
+				for (int i = 0; i < 2; i++)
+				{
+					Dust dust = Dust.NewDustDirect(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, DustID.Vortex, 0f, 0f, 100, default, 2f);
+					dust.noGravity = true;
+					dust.noLight = true;
+					dust.color = Color.Pink;
+				}
+			}
             if (Util.CheckProjAlive<LMDoublePlanetAurora>((int)projectile.ai[1]) && Main.projectile[(int)projectile.ai[1]].localAI[1] == 0)
             {
                 Projectile parent = Main.projectile[(int)projectile.ai[1]];
@@ -374,7 +396,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                         var baseUnit = (parent.Center - projectile.Center).SafeNormalize(Vector2.Zero).RotatedBy(Math.PI / 12);
                         for (int i = 0; i < 3; i++)
                             Projectile.NewProjectile(projectile.Center, baseUnit.RotatedBy(Math.PI / 18 * i),
-                                ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(), projectile.damage / 5, 0f, projectile.owner, 1, 36f);
+                                ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(), projectile.damage * 2 / 3, 0f, projectile.owner, 1, 36f);
                     }
 
                     float R = LumiteDestroyerArguments.R - 600 + 600 * (float)Math.Sin(Math.PI / 2 * (projectile.localAI[0] - 90) / 180);
@@ -386,8 +408,8 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     if (projectile.localAI[0] % 120 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
                     {
                         var baseUnit = (parent.Center - projectile.Center).SafeNormalize(Vector2.Zero);
-                            Projectile.NewProjectile(projectile.Center, baseUnit,
-                                ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(), projectile.damage / 5, 0f, projectile.owner, 1, 36f);
+                        Projectile.NewProjectile(projectile.Center, baseUnit,
+                            ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(), projectile.damage * 2 / 3, 0f, projectile.owner, 1, 36f);
                     }
                     projectile.Center = parent.Center - parent.rotation.ToRotationVector2().RotatedBy(MathHelper.TwoPi / 3 * projectile.ai[0]) * R;
                 }
@@ -519,7 +541,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 Vector2 speed = new Vector2(0f, 2f).RotatedBy(projectile.rotation);
                 for (int i = 0; i < max; i++)
                     Projectile.NewProjectile(projectile.Center, speed.RotatedBy(rotationInterval * i),
-                        ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(), projectile.damage / 3, 0f, Main.myPlayer, 1, 36f);
+                        ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(), projectile.damage * 2 / 3, 0f, Main.myPlayer, 1, 36f);
             }
         }
     }

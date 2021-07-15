@@ -139,11 +139,11 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             }
             else if (projectile.ai[0] == 2)
             {
-                float Omega = MathHelper.TwoPi / 60;
+                float Omega = MathHelper.TwoPi / 90;
                 int direction = Math.Sign(projectile.ai[1]);
                 Projectile parent = Main.projectile[Math.Abs((int)projectile.ai[1])];//Wave
                 projectile.localAI[0]++;
-                if (projectile.localAI[0] > 60 && projectile.localAI[0] < LaunchTime - 45)
+                if (projectile.localAI[0] > 90 && projectile.localAI[0] < LaunchTime - 45)
                 {
                     projectile.localAI[0] = 0;
                 }

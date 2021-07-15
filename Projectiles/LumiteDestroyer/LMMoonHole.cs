@@ -21,11 +21,22 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         public override void SetDefaults()
         {
             base.SetDefaults();
+            projectile.width = projectile.height = 270;
             projectile.scale = 0.5f;
         }
         public override void AI()
         {                
-            projectile.Loomup(3);
+            projectile.Loomup(2);
+			if (projectile.alpha != 0)
+			{
+				for (int i = 0; i < 2; i++)
+				{
+					Dust dust = Dust.NewDustDirect(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, DustID.Vortex, 0f, 0f, 100, default, 2f);
+					dust.noGravity = true;
+					dust.noLight = true;
+					dust.color = Color.Pink;
+				}
+			}
             projectile.localAI[0]++;
 
             Projectile parent = Main.projectile[(int)projectile.ai[1]];
@@ -147,18 +158,42 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 Main.dust[num228].noGravity = true;
                 Main.dust[num228].velocity = vector7;
             }
-            base.Kill(timeLeft);
 
 
             if (Main.netMode != NetmodeID.MultiplayerClient)
             {
-                const int max = 8;
+                const int max = 36;
                 const float rotationInterval = 2f * (float)Math.PI / max;
                 Vector2 speed = new Vector2(0f, 8f + 4f).RotatedBy(projectile.rotation);
                 for (int i = 0; i < max; i++)
                     Projectile.NewProjectile(projectile.Center, speed.RotatedBy(rotationInterval * i),
-                        ModContent.ProjectileType<LMRetractStar>(), projectile.damage / 2, 0f, Main.myPlayer,projectile.ai[1]);
+                        ModContent.ProjectileType<LMRetractStar>(), projectile.damage * 2 / 3, 0f, Main.myPlayer, projectile.ai[1], 1);
             }
+        }
+        public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
+        {
+            /*if (projectile.localAI[0] >= 200)
+            {
+                float timer = projectile.localAI[0] - 200;
+                if (timer <= 45)
+                {
+                    Color alpha = Color.BlueViolet;
+                    if (timer <= 10)
+                    {
+                        alpha *= timer / 10f;
+                    }
+                    else if (timer >= 30 && timer <= 45)
+                    {
+                        alpha *= (45 - timer) / 15f;
+                    }
+                    const int max = 30;
+                    const float rotationInterval = 2f * (float)Math.PI / max;
+                    Vector2 speed = new Vector2(0f, 8f + 4f).RotatedBy(projectile.rotation);
+                    for (int i = 0; i < max; i++)
+                        projectile.DrawAim(spriteBatch, speed.RotatedBy(rotationInterval * i) * (i % 2 == 0 ? 1 : -1) * 200, alpha);
+                }
+            }*/
+            return base.PreDraw(spriteBatch, lightColor);
         }
     }
     public class LMMoonHole : LMBlackHole
@@ -175,12 +210,11 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 }
                 return;
             }
-            projectile.Loomup();
             Player player = Main.player[(int)projectile.ai[0]];
             if (projectile.localAI[0] == 0 && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 Projectile.NewProjectile(projectile.Center, Vector2.Zero, ModContent.ProjectileType<LMGigaMoon>(),
-                    0, 0f, Main.myPlayer, 0, projectile.whoAmI);
+                    projectile.damage, 0f, Main.myPlayer, 0, projectile.whoAmI);
             }
 
             projectile.localAI[0]++;
@@ -191,15 +225,16 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             }
             else if (projectile.localAI[0] <= 240)
             {
+				projectile.Loomup();
                 projectile.velocity = Vector2.Zero;
             }
             else if (projectile.localAI[0] <= 330)
             {
                 projectile.scale += 3f / 90;
             }
-            else if (projectile.localAI[0] <= 560)
+            else if (projectile.localAI[0] <= 510)
             {
-                projectile.ai[1] = 1;
+                projectile.ai[1]++;
             }
             else
             {
@@ -232,37 +267,102 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 
             Lighting.AddLight(projectile.Center, 0.9f, 0.8f, 0.1f);
 
-            if (Util.CheckProjAlive<LMMoonHole>((int)projectile.ai[0], true))
+            if (Util.CheckProjAlive<LMMoonHole>((int)projectile.ai[0]))
             {
                 Projectile hole = Main.projectile[(int)projectile.ai[0]];
-                if (hole.ai[1] == 1)
+                if (hole.ai[1] != 0)
                 {
-                    if (projectile.ai[1] == 0)
+                    //gravitational one
+                    /*if (projectile.DistanceSQ(hole.Center) <= 150 * 150)
                     {
-                        projectile.SlowDown(0.95f);
+                        projectile.Kill();
+                        return;
+                    }
+                    var distanceSQ = projectile.DistanceSQ(hole.Center);
+                    float intensity = (hole.scale + hole.ai[1] / 15);
+                    if (distanceSQ <= 900 * 900 && distanceSQ > 150*150)
+                    {
+                        var accle = projectile.DirectionTo(hole.Center)
+                            * Math.Min(9000 * intensity / distanceSQ, 1.35f);//need further testing
+
+                        projectile.velocity += accle;
+                    }
+                    else if (distanceSQ <= 4800 * 4800)
+                    {
+                        var accle = projectile.DirectionTo(hole.Center)
+                            * Math.Min(16000 * intensity * 2 / distanceSQ, 1.8f);//need further testing
+
+                        projectile.velocity += accle;
+                    }
+					projectile.velocity = projectile.velocity.SafeNormalize(Vector2.Zero) * Math.Min(projectile.velocity.Length(), 30f);*/
+                    if (projectile.ai[1] == 0 || projectile.ai[1] == 1)
+                    {
+                        projectile.SlowDown(0.8f);
                         if (projectile.velocity == Vector2.Zero)
                         {
-                            projectile.velocity = (hole.Center - projectile.Center).SafeNormalize(Vector2.UnitY);
-                            projectile.ai[1] = 1;
+                            projectile.velocity = projectile.DirectionTo(hole.Center);
+                            projectile.ai[1] = 2;
                         }
                     }
                     else
                     {
-                        projectile.localAI[1]++;
-                        if (projectile.velocity.Compare(48f) < 0) projectile.velocity *= 1.05f;
-                        if (projectile.DistanceSQ(hole.Center) <= 150 * 150)
+                        if (projectile.velocity.Compare(48f) < 0)
+                            projectile.velocity *= 1.08f;
+                        if (projectile.DistanceSQ(hole.Center) <= 100 * 100)
                         {
                             projectile.Kill();
                         }
                     }
                 }
+                else
+                {
+                    if (projectile.ai[1] == 1 && projectile.velocity.Compare(90f) < 0)
+                    {
+                        projectile.localAI[1]++;
+                        if (projectile.localAI[1] >= 25)
+                            projectile.velocity *= 1.08f;
+                    }
+                }
             }
+			else
+			{
+				projectile.Kill();
+			}
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
         {
-            if (Util.CheckProjAlive<LMMoonHole>((int)projectile.ai[0], true))
+            Texture2D glow = mod.GetTexture("Projectiles/DecimatorOfPlanets/DarkStar_Glow");
+            int rect1 = glow.Height / Main.projFrames[projectile.type];
+            int rect2 = rect1 * projectile.frame;
+            Rectangle glowrectangle = new Rectangle(0, rect2, glow.Width, rect1);
+            Vector2 gloworigin2 = glowrectangle.Size() / 2f;
+            Color glowcolor = Color.Lerp(new Color(180, 100, 180, 150), Color.Transparent, 0.8f);
+            Vector2 drawCenter = projectile.Center - (projectile.velocity.SafeNormalize(Vector2.UnitX) * 14);
+
+            Main.spriteBatch.Draw(glow, drawCenter - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(glowrectangle),//create small, non transparent trail texture
+                   projectile.GetAlpha(lightColor), projectile.velocity.ToRotation() + MathHelper.PiOver2, gloworigin2, projectile.scale / 2, SpriteEffects.None, 0f);
+
+            for (int i = 0; i < 3; i++) //create multiple transparent trail textures ahead of the projectile
             {
-                /*float timer = projectile.localAI[1] - 1;
+                Vector2 drawCenter2 = drawCenter + (projectile.velocity.SafeNormalize(Vector2.UnitX) * 12).RotatedBy(MathHelper.Pi / 5 - (i * MathHelper.Pi / 5)); //use a normalized version of the projectile's velocity to offset it at different angles
+                drawCenter2 -= (projectile.velocity.SafeNormalize(Vector2.UnitX) * 12); //then move it backwards
+                Main.spriteBatch.Draw(glow, drawCenter2 - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(glowrectangle),
+                    glowcolor, projectile.velocity.ToRotation() + MathHelper.PiOver2, gloworigin2, projectile.scale, SpriteEffects.None, 0f);
+            }
+
+            for (int i = 0; i < ProjectileID.Sets.TrailCacheLength[projectile.type]; i++) //reused betsy fireball scaling trail thing
+            {
+                Color color27 = glowcolor;
+                color27 *= (float)(ProjectileID.Sets.TrailCacheLength[projectile.type] - i) / ProjectileID.Sets.TrailCacheLength[projectile.type];
+                float scale = projectile.scale * (float)(ProjectileID.Sets.TrailCacheLength[projectile.type] - i) / ProjectileID.Sets.TrailCacheLength[projectile.type];
+                Vector2 value4 = projectile.oldPos[i] - (projectile.velocity.SafeNormalize(Vector2.UnitX) * 14);
+                Main.spriteBatch.Draw(glow, value4 + projectile.Size / 2f - Main.screenPosition + new Vector2(0, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(glowrectangle), color27,
+                    projectile.velocity.ToRotation() + MathHelper.PiOver2, gloworigin2, scale, SpriteEffects.None, 0f);
+            }
+
+            if (projectile.ai[1] == 1)
+            {
+                int timer = (int)projectile.localAI[1];
                 if (timer <= 45)
                 {
                     Color alpha = Color.BlueViolet;
@@ -274,10 +374,10 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     {
                         alpha *= (45 - timer) / 15f;
                     }
-                    projectile.DrawAim(spriteBatch, Main.projectile[(int)projectile.ai[0]].Center, alpha);
-                }*/
-            }  
-            return base.PreDraw(spriteBatch, lightColor);
+                    projectile.DrawAim(spriteBatch, projectile.Center + projectile.velocity.SafeNormalize(Vector2.Zero) * 3600, alpha);
+                }
+            }
+            return false;
         }
     }
 }

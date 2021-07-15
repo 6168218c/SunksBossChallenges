@@ -253,7 +253,7 @@ namespace SunksBossChallenges
             }
         }
         public static void WormMovementEx(this Entity entity, Vector2 dest, float maxSpeed, float turnAccle = 0.1f, float ramAccle = 0.15f,
-            float radiusSpeed = 0.05f, int distLimit = 900, float angleLimit = MathHelper.Pi * 3 / 5)
+            float radiusSpeed = 0.06f, int distLimit = 675, float angleLimit = MathHelper.Pi * 3 / 5)
         {
             Vector2 targetVector = dest - entity.Center;
             targetVector = targetVector.SafeNormalize(Vector2.UnitY) * maxSpeed;

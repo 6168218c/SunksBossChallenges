@@ -56,7 +56,8 @@ namespace SunksBossChallenges
             /*SkyManager.Instance.Deactivate("SunksBossChallenges:DecimatorOfPlanetsAggressive");
             SkyManager.Instance.Deactivate("SunksBossChallenges:DecimatorOfPlanetsPassive");
             SkyManager.Instance.Deactivate("SunksBossChallenges:DecimatorOfPlanetsLastPhase");*/
-            SkyManager.Instance.Deactivate("SunksBossChallenges:LumiteDestroyer");
+            //SkyManager.Instance.Deactivate("SunksBossChallenges:LumiteDestroyer");
+			//SkyManager.Instance["SunksBossChallenges:LumiteDestroyer"] = null;
             base.Unload();
         }
     }

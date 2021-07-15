@@ -42,11 +42,11 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             Player player = Main.player[head.target];
             projectile.alpha -= 25;
             if (projectile.alpha < 0) projectile.alpha = 0;
-            if (head.ai[1] == LumiteDestroyerSegment.ChronoDash)
+            if (head.ai[1] == LumiteDestroyerSegment.ChronoDash && !player.dead)
             {
                 if(head.ai[2] <= 180)
                     projectile.Center = (player.Center + projectile.Center * 64) / 65;
-                if (head.ai[2] == 251 && head.ai[3] < 5 && Main.netMode != NetmodeID.MultiplayerClient)
+                if (head.ai[2] == 231 && head.ai[3] < 5 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     Vector2 unit;
                     int direction = Main.rand.NextBool() ? -1 : 1;
@@ -63,9 +63,9 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 						unit = -Vector2.UnitY;
                         for (int i = 1; i < 12; i += 2)
                         {
-                            Vector2 projPos = projectile.Center + unit * ClockR * direction;
+                            Vector2 projPos = player.Center + unit * ClockR * direction;
                             Projectile.NewProjectile(projPos, Vector2.Zero, ModContent.ProjectileType<DecimatorOfPlanets.LaserBarrage>(),
-                                projectile.damage / 3, 0f, projectile.owner, projectile.Center.X, projectile.Center.Y);
+                                projectile.damage / 3, 0f, projectile.owner, player.Center.X, player.Center.Y);
                             unit = unit.RotatedBy(-MathHelper.Pi / 6);
                         }
                     }
@@ -74,9 +74,9 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                         unit = -Vector2.UnitY;
                         for (int i = 0; i < 12; i += 2)
                         {
-                            Vector2 projPos = projectile.Center + unit * ClockR * direction;
+                            Vector2 projPos = player.Center + unit * ClockR * direction;
                             Projectile.NewProjectile(projPos, Vector2.Zero, ModContent.ProjectileType<DecimatorOfPlanets.LaserBarrage>(),
-                                projectile.damage / 3, 0f, projectile.owner, projectile.Center.X, projectile.Center.Y);
+                                projectile.damage / 3, 0f, projectile.owner, player.Center.X, player.Center.Y);
                             unit = unit.RotatedBy(-MathHelper.Pi / 6);
                         }
                     }
@@ -91,7 +91,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     ray.netUpdate = true;
                     lastLaserRotation = projectile.localAI[0];
                 }
-                if(head.ai[2]==270 && head.ai[3] < 5 && Main.netMode != NetmodeID.MultiplayerClient)
+                if (head.ai[2] == 235 && head.ai[3] < 5 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     Vector2 baseUnit;
                     switch (selectedArea)
@@ -103,7 +103,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                                 Projectile.NewProjectile(projectile.Center,
                                 baseUnit * 12f,
                                 ProjectileID.CultistBossFireBall,
-                                projectile.damage / 8, 0f, Main.myPlayer);
+                                projectile.damage / 3, 0f, Main.myPlayer);
                                 baseUnit = baseUnit.RotatedBy(MathHelper.Pi / 18);
                             }
                             break;
@@ -112,9 +112,9 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                             for (int i = 0; i < 12; i++)
                             {
                                 Projectile.NewProjectile(projectile.Center,
-                                baseUnit * 18f,
+                                baseUnit * 12f,
                                 ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(),
-                                projectile.damage / 8, 0f, Main.myPlayer);
+                                projectile.damage / 3, 0f, Main.myPlayer);
                                 baseUnit = baseUnit.RotatedBy(MathHelper.Pi / 6);
                             }
                             break;
@@ -125,18 +125,18 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                                 Projectile.NewProjectile(projectile.Center,
                                 baseUnit * 36f,
                                 ProjectileID.NebulaSphere,
-                                projectile.damage / 8, 0f, Main.myPlayer, player.whoAmI);
+                                projectile.damage / 3, 0f, Main.myPlayer, player.whoAmI);
                                 baseUnit = baseUnit.RotatedBy(MathHelper.Pi / 3);
                             }
                             break;
                         case 3:
-                            baseUnit = -Vector2.UnitY;
-                            for (int i = 0; i < 8; i++)
+                            baseUnit = Vector2.UnitY.RotatedBy(Math.PI / 12);
+                            for (int i = 0; i < 12; i++)
                             {
                                 Projectile.NewProjectile(projectile.Center,
                                 baseUnit*18f,
                                 ProjectileID.CultistBossLightningOrbArc,
-                                projectile.damage / 8, 0f, Main.myPlayer, baseUnit.ToRotation());
+                                projectile.damage / 3, 0f, Main.myPlayer, baseUnit.ToRotation());
                                 baseUnit = baseUnit.RotatedBy(MathHelper.Pi / 4);
                             }
                             break;
