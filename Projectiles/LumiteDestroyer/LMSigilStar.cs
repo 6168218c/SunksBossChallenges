@@ -393,7 +393,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     projectile.localAI[0]++;
                     if (projectile.velocity.Compare(60) < 0)
                     {
-                        projectile.velocity *= 1.035f;
+                        projectile.velocity *= 1.05f;
                     }
                     if (projectile.localAI[0] >= 240)
                     {

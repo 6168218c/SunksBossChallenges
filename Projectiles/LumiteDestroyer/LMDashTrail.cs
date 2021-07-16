@@ -163,6 +163,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                             alpha *= (float)(255 - projectile.alpha) / 25;
                             width *= (float)(255 - projectile.alpha) / 25;
                         }
+                        alpha *= head.Opacity;
 
                         Vector2 d = projectile.oldPos[i - 1] - projectile.oldPos[i];
                         vertecies.Add(new VertexStripInfo((projectile.oldPos[i] - d * i * 0.4f) + dir * width, new Vector3((float)Math.Sqrt(factor), 1, alpha)));

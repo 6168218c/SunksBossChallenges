@@ -176,4 +176,28 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             projectile.localAI[0] = reader.ReadSingle();
         }
     }
+    public class LMSigilPortal : LMSubDivideSigil
+    {
+        public override void AI()
+        {
+            if (projectile.localAI[1] == 1)
+            {
+                projectile.scale *= 0.9f;
+                if (projectile.scale < 0.01f)
+                    projectile.Kill();
+                return;
+            }
+            projectile.Loomup();
+            if (!Util.CheckNPCAlive<LumiteDestroyerHead>((int)projectile.ai[0]))
+            {
+                projectile.localAI[1] = 1;
+                return;
+            }
+            NPC head = Main.npc[(int)projectile.ai[0]];
+            if (head.ai[1] != LumiteDestroyerSegment.ChronoDash)
+            {
+                projectile.localAI[1] = 1;
+            }
+        }
+    }
 }

@@ -96,7 +96,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             }
             else
             {
-                if (this.Timer == 0f)
+                if (this.Timer == 0f && projectile.localAI[1] != 2)
                 {
                     Main.PlaySound(SoundID.Zombie, (int)projectile.position.X, (int)projectile.position.Y, 104, 1f, 0f);
                 }

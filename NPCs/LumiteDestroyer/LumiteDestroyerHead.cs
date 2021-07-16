@@ -19,6 +19,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         internal int spinTimer = 900;
         internal int[] chaosPlanets = new int[3];
         internal int randomCorrecter = 0;
+        internal float lastTime = 0;
         internal int DynDRTimer = 0;
         internal int lastHealth = 0;
         internal float DynDR;
@@ -29,7 +30,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         int Length => 80;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Nova Annihilator");
+            DisplayName.SetDefault("Nova");
             NPCID.Sets.TrailingMode[npc.type] = 3;
             NPCID.Sets.TrailCacheLength[npc.type] = 16;
             Main.npcFrameCount[npc.type] = Main.npcFrameCount[NPCID.TheDestroyer];
@@ -74,7 +75,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         }
         public bool CanBeTransparent()
         {
-            return (npc.ai[1] == -1 || npc.ai[1] == StarCard || (npc.ai[1] == StarFall && npc.localAI[0] >= 2)
+            return (npc.ai[1] == -1 || npc.ai[1] == StarCard || (npc.ai[1] == StarFall && npc.localAI[1] >= 2)
+                || npc.ai[1] == ChronoDash
                 || npc.ai[1] == DivideAttackStart
                 || npc.ai[1] == DivideAttackStart + 5 || npc.ai[1] == DivideAttackStart + 6 || npc.ai[1] == DivideAttackStart + 7
                 || npc.ai[1] == DivideAttackStart + DivideAILength
@@ -109,7 +111,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         void SwitchToRandomly(float normalAI1, float randomAI1, float possibility)
         {
             randomCorrecter++;
-            if ((Main.rand.NextFloat() < possibility && randomCorrecter > 3) || randomCorrecter == 8)//at least one divide attack every 9 attacks
+            float rnd = Main.rand.NextFloat();
+            if ((rnd < possibility && randomCorrecter > 3) || randomCorrecter == 9)//at least one divide attack every 9 attacks
             {
                 randomCorrecter = 0;
                 DivideResumeAI = normalAI1;
@@ -153,7 +156,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
 
                     Vector2 dist = Main.rand.NextVector2Unit() * LumiteDestroyerArguments.R * 1.8f;
                     npc.Center = player.Center + player.velocity * 60f + dist;
-                    npc.velocity = Vector2.Normalize(player.Center - npc.Center) * maxSpeed / 3;
+                    npc.velocity = Vector2.Normalize(player.Center - npc.Center) * maxSpeed;
                     ForeachSegment((tmpNPC, counter) =>
                     {
                         tmpNPC.Center = player.Center + dist;
@@ -352,9 +355,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             if (DynDRTimer == 0 && npc.ai[1] >= 0)
             {
-                if (npc.life < lastHealth - npc.lifeMax / 3600)
+                if (npc.life < lastHealth - npc.lifeMax / 3750)
                 {
-                    DynDR = Math.Max(DynDR - 0.01f, 1 - ((float)npc.lifeMax / 3600 / (lastHealth - npc.life)));
+                    DynDR = Math.Max(DynDR - 0.01f, 1 - ((float)npc.lifeMax / 3750 / (lastHealth - npc.life)));
                     DynDR = Math.Max(DynDR, 0.45f);
                 }
                 else
@@ -463,7 +466,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
 
         public override bool CanHitPlayer(Player target, ref int cooldownSlot)
         {
-            return !CanBeTransparent() || (npc.ai[1] == DivideAttackStart + 7 && npc.ai[2] > 108);
+            return !CanBeTransparent() || (npc.ai[1] == ChronoDash && npc.alpha == 0) || (npc.ai[1] == DivideAttackStart + 7 && npc.ai[2] > 108);
         }
 
         public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
@@ -525,6 +528,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             Texture2D texture2D = Main.npcTexture[npc.type];
             Texture2D DestTexture = mod.GetTexture("NPCs/LumiteDestroyer/LumiteDestroyerHead_Glow");
+            Texture2D ExtraGlow = mod.GetTexture("NPCs/LumiteDestroyer/LumiteDestroyerHead_Glow2");
             Color glowColor = npc.ai[1] != 1 ? Color.White : Color.Lerp(Color.White, Color.Black, (float)Math.Sin(MathHelper.Pi / 14 * npc.localAI[2]));
             SpriteEffects effects = (npc.direction < 0) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             var mainColor = drawColor;
@@ -544,7 +548,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     mainColor *= 0.5f;
                 }
             }*/
-            if ((npc.ai[1] == DivideAttackStart + 5 )|| (npc.ai[1] == DivideAttackStart + 6))
+            if (npc.ai[1] == StarFall)
             {
                 /*if (npc.ai[2] >= 10)
                 {
@@ -553,6 +557,21 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     if (npc.ai[1] == DivideAttackStart + 6)
                         npc.DrawAim(spriteBatch, npc.Center + new Vector2(0, LumiteDestroyerArguments.R) * 5 * npc.ai[3], Color.Red);
                 }*/
+                if (npc.ai[2] <= 55)
+                {
+                    Player player = Main.player[npc.target];
+                    float timer = npc.ai[2];
+                    Color alpha = Color.BlueViolet;
+                    if (timer <= 10)
+                    {
+                        alpha *= timer / 10f;
+                    }
+                    else if (timer >= 40 && timer <= 55)
+                    {
+                        alpha *= (55 - timer) / 15f;
+                    }
+                    npc.DrawAim(spriteBatch, npc.Center + (player.Center - npc.Center).SafeNormalize(Vector2.Zero) * 2500, alpha);
+                }
             }
             else if (npc.ai[1] == DeathStruggleStart + 4)
             {
@@ -571,6 +590,10 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             }
             spriteBatch.Draw(texture2D, npc.Center - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), mainColor * npc.Opacity, npc.rotation + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
             spriteBatch.Draw(DestTexture, npc.Center - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), glowColor * 0.75f * npc.Opacity, npc.rotation + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
+            if (npc.ai[1] == StarFall || npc.ai[1] == StarCard)
+            {
+                spriteBatch.Draw(ExtraGlow, npc.Center - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), glowColor * 0.75f, npc.rotation + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
+            }
             return false;
         }
     }

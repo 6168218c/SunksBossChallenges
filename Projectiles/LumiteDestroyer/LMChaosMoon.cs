@@ -102,6 +102,10 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 #endif
                                 projectile.velocity += (force / projectile.ai[1]);
                             }
+                            else
+                            {
+                                projectile.ai[0] = 1;//weird code to make 3 explode at once
+                            }
                         }
                     }
                 }

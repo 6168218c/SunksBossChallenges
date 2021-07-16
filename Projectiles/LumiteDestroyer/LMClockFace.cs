@@ -46,7 +46,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             {
                 if(head.ai[2] <= 180)
                     projectile.Center = (player.Center + projectile.Center * 64) / 65;
-                if (head.ai[2] == 231 && head.ai[3] < 5 && Main.netMode != NetmodeID.MultiplayerClient)
+                if (head.ai[2] == 265 && head.ai[3] < 5 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     Vector2 unit;
                     int direction = Main.rand.NextBool() ? -1 : 1;
@@ -137,7 +137,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                                 baseUnit*18f,
                                 ProjectileID.CultistBossLightningOrbArc,
                                 projectile.damage / 3, 0f, Main.myPlayer, baseUnit.ToRotation());
-                                baseUnit = baseUnit.RotatedBy(MathHelper.Pi / 4);
+                                baseUnit = baseUnit.RotatedBy(Math.PI / 6);
                             }
                             break;
                     }
@@ -330,13 +330,40 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 for (int i = 0; i < 12; i++)
                 {
                     Projectile ray = Projectile.NewProjectileDirect(projectile.Center + unit, unit, ModContent.ProjectileType<DestroyerDeathRay>(),
-                        projectile.damage * 2, 0f, projectile.owner, 135, projectile.ai[0]);
+                        projectile.damage * 2, 0f, Main.myPlayer, 135, projectile.ai[0]);
                     ray.localAI[1] = 1f;
                     ray.netUpdate = true;
                     unit = unit.RotatedBy(-MathHelper.Pi / 6);
                 }
+                Projectile.NewProjectile(projectile.Center, Vector2.Zero, ModContent.ProjectileType<LMClockFaceIllusion>(),
+                    0, 0f, Main.myPlayer);
             }
             base.Kill(timeLeft);
+        }
+    }
+    public class LMClockFaceIllusion : LMClockFace
+    {
+        public override void SetDefaults()
+        {
+            base.SetDefaults();
+            projectile.alpha = 0;
+        }
+        public override void AI()
+        {
+            projectile.localAI[0] = projectile.localAI[1] = -MathHelper.PiOver2;
+            projectile.alpha += 5;
+            if (projectile.alpha >= 255)
+            {
+                projectile.alpha = 255;
+                projectile.Kill();
+            }
+        }
+        public override Color? GetAlpha(Color lightColor)
+        {
+            return Color.White * projectile.Opacity;
+        }
+        public override void Kill(int timeLeft)
+        {
         }
     }
 }

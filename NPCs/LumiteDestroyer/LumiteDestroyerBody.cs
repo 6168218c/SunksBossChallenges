@@ -19,7 +19,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Nova Annihilator");
+            DisplayName.SetDefault("Nova");
             NPCID.Sets.TrailingMode[npc.type] = 3;
             NPCID.Sets.TrailCacheLength[npc.type] = 2;
             Main.npcFrameCount[npc.type] = 3;
@@ -184,6 +184,15 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 Main.dust[num].scale = 0.4f;
                 Main.dust[num].velocity = Main.rand.NextVector2Unit(npc.rotation - 0.001f, npc.rotation + 0.001f) * 9f;
             }
+            var maxSpeed = 15f + player.velocity.Length() / 3;
+            float turnAcc = 0.15f;
+            float ramAcc = 0.15f;
+            if (Main.expertMode)
+                maxSpeed *= 1.125f;
+            //if (Main.getGoodWorld)
+            //    maxSpeed *= 1.25f;
+            maxSpeed = maxSpeed * 0.9f + maxSpeed * ((head.lifeMax - head.life) / (float)head.lifeMax) * 0.2f;
+            maxSpeed = Math.Max(player.velocity.Length() * 1.5f, maxSpeed);
 
             npc.dontTakeDamage = (head.modNPC as LumiteDestroyerHead).CanBeInvincible()
                 || (head.modNPC as LumiteDestroyerHead).IsDeathStruggling();
@@ -232,6 +241,84 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             }
                         }
                     }
+                    else if (head.ai[1] == ChronoDash)
+                    {
+                        if (previousSegment.alpha == 0)
+                        {
+                            if (Util.CheckProjAlive<LMSigilPortal>((int)head.localAI[2]))//out portal
+                            {
+                                Projectile proj = Main.projectile[(int)head.localAI[2]];
+                                if (npc.DistanceSQ(proj.Center) <= segDistance * segDistance * 16)
+                                {
+                                    npc.alpha = 255;
+                                }
+                                else
+                                {
+                                    npc.alpha = 0;
+                                    if (npc.type == ModContent.NPCType<LumiteDestroyerTail>())
+                                    {
+                                        proj.localAI[1] = 1;//let it disappear
+                                    }
+                                }
+                            }
+                            npc.chaseable = true;
+                            if (npc.Distance(previousSegment.Center) > 6)
+                            {
+                                Vector2 offset = new Vector2(0, 1f);
+                                try//default behavior
+                                {
+                                    offset = previousSegment.Center - npc.Center;
+                                }
+                                catch { }
+                                if (offset == Vector2.Zero || offset.HasNaNs()) offset = new Vector2(0, 1f);
+                                var dist = segDistance * npc.scale;
+                                npc.rotation = offset.ToRotation();
+                                offset -= Vector2.Normalize(offset) * dist;
+                                npc.velocity = Vector2.Zero;
+                                npc.position += offset;
+                            }
+                        }
+                        else if (previousSegment.alpha == 255 && previousSegment.localAI[1] == 1 && npc.localAI[1] != 1)
+                        {
+                            if (Util.CheckProjAlive<LMSigilPortal>((int)head.localAI[3]))//in portal
+                            {
+                                Projectile proj = Main.projectile[(int)head.localAI[3]];
+                                npc.velocity = (proj.Center - npc.Center).SafeNormalize(Vector2.Zero) * head.velocity.Length();
+                                if (npc.DistanceSQ(proj.Center) <= segDistance * segDistance * 2)
+                                {
+                                    npc.alpha = 255;
+                                    npc.localAI[1] = 1;
+                                    if (npc.type == ModContent.NPCType<LumiteDestroyerTail>())
+                                    {
+                                        proj.localAI[1] = 1;//let it disappear
+                                    }
+                                }
+                                else
+                                {
+                                    npc.alpha = 0;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            npc.chaseable = true;
+                            if (npc.Distance(previousSegment.Center) > 6)
+                            {
+                                Vector2 offset = new Vector2(0, 1f);
+                                try//default behavior
+                                {
+                                    offset = previousSegment.Center - npc.Center;
+                                }
+                                catch { }
+                                if (offset == Vector2.Zero || offset.HasNaNs()) offset = new Vector2(0, 1f);
+                                var dist = segDistance * npc.scale;
+                                npc.rotation = offset.ToRotation();
+                                offset -= Vector2.Normalize(offset) * dist;
+                                npc.velocity = Vector2.Zero;
+                                npc.position += offset;
+                            }
+                        }
+                    }
                     else
                     {
                         npc.chaseable = true;
@@ -249,29 +336,6 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             offset -= Vector2.Normalize(offset) * dist;
                             npc.velocity = Vector2.Zero;
                             npc.position += offset;
-                        }
-
-                        if (head.ai[1] == ChronoDash)
-                        {
-                            if (head.ai[2] >= 230)
-                            {
-                                if (Util.CheckProjAlive<LMSubDivideSigil>((int)head.localAI[2]))
-                                {
-                                    Projectile proj = Main.projectile[(int)head.localAI[2]];
-                                    if (npc.DistanceSQ(proj.Center) <= segDistance * segDistance)
-                                    {
-                                        npc.alpha = 255;
-                                    }
-                                    else
-                                    {
-                                        npc.alpha = 0;
-                                        if (npc.type == ModContent.NPCType<LumiteDestroyerTail>())
-                                        {
-                                            proj.localAI[0] = 125;//let it disappear
-                                        }
-                                    }
-                                }
-                            }
                         }
 
                         if (npc.localAI[1] > 0)
@@ -298,15 +362,6 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             {
                 if (npc.localAI[0] >= DivideAttackStart)//acting as head
                 {
-                    var maxSpeed = 15f + player.velocity.Length() / 3;
-                    float turnAcc = 0.15f;
-                    float ramAcc = 0.15f;
-                    if (Main.expertMode)
-                        maxSpeed *= 1.125f;
-                    //if (Main.getGoodWorld)
-                    //    maxSpeed *= 1.25f;
-                    maxSpeed = maxSpeed * 0.9f + maxSpeed * ((head.lifeMax - head.life) / (float)head.lifeMax) * 0.2f;
-                    maxSpeed = Math.Max(player.velocity.Length() * 1.5f, maxSpeed);
                     if (npc.localAI[0] == DivideAttackStart + 1)
                     {
                         npc.WormMovement(npc.Center + npc.localAI[1].ToRotationVector2() * 600f, maxSpeed * 0.75f, turnAcc * 1.25f, ramAcc);
@@ -547,6 +602,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             Texture2D DestTexture = (npc.type == ModContent.NPCType<LumiteDestroyerBody>()) ? 
                 mod.GetTexture("NPCs/LumiteDestroyer/LumiteDestroyerBody_Glow") 
                 : mod.GetTexture("NPCs/LumiteDestroyer/LumiteDestroyerTail_Glow");
+            Texture2D ExtraGlow = (npc.type == ModContent.NPCType<LumiteDestroyerBody>()) ?
+                mod.GetTexture("NPCs/LumiteDestroyer/LumiteDestroyerBody_Glow2")
+                : mod.GetTexture("NPCs/LumiteDestroyer/LumiteDestroyerTail_Glow2");
             NPC head = Main.npc[npc.realLife];
             Color glowColor = Color.White;
             SpriteEffects effects = (npc.direction < 0) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
@@ -594,6 +652,10 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             }
             spriteBatch.Draw(texture2D, npc.Center - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), mainColor * npc.Opacity, npc.rotation + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
             spriteBatch.Draw(DestTexture, npc.Center - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), glowColor * 0.75f * npc.Opacity, npc.rotation + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
+            if (head.ai[1] == StarFall || head.ai[1] == StarCard)
+            {
+                spriteBatch.Draw(ExtraGlow, npc.Center - Main.screenPosition + new Vector2(0f, npc.gfxOffY), new Rectangle?(npc.frame), glowColor * 0.75f, npc.rotation + MathHelper.Pi / 2, npc.frame.Size() / 2f, npc.scale, effects, 0f);
+            }
             return false;
         }
 
@@ -656,6 +718,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             if (npc.realLife != -1 && Main.npc[npc.realLife].type == ModContent.NPCType<LumiteDestroyerHead>())
             {
                 return !(Main.npc[npc.realLife].modNPC as LumiteDestroyerHead).CanBeTransparent()
+                    || (Main.npc[npc.realLife].ai[1] == ChronoDash && npc.alpha == 0)
                     || (npc.localAI[0] == DivideAttackStart + 7 && npc.localAI[2] >= 108);
             }
             return true;

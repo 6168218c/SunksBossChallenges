@@ -26,7 +26,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         }
         public override void AI()
         {                
-            projectile.Loomup(2);
+            projectile.Loomup(4);
 			if (projectile.alpha != 0)
 			{
 				for (int i = 0; i < 2; i++)
@@ -41,17 +41,17 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 
             Projectile parent = Main.projectile[(int)projectile.ai[1]];
 
-            if (projectile.localAI[0] <= 210)
+            if (projectile.localAI[0] <= 90)
             {
                 projectile.Center = parent.Center;
-                if (projectile.localAI[0] == 150 && Main.netMode != NetmodeID.MultiplayerClient)
+                if (projectile.localAI[0] == 30 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     Projectile shockwave = Projectile.NewProjectileDirect(projectile.Center, Vector2.Zero, ModContent.ProjectileType<ShockwaveCenter>(),
                         0, 0f, Main.myPlayer, 1);
                     shockwave.timeLeft = 90;
                 }
             }
-            else if (projectile.localAI[0] <= 240)
+            else if (projectile.localAI[0] <= 120)
             {
                 projectile.velocity = Vector2.Zero;
                 projectile.scale -= (0.5f / 32);
@@ -195,6 +195,10 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             }*/
             return base.PreDraw(spriteBatch, lightColor);
         }
+        public override bool CanHitPlayer(Player target)
+        {
+            return projectile.localAI[1] > 90;
+        }
     }
     public class LMMoonHole : LMBlackHole
     {
@@ -210,36 +214,74 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 }
                 return;
             }
-            Player player = Main.player[(int)projectile.ai[0]];
+            if (!Util.CheckNPCAlive<LumiteDestroyerHead>((int)projectile.ai[0]))
+            {
+                projectile.localAI[1] = 1;
+                return;
+            }
+            NPC head = Main.npc[(int)projectile.ai[0]];
+            Player player = Main.player[head.target];
+            //Player player = Main.player[0];
+
+            if (Util.CheckProjAlive<LMJevilSigil>((int)head.localAI[0]))
+            {
+                projectile.Center = Main.projectile[(int)head.localAI[0]].Center;
+                return;
+            }
+            /*foreach(Projectile proj in Main.projectile)
+            {
+                if (Util.CheckProjAlive<LMJevilSigil>(proj.whoAmI))
+                {
+                    projectile.Center = proj.Center;
+                    return;//wait until it dies
+                }
+            }*/
+
             if (projectile.localAI[0] == 0 && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 Projectile.NewProjectile(projectile.Center, Vector2.Zero, ModContent.ProjectileType<LMGigaMoon>(),
                     projectile.damage, 0f, Main.myPlayer, 0, projectile.whoAmI);
             }
-
             projectile.localAI[0]++;
 
-            if (projectile.localAI[0] <= 210)
+            if (projectile.localAI[0] <= 90)
             {
-                projectile.FastMovement(player.Center - Vector2.UnitY * 375, 15);
+                if(projectile.localAI[0] >= 45)
+                    projectile.FastMovement(player.Center - Vector2.UnitY * 375, 15);
             }
-            else if (projectile.localAI[0] <= 240)
+            else if (projectile.localAI[0] <= 120)
             {
 				projectile.Loomup();
                 projectile.velocity = Vector2.Zero;
             }
-            else if (projectile.localAI[0] <= 330)
+            else if (projectile.localAI[0] <= 210)
             {
                 projectile.scale += 3f / 90;
             }
-            else if (projectile.localAI[0] <= 510)
+            else if (projectile.localAI[0] <= 390)
             {
+                Vector2 offset = Main.rand.NextVector2Circular(1000, 1000);
+                Dust dust = Main.dust[Dust.NewDust(projectile.Center + offset, 0, 0, DustID.Clentaminator_Purple, 0, 0, 100, Color.White)];
+                dust.velocity = -offset * 1000 / offset.LengthSquared();
+                if (Main.rand.Next(3) == 0)
+                    dust.velocity += Vector2.Normalize(offset) * 5f;
+                dust.noGravity = true;
+                if (projectile.localAI[0] == 270 && Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    Projectile shockwave = Projectile.NewProjectileDirect(projectile.Center, Vector2.Zero, ModContent.ProjectileType<ShockwaveCenter>(),
+                        0, 0f, Main.myPlayer, 1);
+                    shockwave.timeLeft = 90;
+                }
                 projectile.ai[1]++;
             }
             else
             {
                 projectile.localAI[1] = 1;
             }
+        }
+        public override bool CanHitPlayer(Player target)
+        {
+            return projectile.localAI[0] > 90;
         }
     }
     public class LMRetractStar : DecimatorOfPlanets.DarkStar
@@ -301,6 +343,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                         if (projectile.velocity == Vector2.Zero)
                         {
                             projectile.velocity = projectile.DirectionTo(hole.Center);
+                            projectile.localAI[1] = 0;
                             projectile.ai[1] = 2;
                         }
                     }
@@ -308,6 +351,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     {
                         if (projectile.velocity.Compare(48f) < 0)
                             projectile.velocity *= 1.08f;
+                        projectile.localAI[1]++;
                         if (projectile.DistanceSQ(hole.Center) <= 100 * 100)
                         {
                             projectile.Kill();
@@ -360,7 +404,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     projectile.velocity.ToRotation() + MathHelper.PiOver2, gloworigin2, scale, SpriteEffects.None, 0f);
             }
 
-            if (projectile.ai[1] == 1)
+            if (projectile.ai[1] == 1|| projectile.ai[1] == 2)
             {
                 int timer = (int)projectile.localAI[1];
                 if (timer <= 45)

@@ -52,6 +52,22 @@ namespace SunksBossChallenges.Projectiles.DecimatorOfPlanets
                 if (projectile.velocity.Compare(projectile.ai[1]) < 0)
                     projectile.velocity *= 1.05f;
             }
+            else if (projectile.ai[0] == 3f)
+            {
+                if (projectile.localAI[1] == 0)
+                {
+                    projectile.timeLeft = 180;
+                }
+                projectile.localAI[1]++;
+                if (projectile.localAI[1] % 60 <= 20)
+                {
+                    projectile.velocity *= 0.95f;
+                }
+                else
+                {
+                    projectile.velocity *= 1.035f;
+                }
+            }
 
             if (projectile.localAI[0] == 0)
                 projectile.localAI[0] = 1f;

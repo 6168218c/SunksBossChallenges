@@ -13,7 +13,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Nova Annihilator");
+            DisplayName.SetDefault("Nova");
             NPCID.Sets.TrailingMode[npc.type] = 3;
             NPCID.Sets.TrailCacheLength[npc.type] = 16;
             Main.npcFrameCount[npc.type] = Main.npcFrameCount[NPCID.TheDestroyerTail];
