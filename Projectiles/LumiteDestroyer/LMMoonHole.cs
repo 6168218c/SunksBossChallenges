@@ -339,7 +339,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 					projectile.velocity = projectile.velocity.SafeNormalize(Vector2.Zero) * Math.Min(projectile.velocity.Length(), 30f);*/
                     if (projectile.ai[1] == 0 || projectile.ai[1] == 1)
                     {
-                        projectile.SlowDown(0.8f);
+                        projectile.SlowDown(0.6f);
                         if (projectile.velocity == Vector2.Zero)
                         {
                             projectile.velocity = projectile.DirectionTo(hole.Center);
@@ -360,7 +360,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 }
                 else
                 {
-                    if (projectile.ai[1] == 1 && projectile.velocity.Compare(90f) < 0)
+                    if (projectile.ai[1] == 1 && projectile.velocity.Compare(60f) < 0)
                     {
                         projectile.localAI[1]++;
                         if (projectile.localAI[1] >= 25)

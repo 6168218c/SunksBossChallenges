@@ -292,7 +292,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     {
                         SwitchTo(-1);
                         SkyManager.Instance.Activate("SunksBossChallenges:LumiteDestroyer");
-                        music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Frontier");
+                        music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Revenger");
                     }
                     else if (npc.ai[2] >= 540)
                     {
@@ -764,7 +764,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                             {
                                 counter++;
                                 NPC tmpNPC = Main.npc[i];
-                                tmpNPC.alpha = 255;
+                                tmpNPC.alpha = npc.ai[3] == 5 ? 0 : 255;
                                 (tmpNPC.modNPC as LumiteDestroyerSegment).ImmuneTimer = 90;
                                 tmpNPC.Blink(target);
                                 tmpNPC.velocity = Vector2.Zero;
@@ -1057,393 +1057,10 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     }
                 }
                 #endregion
-                #region Divide Attack
-                else if (npc.ai[1] == DivideAttackStart)
+                if (npc.ai[1] >= DivideAttackStart && npc.ai[1] <= DivideAttackStart + DivideAILength)
                 {
-                    npc.WormMovement(player.Center + targetModifier, maxSpeed / 2, turnAcc, ramAcc / 2);
-                    if (npc.ai[2] == 0 && Main.netMode != NetmodeID.MultiplayerClient)
-                    {
-                        npc.ai[3] = Projectile.NewProjectile(player.Center, Vector2.Zero, ModContent.ProjectileType<LMDivideSigil>(),
-                            0, 0f, Main.myPlayer, npc.whoAmI, 0);
-                        npc.netUpdate = true;
-                    }
-                    npc.ai[2]++;
-                    ForeachSegment((tmpNPC, counter) =>
-                    {
-                        tmpNPC.alpha += 3;
-                        if (tmpNPC.alpha > 255) tmpNPC.alpha = 255;
-                    });
-
-                    if (npc.ai[2] >= 180)
-                    {
-                        Vector2 dist = Main.rand.NextVector2Unit() * LumiteDestroyerArguments.TeleportDistance;
-                        if (Util.CheckProjAlive<LMDivideSigil>((int)npc.ai[3]))
-                        {
-                            dist = Main.projectile[(int)npc.ai[3]].rotation.ToRotationVector2() * LumiteDestroyerArguments.TeleportDistance;
-                            if (Main.projectile[(int)npc.ai[3]].localAI[1] != 1)
-                                Main.projectile[(int)npc.ai[3]].localAI[1] = 1;
-                        }
-                        ForeachSegment((tmpNPC, counter) =>
-                        {
-                            int factor = counter / 28;
-                            var offset = dist.RotatedBy(MathHelper.TwoPi / 3 * factor);
-                            tmpNPC.Center = player.Center + offset;
-                            tmpNPC.velocity = Vector2.Zero;
-                            if (counter % 28 == 0)
-                            {
-                                tmpNPC.localAI[0] = DivideAttackStart + 1;
-                                tmpNPC.localAI[1] = (-offset).ToRotation();
-                                tmpNPC.localAI[2] = 0;
-                                tmpNPC.velocity = -offset.SafeNormalize(Vector2.Zero) * maxSpeed / 6;
-                                tmpNPC.netUpdate = true;
-                            }
-                            else
-                            {
-                                tmpNPC.localAI[0] = 0;
-                                tmpNPC.localAI[1] = 0;
-                                tmpNPC.localAI[2] = 0;
-                                tmpNPC.netUpdate = true;
-                            }
-                        });
-                        npc.Center = player.Center + dist;
-                        npc.velocity = -dist.SafeNormalize(Vector2.Zero) * maxSpeed / 6;
-                        if (Main.netMode != NetmodeID.MultiplayerClient)
-                        {
-                            var proj = Projectile.NewProjectileDirect(player.Center, Vector2.Zero, ModContent.ProjectileType<GlowRing>(), 0, 0, Main.myPlayer, -1, -5);
-                            proj.scale = 2f;
-                            proj.netUpdate = true;
-                        }
-                        SwitchTo(DivideAttackStart + 1);
-                        npc.localAI[1] = (-dist).ToRotation();
-                    }
+                    DivideAttack(player, targetModifier, maxSpeed, turnAcc, ramAcc);
                 }
-                else if (npc.ai[1] == DivideAttackStart + 1)
-                {
-                    npc.ai[2]++;
-                    npc.WormMovement(npc.Center + npc.localAI[1].ToRotationVector2() * 600f, maxSpeed * 0.675f, turnAcc * 1.25f, ramAcc);
-
-                    if (npc.ai[2] >= 120)
-                    {
-                        ForeachSegment((tmpNPC, counter) =>
-                        {
-                            int factor = counter / 28;
-                            if (counter % 28 == 0)
-                            {
-                                tmpNPC.localAI[0] = DivideAttackStart + factor + 2;
-                                tmpNPC.localAI[1] = 0;
-                                tmpNPC.localAI[2] = 0;
-                                tmpNPC.netUpdate = true;
-                            }
-                            else
-                            {
-                                tmpNPC.localAI[0] = 0;
-                                tmpNPC.localAI[1] = 0;
-                                tmpNPC.localAI[2] = 0;
-                                tmpNPC.netUpdate = true;
-                            }
-                        });
-                        SwitchTo(DivideAttackStart + 2);
-                    }
-                }
-                #region CoAttack Pattern1
-                else if (npc.ai[1] == DivideAttackStart + 2)
-                {
-                    npc.ai[2]++;
-                    npc.WormMovementEx(player.Center + targetModifier, maxSpeed * 0.75f, turnAcc * 1.25f, ramAcc);
-                    if (npc.ai[2] >= 360)
-                    {
-                        if (DivideChooser)
-                        {
-                            ForeachSegment((tmpNPC, counter) =>
-                            {
-                                int factor = counter / 28;
-                                if (counter % 28 == 0)
-                                {
-                                    tmpNPC.localAI[0] = DivideAttackStart + 5;
-                                    tmpNPC.localAI[1] = 0;
-                                    tmpNPC.localAI[2] = 0;
-                                    tmpNPC.netUpdate = true;
-                                }
-                                else
-                                {
-                                    tmpNPC.localAI[0] = 0;
-                                    tmpNPC.localAI[1] = 0;
-                                    tmpNPC.localAI[2] = 0;
-                                    tmpNPC.netUpdate = true;
-                                }
-                            });
-                            SwitchTo(DivideAttackStart + 5);
-                        }
-                        else
-                        {
-                            SwitchTo(DivideAttackStart + DivideAILength - 1);
-                        }
-                        DivideChooser = !DivideChooser;
-                    }
-                }
-                else if (npc.ai[1] == DivideAttackStart + 3)
-                {
-                    CrawlipedeMove();
-                }
-                else if (npc.ai[1] == DivideAttackStart + 4)
-                {
-                    CrawlipedeMove(-600);
-                }
-                #endregion
-                #region CoAttack Pattern2
-                else if (npc.ai[1] == DivideAttackStart + 5)
-                {
-                    npc.WormMovementEx(player.Center + npc.DirectionFrom(player.Center) * LumiteDestroyerArguments.R * 2.5f,
-                        maxSpeed * 0.6f, turnAcc * 1.25f, ramAcc);
-                    npc.ai[2]++;
-
-                    ForeachSegment((tmpNPC, counter) =>
-                    {
-                        tmpNPC.alpha += 3;
-                        if (tmpNPC.alpha > 255) tmpNPC.alpha = 255;
-                    });
-
-                    if (npc.ai[2] >= 120)
-                    {
-                        SwitchTo(DivideAttackStart + 6);
-                    }
-                }
-                else if (npc.ai[1] == DivideAttackStart + 6 || npc.ai[1] == DivideAttackStart + 7)
-                {
-                    //Common code
-                    int i = npc.whoAmI;
-                    int counter = 0;
-                    if (npc.ai[1] == DivideAttackStart + 6)
-                    {
-                        npc.WormMovementEx(player.Center + targetModifier, maxSpeed * 0.6f, turnAcc * 1.25f, ramAcc);
-                        if (npc.ai[3] > 8)
-                        {
-                            ForeachSegment((tmpNPC, cnt) =>
-							{
-								if (cnt % 28 == 0)
-								{
-									tmpNPC.localAI[0] = DivideAttackStart + DivideAILength;
-									tmpNPC.localAI[1] = 0;
-									tmpNPC.localAI[2] = 0;
-									tmpNPC.netUpdate = true;
-								}
-								else
-								{
-									tmpNPC.localAI[0] = 0;
-									tmpNPC.localAI[1] = 0;
-									tmpNPC.localAI[2] = 0;
-									tmpNPC.netUpdate = true;
-								}
-							});
-							SwitchTo(DivideAttackStart + DivideAILength);
-                        }
-                    }
-                    else if (npc.ai[1] == DivideAttackStart + 7)
-                    {
-                        //reserved
-                        npc.ai[2]++;//the head will create the aim
-                        if (npc.ai[2] < 108)
-                        {
-                            npc.WormMovementEx(player.Center + targetModifier, maxSpeed * 0.6f, turnAcc * 1.25f, ramAcc);
-                        }
-                        else if (npc.ai[2] == 108)
-                        {
-                            Projectile aim = Main.projectile[(int)npc.localAI[1]];
-                            Vector2 endpoint = new Vector2(aim.ai[0], aim.ai[1]);
-                            npc.Center = aim.Center;
-                            npc.velocity = (endpoint - npc.Center).SafeNormalize(Vector2.Zero) * maxSpeed;
-                            i = npc.whoAmI;
-                            counter = 0;
-                            while (i != -1)
-                            {
-                                counter++;
-                                NPC tmpNPC = Main.npc[i];
-                                if (tmpNPC.localAI[0] >= DivideAttackStart && tmpNPC.whoAmI != npc.whoAmI)
-                                {
-                                    break;
-                                }
-                                //tmpNPC.Center = aim.Center;
-                                tmpNPC.Blink(aim.Center);
-                                tmpNPC.alpha = 0;
-                                i = (int)Main.npc[i].ai[0];
-                            }
-                            aim.Kill();
-                        }
-                        else if (npc.ai[2] > 108)
-                        {
-                            if (npc.velocity.Compare(maxSpeed * 1.5f) < 0) npc.velocity *= 1.2f;
-                            if (npc.ai[2] % 6 == 2 && Main.netMode != NetmodeID.MultiplayerClient)
-                            {
-                                var direction = npc.velocity.SafeNormalize(Vector2.UnitY);
-                                Vector2 target = npc.Center +
-                                    Vector2.Lerp(direction, Vector2.UnitX * Math.Sign(player.Center.X - npc.Center.X), 0.8f) * Math.Max(1800,Math.Abs(player.Center.X - npc.Center.X));
-                                Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<LaserBarrage>(),
-                                    npc.damage / 5, 0f, Main.myPlayer, target.X, target.Y);
-
-                            }
-                        }
-                        if (npc.ai[2] >= 180)
-                        {
-                            npc.ai[1] = DivideAttackStart + 6;
-                            npc.ai[2] = 0;
-                            npc.netUpdate = true;
-                            //SwitchTo(DivideAttackStart + 6, false);
-                        }
-                    }
-                    npc.localAI[2]++;
-                    while (i != -1)
-                    {
-                        counter++;
-                        NPC tmpNPC = Main.npc[i];
-                        if (counter % 28 == 0)
-                        {
-                            if ((tmpNPC.localAI[0] == DivideAttackStart + 6||tmpNPC.localAI[0] == DivideAttackStart + 5) && Main.rand.Next(60) > 48 && npc.ai[3] <= 9 && npc.localAI[2] >= 45)
-                            {
-                                int ydirFactor = Main.rand.NextBool() ? -1 : 1;
-                                int xdirFactor = Main.rand.NextBool() ? -1 : 1;
-                                var start = player.Center + Vector2.UnitY * ydirFactor * 1800
-                                    + Main.rand.NextVector2Circular(900, 100) * xdirFactor;
-                                var end = player.Center - Vector2.UnitY * ydirFactor * 1800
-                                    + Main.rand.NextVector2Circular(900, 100) * xdirFactor;
-                                if ((end - start).Compare(1800) < 0)
-                                {
-                                    end = start + (end - start).SafeNormalize(Vector2.UnitY) * 1800;
-                                }
-                                int index = Projectile.NewProjectile(start, Vector2.Zero, ModContent.ProjectileType<LMAimLine>(),
-                                    0, 0f, Main.myPlayer, end.X, end.Y);
-                                tmpNPC.localAI[0] = DivideAttackStart + 7;
-                                tmpNPC.localAI[1] = index;
-                                tmpNPC.localAI[2] = 0;
-                                tmpNPC.netUpdate = true;
-                                npc.localAI[2] = 0;
-                                npc.ai[3]++;
-                            }
-                        }
-                        else if (i == npc.whoAmI)
-                        {
-                            if (tmpNPC.ai[1] == DivideAttackStart + 6 && Main.rand.Next(60) > 48 && npc.ai[3] <= 9)
-                            {
-                                int ydirFactor = Main.rand.NextBool() ? -1 : 1;
-                                int xdirFactor = Main.rand.NextBool() ? -1 : 1;
-                                var start = player.Center + Vector2.UnitY * ydirFactor * 1800
-                                    + Main.rand.NextVector2Circular(900, 100) * xdirFactor;
-                                var end = player.Center - Vector2.UnitY * ydirFactor * 1800
-                                    + Main.rand.NextVector2Circular(900, 100) * xdirFactor;
-                                if ((end - start).Compare(1800) < 0)
-                                {
-                                    end = start + (end - start).SafeNormalize(Vector2.UnitY) * 1800;
-                                }
-                                int index = Projectile.NewProjectile(start, Vector2.Zero, ModContent.ProjectileType<LMAimLine>(),
-                                    0, 0f, Main.myPlayer, end.X, end.Y);
-                                tmpNPC.ai[1] = DivideAttackStart + 7;
-                                tmpNPC.localAI[1] = index;
-                                tmpNPC.localAI[2] = 0;
-                                tmpNPC.netUpdate = true;
-                                npc.ai[3]++;
-                            }
-                        }
-                        i = (int)Main.npc[i].ai[0];
-                    }
-                }
-                #endregion
-                else if (npc.ai[1] == DivideAttackStart + DivideAILength - 1)
-                {
-                    if (npc.ai[2] == 0)//set up
-                    {
-                        npc.ai[3] = Main.rand.NextFloatDirection();
-                        npc.velocity = Vector2.Zero;
-                        ForeachSegment((tmpNPC, counter) =>
-                        {
-                            tmpNPC.velocity = Vector2.Zero;
-                            int factor = counter / 28;
-                            float offsetRotation = MathHelper.TwoPi / 3 * factor;
-                            if (counter % 28 == 0)
-                            {
-                                tmpNPC.localAI[0] = DivideAttackStart + DivideAILength - 1;
-                                tmpNPC.localAI[1] = offsetRotation;
-                                tmpNPC.localAI[2] = 0;
-                                tmpNPC.netUpdate = true;
-                            }
-                            else
-                            {
-                                tmpNPC.localAI[0] = 0;
-                                tmpNPC.localAI[1] = 0;
-                                tmpNPC.localAI[2] = 0;
-                                tmpNPC.netUpdate = true;
-                            }
-                        });
-                        spinCenter = player.Center + player.velocity * 10;
-                    }
-                    var fakeCenter = player.Center + player.velocity * 10;
-                    spinCenter = (spinCenter * 99f + fakeCenter) / 100f;
-
-                    npc.ai[2]++;
-                    var center = spinCenter + npc.ai[3].ToRotationVector2() * LumiteDestroyerArguments.R * 1.25f;
-                    npc.HoverMovementEx(center, maxSpeed, 0.6f);
-
-                    if (Main.netMode != NetmodeID.MultiplayerClient && npc.ai[2] >= 150 && npc.ai[2] % 5 == 0)
-                    {
-                        Projectile.NewProjectile(npc.Center, (spinCenter - npc.Center).SafeNormalize(Vector2.Zero) * 5f, ModContent.ProjectileType<DeathLaserEx>(), npc.damage / 5, 0f, Main.myPlayer, 90f, -1);
-                    }
-
-                    npc.ai[3] += 0.025f;
-                    if (npc.ai[3] >= MathHelper.TwoPi)
-                    {
-                        npc.ai[3] -= MathHelper.TwoPi;
-                    }
-
-                    if (npc.ai[2] >= 450)
-                    {
-                        ForeachSegment((tmpNPC, counter) =>
-                        {
-                            if (counter % 28 == 0)
-                            {
-                                tmpNPC.localAI[0] = DivideAttackStart + DivideAILength;
-                                tmpNPC.localAI[1] = 0;
-                                tmpNPC.localAI[2] = 0;
-                                tmpNPC.netUpdate = true;
-                            }
-                            else
-                            {
-                                tmpNPC.localAI[0] = 0;
-                                tmpNPC.localAI[1] = 0;
-                                tmpNPC.localAI[2] = 0;
-                                tmpNPC.netUpdate = true;
-                            }
-                        });
-                        SwitchTo(DivideAttackStart + DivideAILength);
-                    }
-                }
-                else if (npc.ai[1] == DivideAttackStart + DivideAILength)//fade back
-                {
-                    npc.WormMovement(player.Center + targetModifier, maxSpeed / 2, turnAcc, ramAcc / 2);
-                    npc.ai[2]++;
-                    ForeachSegment((tmpNPC, counter) =>
-                    {
-                        tmpNPC.alpha += 3;
-                        if (tmpNPC.alpha > 255) tmpNPC.alpha = 255;
-                    });
-
-                    if (npc.ai[2] >= 120)
-                    {
-                        Vector2 dist = Main.rand.NextVector2Unit() * LumiteDestroyerArguments.TeleportDistance;
-                        npc.Center = player.Center + player.velocity * 60f + dist;
-                        npc.velocity = Vector2.Normalize(player.Center - npc.Center) * maxSpeed / 3;
-                        ForeachSegment((tmpNPC, counter) =>
-                        {
-                            tmpNPC.Center = player.Center + dist;
-                            tmpNPC.velocity = Vector2.Zero;
-                            tmpNPC.localAI[0] = 0;
-                            tmpNPC.localAI[1] = 0;
-                            tmpNPC.localAI[2] = 0;
-                            tmpNPC.frame.Y = 0;
-                            tmpNPC.netUpdate = true;
-                        });
-                        //SwitchTo(IsPhase3() ? (Main.rand.NextBool() ? Main.rand.Next(1, 6) : Main.rand.Next(3, 6)) : Main.rand.Next(0, 3));
-                        SwitchTo(DivideResumeAI);
-                    }
-                }
-                #endregion
             }
             else if (npc.ai[1] < DeathStruggleStart)
             {
@@ -1603,6 +1220,399 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
 
             npc.rotation = npc.velocity.ToRotation();
             //Lighting.AddLight(npc.Center, 0.3f, 0.3f, 0.5f);
+        }
+        void DivideAttack(Player player, Vector2 targetModifier,float maxSpeed,float turnAcc,float ramAcc)
+        {
+            #region Divide Attack
+            if (npc.ai[1] == DivideAttackStart)
+            {
+                npc.WormMovement(player.Center + targetModifier, maxSpeed / 2, turnAcc, ramAcc / 2);
+                if (npc.ai[2] == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    npc.ai[3] = Projectile.NewProjectile(player.Center, Vector2.Zero, ModContent.ProjectileType<LMDivideSigil>(),
+                        0, 0f, Main.myPlayer, npc.whoAmI, 0);
+                    npc.netUpdate = true;
+                }
+                npc.ai[2]++;
+                ForeachSegment((tmpNPC, counter) =>
+                {
+                    tmpNPC.alpha += 3;
+                    if (tmpNPC.alpha > 255) tmpNPC.alpha = 255;
+                });
+
+                if (npc.ai[2] >= 180)
+                {
+                    Vector2 dist = Main.rand.NextVector2Unit() * LumiteDestroyerArguments.TeleportDistance;
+                    if (Util.CheckProjAlive<LMDivideSigil>((int)npc.ai[3]))
+                    {
+                        dist = Main.projectile[(int)npc.ai[3]].rotation.ToRotationVector2() * LumiteDestroyerArguments.TeleportDistance;
+                        if (Main.projectile[(int)npc.ai[3]].localAI[1] != 1)
+                            Main.projectile[(int)npc.ai[3]].localAI[1] = 1;
+                    }
+                    ForeachSegment((tmpNPC, counter) =>
+                    {
+                        int factor = counter / 28;
+                        var offset = dist.RotatedBy(MathHelper.TwoPi / 3 * factor);
+                        tmpNPC.Center = player.Center + offset;
+                        tmpNPC.velocity = Vector2.Zero;
+                        if (counter % 28 == 0)
+                        {
+                            tmpNPC.localAI[0] = DivideAttackStart + 1;
+                            tmpNPC.localAI[1] = (-offset).ToRotation();
+                            tmpNPC.localAI[2] = 0;
+                            tmpNPC.velocity = -offset.SafeNormalize(Vector2.Zero) * maxSpeed / 6;
+                            tmpNPC.netUpdate = true;
+                        }
+                        else
+                        {
+                            tmpNPC.localAI[0] = 0;
+                            tmpNPC.localAI[1] = 0;
+                            tmpNPC.localAI[2] = 0;
+                            tmpNPC.netUpdate = true;
+                        }
+                    });
+                    npc.Center = player.Center + dist;
+                    npc.velocity = -dist.SafeNormalize(Vector2.Zero) * maxSpeed / 6;
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                    {
+                        var proj = Projectile.NewProjectileDirect(player.Center, Vector2.Zero, ModContent.ProjectileType<GlowRing>(), 0, 0, Main.myPlayer, -1, -5);
+                        proj.scale = 2f;
+                        proj.netUpdate = true;
+                    }
+                    SwitchTo(DivideAttackStart + 1);
+                    npc.localAI[1] = (-dist).ToRotation();
+                }
+            }
+            else if (npc.ai[1] == DivideAttackStart + 1)
+            {
+                npc.ai[2]++;
+                npc.WormMovement(npc.Center + npc.localAI[1].ToRotationVector2() * 600f, maxSpeed * 0.675f, turnAcc * 1.25f, ramAcc);
+
+                if (npc.ai[2] >= 120)
+                {
+                    ForeachSegment((tmpNPC, counter) =>
+                    {
+                        int factor = counter / 28;
+                        if (counter % 28 == 0)
+                        {
+                            tmpNPC.localAI[0] = DivideAttackStart + factor + 2;
+                            tmpNPC.localAI[1] = 0;
+                            tmpNPC.localAI[2] = 0;
+                            tmpNPC.netUpdate = true;
+                        }
+                        else
+                        {
+                            tmpNPC.localAI[0] = 0;
+                            tmpNPC.localAI[1] = 0;
+                            tmpNPC.localAI[2] = 0;
+                            tmpNPC.netUpdate = true;
+                        }
+                    });
+                    SwitchTo(DivideAttackStart + 2);
+                }
+            }
+            #region CoAttack Pattern1
+            else if (npc.ai[1] == DivideAttackStart + 2)
+            {
+                npc.ai[2]++;
+                npc.WormMovementEx(player.Center + targetModifier, maxSpeed * 0.6f, turnAcc * 1.25f, ramAcc);
+                if (npc.ai[2] >= 360)
+                {
+                    ForeachSegment((tmpNPC, counter) =>
+                    {
+                        int factor = counter / 28;
+                        if (counter % 28 == 0)
+                        {
+                            tmpNPC.localAI[0] = DivideAttackStart + 5;
+                            tmpNPC.localAI[1] = 0;
+                            tmpNPC.localAI[2] = 0;
+                            tmpNPC.netUpdate = true;
+                        }
+                        else
+                        {
+                            tmpNPC.localAI[0] = 0;
+                            tmpNPC.localAI[1] = 0;
+                            tmpNPC.localAI[2] = 0;
+                            tmpNPC.netUpdate = true;
+                        }
+                    });
+                    SwitchTo(DivideAttackStart + 5);
+                }
+            }
+            //not on head
+            /*else if (npc.ai[1] == DivideAttackStart + 3)
+            {
+                CrawlipedeMove();
+            }
+            else if (npc.ai[1] == DivideAttackStart + 4)
+            {
+                CrawlipedeMove(-600);
+            }*/
+            #endregion
+            #region CoAttack Pattern2
+            else if (npc.ai[1] == DivideAttackStart + 5)
+            {
+                npc.WormMovementEx(player.Center + npc.DirectionFrom(player.Center) * LumiteDestroyerArguments.R * 2.5f,
+                    maxSpeed * 0.6f, turnAcc * 1.25f, ramAcc);
+                npc.ai[2]++;
+
+                ForeachSegment((tmpNPC, counter) =>
+                {
+                    tmpNPC.alpha += 3;
+                    if (tmpNPC.alpha > 255) tmpNPC.alpha = 255;
+                });
+
+                if (npc.ai[2] >= 120)
+                {
+                    if (DivideChooser)
+                    {
+                        SwitchTo(DivideAttackStart + 6);
+                    }
+                    else
+                    {
+                        SwitchTo(DivideAttackStart + DivideAILength - 1);
+                    }
+                    DivideChooser = !DivideChooser;
+                }
+            }
+            else if (npc.ai[1] == DivideAttackStart + 6 || npc.ai[1] == DivideAttackStart + 7)
+            {
+                //Common code
+                int i = npc.whoAmI;
+                int counter = 0;
+                if (npc.ai[1] == DivideAttackStart + 6)
+                {
+                    npc.WormMovementEx(player.Center + targetModifier, maxSpeed * 0.6f, turnAcc * 1.25f, ramAcc);
+                    if (npc.ai[3] > 8)
+                    {
+                        ForeachSegment((tmpNPC, cnt) =>
+                        {
+                            if (cnt % 28 == 0)
+                            {
+                                tmpNPC.localAI[0] = DivideAttackStart + DivideAILength;
+                                tmpNPC.localAI[1] = 0;
+                                tmpNPC.localAI[2] = 0;
+                                tmpNPC.netUpdate = true;
+                            }
+                            else
+                            {
+                                tmpNPC.localAI[0] = 0;
+                                tmpNPC.localAI[1] = 0;
+                                tmpNPC.localAI[2] = 0;
+                                tmpNPC.netUpdate = true;
+                            }
+                        });
+                        SwitchTo(DivideAttackStart + DivideAILength);
+                    }
+                }
+                else if (npc.ai[1] == DivideAttackStart + 7)
+                {
+                    //reserved
+                    npc.ai[2]++;//the head will create the aim
+                    if (npc.ai[2] < 108)
+                    {
+                        npc.WormMovementEx(player.Center + targetModifier, maxSpeed * 0.6f, turnAcc * 1.25f, ramAcc);
+                    }
+                    else if (npc.ai[2] == 108)
+                    {
+                        Projectile aim = Main.projectile[(int)npc.localAI[1]];
+                        Vector2 endpoint = new Vector2(aim.ai[0], aim.ai[1]);
+                        npc.Center = aim.Center;
+                        npc.velocity = (endpoint - npc.Center).SafeNormalize(Vector2.Zero) * maxSpeed;
+                        i = npc.whoAmI;
+                        counter = 0;
+                        while (i != -1)
+                        {
+                            counter++;
+                            NPC tmpNPC = Main.npc[i];
+                            if (tmpNPC.localAI[0] >= DivideAttackStart && tmpNPC.whoAmI != npc.whoAmI)
+                            {
+                                break;
+                            }
+                            //tmpNPC.Center = aim.Center;
+                            tmpNPC.Blink(aim.Center);
+                            tmpNPC.alpha = 0;
+                            i = (int)Main.npc[i].ai[0];
+                        }
+                        aim.Kill();
+                    }
+                    else if (npc.ai[2] > 108)
+                    {
+                        if (npc.velocity.Compare(maxSpeed * 1.5f) < 0) npc.velocity *= 1.2f;
+                        if (npc.ai[2] % 6 == 2 && Main.netMode != NetmodeID.MultiplayerClient)
+                        {
+                            var direction = npc.velocity.SafeNormalize(Vector2.UnitY);
+                            Vector2 target = npc.Center +
+                                Vector2.Lerp(direction, Vector2.UnitX * Math.Sign(player.Center.X - npc.Center.X), 0.8f) * Math.Max(1800, Math.Abs(player.Center.X - npc.Center.X));
+                            Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<LaserBarrage>(),
+                                npc.damage / 5, 0f, Main.myPlayer, target.X, target.Y);
+
+                        }
+                    }
+                    if (npc.ai[2] >= 180)
+                    {
+                        npc.ai[1] = DivideAttackStart + 6;
+                        npc.ai[2] = 0;
+                        npc.netUpdate = true;
+                        //SwitchTo(DivideAttackStart + 6, false);
+                    }
+                }
+                npc.localAI[2]++;
+                while (i != -1)
+                {
+                    counter++;
+                    NPC tmpNPC = Main.npc[i];
+                    if (counter % 28 == 0)
+                    {
+                        if ((tmpNPC.localAI[0] == DivideAttackStart + 6 || tmpNPC.localAI[0] == DivideAttackStart + 5) && Main.rand.Next(60) > 48 && npc.ai[3] <= 9 && npc.localAI[2] >= 45)
+                        {
+                            int ydirFactor = Main.rand.NextBool() ? -1 : 1;
+                            int xdirFactor = Main.rand.NextBool() ? -1 : 1;
+                            var start = player.Center + Vector2.UnitY * ydirFactor * 1800
+                                + Main.rand.NextVector2Circular(900, 100) * xdirFactor;
+                            var end = player.Center - Vector2.UnitY * ydirFactor * 1800
+                                + Main.rand.NextVector2Circular(900, 100) * xdirFactor;
+                            if ((end - start).Compare(1800) < 0)
+                            {
+                                end = start + (end - start).SafeNormalize(Vector2.UnitY) * 1800;
+                            }
+                            int index = Projectile.NewProjectile(start, Vector2.Zero, ModContent.ProjectileType<LMAimLine>(),
+                                0, 0f, Main.myPlayer, end.X, end.Y);
+                            tmpNPC.localAI[0] = DivideAttackStart + 7;
+                            tmpNPC.localAI[1] = index;
+                            tmpNPC.localAI[2] = 0;
+                            tmpNPC.netUpdate = true;
+                            npc.localAI[2] = 0;
+                            npc.ai[3]++;
+                        }
+                    }
+                    else if (i == npc.whoAmI)
+                    {
+                        if (tmpNPC.ai[1] == DivideAttackStart + 6 && Main.rand.Next(60) > 48 && npc.ai[3] <= 9)
+                        {
+                            int ydirFactor = Main.rand.NextBool() ? -1 : 1;
+                            int xdirFactor = Main.rand.NextBool() ? -1 : 1;
+                            var start = player.Center + Vector2.UnitY * ydirFactor * 1800
+                                + Main.rand.NextVector2Circular(900, 100) * xdirFactor;
+                            var end = player.Center - Vector2.UnitY * ydirFactor * 1800
+                                + Main.rand.NextVector2Circular(900, 100) * xdirFactor;
+                            if ((end - start).Compare(1800) < 0)
+                            {
+                                end = start + (end - start).SafeNormalize(Vector2.UnitY) * 1800;
+                            }
+                            int index = Projectile.NewProjectile(start, Vector2.Zero, ModContent.ProjectileType<LMAimLine>(),
+                                0, 0f, Main.myPlayer, end.X, end.Y);
+                            tmpNPC.ai[1] = DivideAttackStart + 7;
+                            tmpNPC.localAI[1] = index;
+                            tmpNPC.localAI[2] = 0;
+                            tmpNPC.netUpdate = true;
+                            npc.ai[3]++;
+                        }
+                    }
+                    i = (int)Main.npc[i].ai[0];
+                }
+            }
+            #endregion
+            else if (npc.ai[1] == DivideAttackStart + DivideAILength - 1)
+            {
+                if (npc.ai[2] == 0)//set up
+                {
+                    spinCenter = player.Center + player.velocity * 10;
+                    npc.ai[3] = Main.rand.NextFloatDirection();
+                    npc.velocity = Vector2.Zero;
+                    npc.Center = spinCenter + npc.ai[3].ToRotationVector2() * LumiteDestroyerArguments.R * 1.25f;
+                    ForeachSegment((tmpNPC, counter) =>
+                    {
+                        tmpNPC.velocity = Vector2.Zero;
+                        int factor = counter / 28;
+                        float offsetRotation = MathHelper.TwoPi / 3 * factor;
+                        if (counter % 28 == 0)
+                        {
+                            tmpNPC.localAI[0] = DivideAttackStart + DivideAILength - 1;
+                            tmpNPC.localAI[1] = offsetRotation;
+                            tmpNPC.localAI[2] = 0;
+                            tmpNPC.netUpdate = true;
+                        }
+                        else
+                        {
+                            tmpNPC.localAI[0] = 0;
+                            tmpNPC.localAI[1] = 0;
+                            tmpNPC.localAI[2] = 0;
+                            tmpNPC.netUpdate = true;
+                        }
+                        tmpNPC.Center = spinCenter + offsetRotation.ToRotationVector2() * LumiteDestroyerArguments.R * 1.25f;
+                    });
+                }
+                var fakeCenter = player.Center + player.velocity * 10;
+                spinCenter = (spinCenter * 79 + fakeCenter) / 80f;
+
+                npc.ai[2]++;
+                var center = spinCenter + npc.ai[3].ToRotationVector2() * LumiteDestroyerArguments.R * 1.25f;
+                npc.HoverMovementEx(center, maxSpeed, 0.6f);
+
+                if (Main.netMode != NetmodeID.MultiplayerClient && npc.ai[2] >= 150 && npc.ai[2] % 5 == 0)
+                {
+                    Projectile.NewProjectile(npc.Center, (spinCenter - npc.Center).SafeNormalize(Vector2.Zero) * 5f, ModContent.ProjectileType<DeathLaserEx>(), npc.damage / 5, 0f, Main.myPlayer, 90f, -1);
+                }
+
+                npc.ai[3] += 0.025f;
+                if (npc.ai[3] >= MathHelper.TwoPi)
+                {
+                    npc.ai[3] -= MathHelper.TwoPi;
+                }
+
+                if (npc.ai[2] >= 450)
+                {
+                    ForeachSegment((tmpNPC, counter) =>
+                    {
+                        if (counter % 28 == 0)
+                        {
+                            tmpNPC.localAI[0] = DivideAttackStart + DivideAILength;
+                            tmpNPC.localAI[1] = 0;
+                            tmpNPC.localAI[2] = 0;
+                            tmpNPC.netUpdate = true;
+                        }
+                        else
+                        {
+                            tmpNPC.localAI[0] = 0;
+                            tmpNPC.localAI[1] = 0;
+                            tmpNPC.localAI[2] = 0;
+                            tmpNPC.netUpdate = true;
+                        }
+                    });
+                    SwitchTo(DivideAttackStart + DivideAILength);
+                }
+            }
+            else if (npc.ai[1] == DivideAttackStart + DivideAILength)//fade back
+            {
+                npc.WormMovement(player.Center + targetModifier, maxSpeed / 2, turnAcc, ramAcc / 2);
+                npc.ai[2]++;
+                ForeachSegment((tmpNPC, counter) =>
+                {
+                    tmpNPC.alpha += 3;
+                    if (tmpNPC.alpha > 255) tmpNPC.alpha = 255;
+                });
+
+                if (npc.ai[2] >= 120)
+                {
+                    Vector2 dist = Main.rand.NextVector2Unit() * LumiteDestroyerArguments.TeleportDistance;
+                    npc.Center = player.Center + player.velocity * 60f + dist;
+                    npc.velocity = Vector2.Normalize(player.Center - npc.Center) * maxSpeed / 3;
+                    ForeachSegment((tmpNPC, counter) =>
+                    {
+                        tmpNPC.Center = player.Center + dist;
+                        tmpNPC.velocity = Vector2.Zero;
+                        tmpNPC.localAI[0] = 0;
+                        tmpNPC.localAI[1] = 0;
+                        tmpNPC.localAI[2] = 0;
+                        tmpNPC.frame.Y = 0;
+                        tmpNPC.netUpdate = true;
+                    });
+                    //SwitchTo(IsPhase3() ? (Main.rand.NextBool() ? Main.rand.Next(1, 6) : Main.rand.Next(3, 6)) : Main.rand.Next(0, 3));
+                    SwitchTo(DivideResumeAI);
+                }
+            }
+            #endregion
         }
     }
 }

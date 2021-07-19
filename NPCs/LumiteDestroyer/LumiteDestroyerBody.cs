@@ -170,8 +170,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             #region Music
             if (head.ai[1] >= 0)
             {
-                if (music != mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Frontier"))
-                    music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Frontier");
+                if (music != mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Revenger"))
+                    music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Revenger");
             }
             #endregion
 
@@ -393,28 +393,25 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 break;
                             }
                         }
-                        if (OffgroundTile > 0)
+                        if (OffgroundTile < 0)
                         {
-                            OffgroundTile *= 16;
-                            float heightOffset = OffgroundTile - 600;
-                            if (player.Center.Y > heightOffset)
+                            OffgroundTile = (int)player.Center.Y / 16;
+                        }
+                        OffgroundTile *= 16;
+                        float heightOffset = OffgroundTile - 600;
+                        if (player.Center.Y > heightOffset)
+                        {
+                            targetPos.Y = heightOffset - 200;
+                            if (Math.Abs(npc.Center.X - player.Center.X) < 500f)
                             {
-                                targetPos.Y = heightOffset - 200;
-                                if (Math.Abs(npc.Center.X - player.Center.X) < 500f)
-                                {
-                                    targetPos.X = targetPos.X + Math.Sign(npc.velocity.X) * 600f;
-                                }
-                                turnAcc *= 1.5f;
+                                targetPos.X = targetPos.X + Math.Sign(npc.velocity.X) * 600f;
                             }
-                            else
-                            {
-                                turnAcc *= 1.2f;
-                            }
+                            turnAcc *= 1.5f;
                         }
                         else
                         {
-                            maxSpeed *= 1.125f;//charge
-                            turnAcc *= 2f;
+                            turnAcc *= 1.2f;
+                            maxSpeed *= 0.8f;
                         }
                         float speed = npc.velocity.Length();
                         if (OffgroundTile > 0)
@@ -460,28 +457,25 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 break;
                             }
                         }
-                        if (OffgroundTile > 0)
+                        if (OffgroundTile < 0)
                         {
-                            OffgroundTile *= 16;
-                            float heightOffset = OffgroundTile - 600;
-                            if (player.Center.Y > heightOffset)
+                            OffgroundTile = (int)player.Center.Y / 16;
+                        }
+                        OffgroundTile *= 16;
+                        float heightOffset = OffgroundTile - 600;
+                        if (player.Center.Y > heightOffset)
+                        {
+                            targetPos.Y = heightOffset + 1200;
+                            if (Math.Abs(npc.Center.X - player.Center.X) < 500f)
                             {
-                                targetPos.Y = heightOffset + 600;
-                                if (Math.Abs(npc.Center.X - player.Center.X) < 500f)
-                                {
-                                    targetPos.X = targetPos.X + Math.Sign(npc.velocity.X) * 600f;
-                                }
-                                turnAcc *= 1.5f;
+                                targetPos.X = targetPos.X + Math.Sign(npc.velocity.X) * 600f;
                             }
-                            else
-                            {
-                                turnAcc *= 1.2f;
-                            }
+                            turnAcc *= 1.5f;
                         }
                         else
                         {
-                            maxSpeed *= 1.125f;//charge
-                            turnAcc *= 2f;
+                            turnAcc *= 1.2f;
+                            maxSpeed *= 0.8f;
                         }
                         float speed = npc.velocity.Length();
                         if (OffgroundTile > 0)
@@ -625,6 +619,24 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     mainColor *= 0.5f;
                 }
             }*/
+            if (npc.localAI[0] == DivideAttackStart + DivideAILength - 1)
+            {
+                float timer = head.ai[2];
+                if (timer <= 55)
+                {
+                    Vector2 center = (head.modNPC as LumiteDestroyerHead).spinCenter;
+                    Color alpha = Color.BlueViolet;
+                    if (timer <= 10)
+                    {
+                        alpha *= timer / 10f;
+                    }
+                    else if (timer >= 40 && timer <= 55)
+                    {
+                        alpha *= (55 - timer) / 15f;
+                    }
+                    npc.DrawAim(spriteBatch, center, alpha);
+                }
+            }
             if ((head.ai[1] == DivideAttackStart + 5) || (head.ai[1] == DivideAttackStart + 6))
             {
                 /*if (head.ai[2] >= 10)
@@ -719,7 +731,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             {
                 return !(Main.npc[npc.realLife].modNPC as LumiteDestroyerHead).CanBeTransparent()
                     || (Main.npc[npc.realLife].ai[1] == ChronoDash && npc.alpha == 0)
-                    || (npc.localAI[0] == DivideAttackStart + 7 && npc.localAI[2] >= 108);
+                    || (npc.localAI[0] == DivideAttackStart + 7 && npc.localAI[2] >= 108)
+                    || (npc.localAI[0] == DivideAttackStart + DivideAILength - 1 && Main.npc[npc.realLife].ai[2] <= 150);
             }
             return true;
         }

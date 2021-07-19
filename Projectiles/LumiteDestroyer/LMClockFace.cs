@@ -91,6 +91,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     ray.netUpdate = true;
                     lastLaserRotation = projectile.localAI[0];
                 }
+                if (head.ai[3] == 5) lastLaserRotation = -MathHelper.PiOver2;
                 if (head.ai[2] == 235 && head.ai[3] < 5 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     Vector2 baseUnit;
@@ -246,6 +247,8 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             origin2 = new Vector2(hourTexture.Width / 2, 22f);
             Main.spriteBatch.Draw(hourTexture, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle),
                 color, projectile.localAI[0] - MathHelper.PiOver2, origin2, projectile.scale * 1.1f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(hourTexture, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle),
+                color * 0.5f, lastLaserRotation - MathHelper.PiOver2, origin2, projectile.scale * 1.1f, SpriteEffects.None, 0f);
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
             Texture2D texture2D13 = Main.projectileTexture[projectile.type];
@@ -330,7 +333,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 for (int i = 0; i < 12; i++)
                 {
                     Projectile ray = Projectile.NewProjectileDirect(projectile.Center + unit, unit, ModContent.ProjectileType<DestroyerDeathRay>(),
-                        projectile.damage * 2, 0f, Main.myPlayer, 135, projectile.ai[0]);
+                        projectile.damage, 0f, Main.myPlayer, 135, projectile.ai[0]);
                     ray.localAI[1] = 1f;
                     ray.netUpdate = true;
                     unit = unit.RotatedBy(-MathHelper.Pi / 6);

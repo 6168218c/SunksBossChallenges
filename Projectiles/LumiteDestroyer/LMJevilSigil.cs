@@ -127,7 +127,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     }*/
                     for (int i = 0; i < 6; i++)
                     {
-                        Projectile.NewProjectile(projectile.Center, Vector2.UnitY.RotatedBy(MathHelper.TwoPi / 9 * i) * 10.5f,
+                        Projectile.NewProjectile(projectile.Center, Vector2.UnitY.RotatedBy(MathHelper.TwoPi / 6 * i) * 10.5f,
                             ModContent.ProjectileType<DecimatorOfPlanets.DarkStar>(), projectile.damage * 2 / 3, 0f, Main.myPlayer, 3);
                     }
                 }

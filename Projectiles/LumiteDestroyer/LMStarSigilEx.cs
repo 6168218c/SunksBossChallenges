@@ -111,8 +111,8 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     //we will have five stars per line
                     int count = (int)projectile.localAI[0] / 20 - 1;
                     //var tarPos = Vector2.Lerp(start, end, 1.0f / 6 * count);//the end will not be covered
-                    var tarPos = projectile.Center + Main.rand.NextVector2Circular(150f, 100f);
-                    Projectile.NewProjectile(tarPos, Vector2.Zero, ModContent.ProjectileType<LMStarSigilExUnit>(),
+                    var tarPos = projectile.Center + (projectile.Center - parent.Center);
+                    Projectile.NewProjectile(tarPos, projectile.DirectionTo(parent.Center) * 20f, ModContent.ProjectileType<LMStarSigilExUnit>(),
                         projectile.damage, 0f, projectile.owner, count + i * 6, projectile.whoAmI);
                     baseVector = baseVector.RotatedBy(Math.PI / 2.5);
                     baseUnit = baseUnit.RotatedBy(Math.PI / 2.5);
@@ -185,6 +185,10 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 var tarPos = Vector2.Lerp(start, end, 1.0f / 6 * pos);//the end will not be covered
 
                 if (projectile.localAI[0] < 30)
+                {
+                    projectile.SlowDown(0.95f);
+                }
+                else if (projectile.localAI[0] < 60)
                 {
                     projectile.FastMovement(tarPos);
                 }

@@ -119,8 +119,11 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 projectile.Kill();
             }
         }
-		
-		public override void Kill(int timeLeft)
+        public override bool CanDamage()
+        {
+            return projectile.alpha == 0;
+        }
+        public override void Kill(int timeLeft)
         {
             Main.PlaySound(SoundID.Item89, projectile.position);
 

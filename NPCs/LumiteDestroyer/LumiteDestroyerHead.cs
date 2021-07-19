@@ -273,6 +273,11 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     Projectile.NewProjectile((npc.Center - target).RotatedBy(Math.PI * 2 / 3 * 2) + target, Vector2.Zero, ModContent.ProjectileType<Projectiles.DecimatorOfPlanets.LaserBarrage>(),
                         npc.damage / 6, 0f, Main.myPlayer, target.X, target.Y);
                 }
+                if (npc.ai[2] == 240 && Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    Projectile.NewProjectile(spinCenter, Vector2.Zero, ModContent.ProjectileType<WarningMark>(),
+                        npc.damage / 6, 0f, Main.myPlayer, 120, 0.25f);
+                }
 
                 if (npc.ai[2] >= 360)
                 {
@@ -466,7 +471,10 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
 
         public override bool CanHitPlayer(Player target, ref int cooldownSlot)
         {
-            return !CanBeTransparent() || (npc.ai[1] == ChronoDash && npc.alpha == 0) || (npc.ai[1] == DivideAttackStart + 7 && npc.ai[2] > 108);
+            return !CanBeTransparent()
+                || (npc.ai[1] == ChronoDash && npc.alpha == 0)
+                || (npc.ai[1] == DivideAttackStart + 7 && npc.ai[2] > 108)
+                || (npc.ai[1] == DivideAttackStart + DivideAILength - 1 && npc.ai[2] <= 150);
         }
 
         public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
@@ -571,6 +579,24 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         alpha *= (55 - timer) / 15f;
                     }
                     npc.DrawAim(spriteBatch, npc.Center + (player.Center - npc.Center).SafeNormalize(Vector2.Zero) * 2500, alpha);
+                }
+            }
+            else if (npc.ai[1] == DivideAttackStart + DivideAILength - 1)
+            {
+                float timer = npc.ai[2];
+                if (timer <= 55)
+                {
+                    Vector2 center = spinCenter;
+                    Color alpha = Color.BlueViolet;
+                    if (timer <= 10)
+                    {
+                        alpha *= timer / 10f;
+                    }
+                    else if (timer >= 40 && timer <= 55)
+                    {
+                        alpha *= (55 - timer) / 15f;
+                    }
+                    npc.DrawAim(spriteBatch, center, alpha);
                 }
             }
             else if (npc.ai[1] == DeathStruggleStart + 4)

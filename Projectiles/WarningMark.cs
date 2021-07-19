@@ -45,6 +45,8 @@ namespace SunksBossChallenges.Projectiles
                 projectile.alpha = 255 - projectile.alpha;
             }
 
+            if (projectile.ai[1] != 0) projectile.scale = projectile.ai[1];
+
             if (projectile.localAI[0] >= projectile.ai[0])
             {
                 projectile.localAI[1] = 1;

@@ -149,6 +149,11 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             return false;
         }
 
+        public override bool CanDamage()
+        {
+            return projectile.alpha == 0;
+        }
+
         public override void SendExtraAI(BinaryWriter writer)
         {
             writer.Write(projectile.localAI[0]);
