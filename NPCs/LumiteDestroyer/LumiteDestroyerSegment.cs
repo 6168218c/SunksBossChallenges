@@ -180,6 +180,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
         {
             if (ImmuneTimer != 0) damage *= (1 - 0.80);
+            if (npc.alpha > 0) damage *= (1 - 0.60);
             return true;
         }
         public override bool CheckActive()
@@ -204,7 +205,8 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
             if (!projectile.minion)
             {
                 //projectile.penetrate = 0;
-                if (projectile.penetrate == -1) damage = (int)(damage * 0.6f);
+                if (projectile.penetrate == -1) damage = (int)(damage * 0.15f);
+                else if (projectile.penetrate != 0) damage /= projectile.penetrate;
                 if (projectile.type == ProjectileID.DD2BetsyArrow) damage = (int)(damage * 0.6f);
                 if (projectile.type == ProjectileID.StardustDragon1) damage = (int)(damage * 0.25f);
                 if (projectile.type == ProjectileID.StardustDragon2) damage = (int)(damage * 0.25f);

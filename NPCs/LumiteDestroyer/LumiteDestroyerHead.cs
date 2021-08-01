@@ -179,13 +179,13 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     int direction = Main.rand.Next(4);
                     if (npc.ai[2] == 120)
                         Projectile.NewProjectile(player.Center, Vector2.Zero, ModContent.ProjectileType<LMStarSigilEx>(),
-                            npc.damage / 5, 0f, Main.myPlayer, 0f, npc.target);
+                            npc.damage / 5, 0f, Main.myPlayer, Main.rand.NextBool() ? -1 : 1, npc.target);
                     if (npc.ai[2] == 500)
                         Projectile.NewProjectile(player.Center - Vector2.UnitX.RotatedBy(Math.PI / 2 * direction) * 1080,
                             Vector2.Zero, ModContent.ProjectileType<LMLaserMatrix>(),
                             npc.damage / 6, 0f, Main.myPlayer, 180, direction);
                 }
-                if (npc.ai[2] < 500)
+                if (npc.ai[2] < 360)
                     npc.WormMovementEx(player.Center, maxSpeed, turnAcc, ramAcc);
                 else npc.WormMovementEx(player.Center + npc.DirectionFrom(player.Center) * LumiteDestroyerArguments.R * 1.5f,
                     maxSpeed, turnAcc, ramAcc);
@@ -276,7 +276,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 if (npc.ai[2] == 240 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     Projectile.NewProjectile(spinCenter, Vector2.Zero, ModContent.ProjectileType<WarningMark>(),
-                        npc.damage / 6, 0f, Main.myPlayer, 120, 0.25f);
+                        npc.damage / 6, 0f, Main.myPlayer, 60, 0.25f);
                 }
 
                 if (npc.ai[2] >= 360)
@@ -360,14 +360,14 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
         {
             if (DynDRTimer == 0 && npc.ai[1] >= 0)
             {
-                if (npc.life < lastHealth - npc.lifeMax / 3750)
+                if (npc.life < lastHealth - npc.lifeMax / 4200)
                 {
-                    DynDR = Math.Max(DynDR - 0.01f, 1 - ((float)npc.lifeMax / 3750 / (lastHealth - npc.life)));
+                    DynDR = Math.Max(DynDR - 0.01f, 1 - ((float)npc.lifeMax / 4200 / (lastHealth - npc.life)));
                     DynDR = Math.Max(DynDR, 0.45f);
                 }
                 else
                 {
-                    DynDR = Math.Max(DynDR - 0.0075f, 0.5f);
+                    DynDR = Math.Max(DynDR - 0.005f, 0.5f);
                 }
                 lastHealth = npc.life;
             }

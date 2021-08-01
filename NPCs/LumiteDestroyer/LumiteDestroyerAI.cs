@@ -30,7 +30,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 npc.TargetClosest(true);
                 if (npc.target < 0 || npc.target == 255 || Main.player[npc.target].dead || !Main.player[npc.target].active)
                 {
-                    if (npc.ai[1] == 3)//chrono dash
+                    if (npc.ai[1] == ChronoDash)//chrono dash
                     {
                         Main.fastForwardTime = false;
                     }
@@ -106,7 +106,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                 npc.ai[1] = -2f;//not in phase 2
             }
 
-            int spinMaxTime = 1500;
+            int spinMaxTime = 1050;
             var maxSpeed = 15f + player.velocity.Length() / 3;
             float turnAcc = 0.15f;
             float ramAcc = 0.15f;
@@ -353,7 +353,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                     {
                         SwitchTo(-1);
                         SkyManager.Instance.Activate("SunksBossChallenges:LumiteDestroyer");
-                        music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Frontier");
+                        music = mod.GetSoundSlot(SoundType.Music, "Sounds/Music/Revenger");
                     }
                     else if (npc.ai[2] >= 300)
                     {
@@ -689,7 +689,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<LMDashTrail>(),
                             0, 0f, Main.myPlayer, 1, npc.whoAmI);
                         npc.localAI[3] = Projectile.NewProjectile(player.Center, Vector2.Zero, ModContent.ProjectileType<LMSigilPortal>(),
-                                    0, 0f, Main.myPlayer, npc.whoAmI, 3600);//out portal
+                                    0, 0f, Main.myPlayer, npc.whoAmI, 3600);//in portal
                         npc.netUpdate = true;
                     }
 
@@ -718,10 +718,12 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         {
                             npc.WormMovementEx(player.Center + npc.DirectionFrom(player.Center) * LumiteDestroyerArguments.R * 1.5f,
                                 maxSpeed, turnAcc, ramAcc, radiusSpeed: 0.05f, distLimit: 100, angleLimit: MathHelper.Pi / 6);
-                            if (Util.CheckProjAlive<LMSigilPortal>((int)npc.localAI[3],true))
+                            if (Util.CheckProjAlive<LMSigilPortal>((int)npc.localAI[3], true))
                             {
-                                if(npc.ai[2]==190)
+                                if (npc.ai[2] == 190)
+                                {
                                     npc.ai[2]--;//revert
+                                }
                             }
                         }
                     }
@@ -750,7 +752,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         Main.time = lastTime;
                         if (npc.ai[2] == 230)
                         {
-                            if (Main.netMode != NetmodeID.MultiplayerClient)
+                            if (Main.netMode != NetmodeID.MultiplayerClient && npc.ai[3] < 5)
                             {
                                 npc.localAI[2] = Projectile.NewProjectile(target, Vector2.Zero, ModContent.ProjectileType<LMSigilPortal>(),
                                     0, 0f, Main.myPlayer, npc.whoAmI, 3600);//out portal
@@ -766,7 +768,10 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                                 NPC tmpNPC = Main.npc[i];
                                 tmpNPC.alpha = npc.ai[3] == 5 ? 0 : 255;
                                 (tmpNPC.modNPC as LumiteDestroyerSegment).ImmuneTimer = 90;
-                                tmpNPC.Blink(target);
+                                if (npc.ai[3] == 5 && tmpNPC.whoAmI != npc.whoAmI)
+                                    tmpNPC.Blink(target - Vector2.UnitY * (100+counter));//weird bug
+                                else
+                                    tmpNPC.Blink(target);
                                 tmpNPC.velocity = Vector2.Zero;
                                 tmpNPC.localAI[1] = 0;
                                 i = (int)Main.npc[i].ai[0];
@@ -794,7 +799,9 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         else
                         {
                             if (npc.velocity.Compare(maxSpeed * 2) < 0)
+                            {
                                 npc.velocity *= 1.2f;
+                            } 
                         }
                     }
                     else if (npc.ai[2] > 280)

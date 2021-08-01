@@ -179,5 +179,9 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
         public override void Kill(int timeLeft)
         {
         }
+        public override bool CanDamage()
+        {
+            return false;
+        }
     }
 }

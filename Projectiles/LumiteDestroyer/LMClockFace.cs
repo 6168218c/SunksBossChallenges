@@ -46,6 +46,19 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             {
                 if(head.ai[2] <= 180)
                     projectile.Center = (player.Center + projectile.Center * 64) / 65;
+				if (head.ai[2] == 235 && head.ai[3] < 5 && Main.netMode != NetmodeID.MultiplayerClient)
+                {
+					Vector2 unit = lastLaserRotation.ToRotationVector2();
+                    Projectile ray = Projectile.NewProjectileDirect(projectile.Center, unit, ModContent.ProjectileType<DestroyerDeathRay>(),
+                        projectile.damage, 0f, projectile.owner, 135, projectile.ai[0]);
+                    ray.localAI[1] = 2f;
+                    ray.netUpdate = true;
+                    ray = Projectile.NewProjectileDirect(projectile.Center, -unit, ModContent.ProjectileType<DestroyerDeathRay>(),
+                        projectile.damage, 0f, projectile.owner, 135, projectile.ai[0]);
+                    ray.localAI[1] = 2f;
+                    ray.netUpdate = true;
+                    lastLaserRotation = projectile.localAI[0];
+				}
                 if (head.ai[2] == 265 && head.ai[3] < 5 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     Vector2 unit;
@@ -80,16 +93,6 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                             unit = unit.RotatedBy(-MathHelper.Pi / 6);
                         }
                     }
-                    unit = lastLaserRotation.ToRotationVector2();
-                    Projectile ray = Projectile.NewProjectileDirect(projectile.Center, unit, ModContent.ProjectileType<DestroyerDeathRay>(),
-                        projectile.damage, 0f, projectile.owner, 135, projectile.ai[0]);
-                    ray.localAI[1] = 2f;
-                    ray.netUpdate = true;
-                    ray = Projectile.NewProjectileDirect(projectile.Center, -unit, ModContent.ProjectileType<DestroyerDeathRay>(),
-                        projectile.damage, 0f, projectile.owner, 135, projectile.ai[0]);
-                    ray.localAI[1] = 2f;
-                    ray.netUpdate = true;
-                    lastLaserRotation = projectile.localAI[0];
                 }
                 if (head.ai[3] == 5) lastLaserRotation = -MathHelper.PiOver2;
                 if (head.ai[2] == 235 && head.ai[3] < 5 && Main.netMode != NetmodeID.MultiplayerClient)
@@ -248,7 +251,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             Main.spriteBatch.Draw(hourTexture, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle),
                 color, projectile.localAI[0] - MathHelper.PiOver2, origin2, projectile.scale * 1.1f, SpriteEffects.None, 0f);
             Main.spriteBatch.Draw(hourTexture, projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY), new Microsoft.Xna.Framework.Rectangle?(rectangle),
-                color * 0.5f, lastLaserRotation - MathHelper.PiOver2, origin2, projectile.scale * 1.1f, SpriteEffects.None, 0f);
+                color * (0.5f + 0.4f * (float)Math.Sin(MathHelper.Pi / 15 * projectile.timeLeft)), lastLaserRotation - MathHelper.PiOver2, origin2, projectile.scale * 1.1f, SpriteEffects.None, 0f);
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
             Texture2D texture2D13 = Main.projectileTexture[projectile.type];
