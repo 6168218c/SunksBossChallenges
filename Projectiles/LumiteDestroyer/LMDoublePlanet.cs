@@ -353,6 +353,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
     public class LMPlanetMoonEx : LMPlanetMoon
     {
         Vector2 center;
+        public override bool CanDamage() => false;
         public override void SetStaticDefaults()
         {
             DisplayName.SetDefault("Chaos Moon");

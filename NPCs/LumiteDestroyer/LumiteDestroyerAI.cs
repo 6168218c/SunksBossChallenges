@@ -814,7 +814,7 @@ namespace SunksBossChallenges.NPCs.LumiteDestroyer
                         npc.velocity = npc.velocity.SafeNormalize(Vector2.Zero) * maxSpeed * 2;
                         if (npc.ai[3] > 5)
                         {
-                            if (npc.ai[2] >= 360)
+                            if (npc.ai[2] >= 360 + (1 - (float)npc.life / npc.lifeMax) * 0.5f * 120)
                             {
                                 ForeachSegment((tmpNPC, counter) => tmpNPC.localAI[1] = 0);
                                 SwitchToRandomly(SigilStar, DivideAttackStart, 0.3f);

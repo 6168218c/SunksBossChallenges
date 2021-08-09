@@ -15,6 +15,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
 {
     public class DestroyerDeathRay:ModProjectile
     {
+        float rotateFactor = 0;
         int Timer = 0;
         float length = 0;
         //float rotation;
@@ -45,6 +46,11 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             {
                 projectile.velocity = -Vector2.UnitY;
             }
+            if (Timer == 0)
+            {
+                rotateFactor = projectile.velocity.Length();
+                projectile.velocity.Normalize();
+            }
             if (Main.npc[(int)projectile.ai[1]].active && Main.npc[(int)projectile.ai[1]].type == ModContent.NPCType<LumiteDestroyerHead>())
             {
                 //Vector2 value21 = new Vector2(27f, 59f);
@@ -54,8 +60,6 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 Vector2 offset = new Vector2(Main.npc[(int)projectile.ai[1]].width, 0).RotatedBy(Main.npc[(int)projectile.ai[1]].rotation);
                 if (projectile.localAI[1] != 1f && projectile.localAI[1] != 2f) 
                     projectile.Center = Main.npc[(int)projectile.ai[1]].Center + offset;
-                else
-                    projectile.Center -= projectile.velocity;
             }
             else if(Main.npc[(int)projectile.ai[1]].active && Main.npc[(int)projectile.ai[1]].type == ModContent.NPCType<LumiteDestroyerBody>())
             {
@@ -66,8 +70,6 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                 Vector2 offset = new Vector2(Main.npc[(int)projectile.ai[1]].width, 0).RotatedBy(Main.npc[(int)projectile.ai[1]].rotation);
                 if (projectile.localAI[1] != 1f && projectile.localAI[1] != 2f)
                     projectile.Center = Main.npc[(int)projectile.ai[1]].Center + offset;
-                else
-                    projectile.Center -= projectile.velocity;
             }
             else
             {
@@ -115,7 +117,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             }
             if (projectile.localAI[1] == 1f)
             {
-                projectile.velocity = projectile.velocity.RotatedBy(0.01);
+                projectile.velocity = projectile.velocity.RotatedBy(0.01 * rotateFactor);
                 float num804 = projectile.velocity.ToRotation();
                 projectile.rotation = num804 - 1.57079637f;
                 projectile.velocity = num804.ToRotationVector2();
@@ -271,5 +273,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
             projectile.localAI[1] = reader.ReadSingle();
             base.ReceiveExtraAI(reader);
         }
+
+        public override bool ShouldUpdatePosition() => false;
     }
 }

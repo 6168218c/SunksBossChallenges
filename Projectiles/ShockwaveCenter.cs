@@ -37,13 +37,13 @@ namespace SunksBossChallenges.Projectiles
 		{
 			if (!boom)
 			{
-				if (Main.netMode != NetmodeID.Server && !Filters.Scene["SunksBossChallenges:Shockwave"].IsActive())
+				if (!Main.dedServ && !Filters.Scene["SunksBossChallenges:Shockwave"].IsActive())
 				{
 					Filters.Scene.Activate("SunksBossChallenges:Shockwave", projectile.Center).GetShader().UseColor(2, 5, 15).UseTargetPosition(projectile.Center);
 				}
 				boom = true;
 			}
-			if (Main.netMode != NetmodeID.Server && Filters.Scene["SunksBossChallenges:Shockwave"].IsActive())
+			if (!Main.dedServ && Filters.Scene["SunksBossChallenges:Shockwave"].IsActive())
 			{
 				float progress = (180 - projectile.timeLeft) / 60f;// Will range from -3 to 3, 0 being the point where the bomb explodes.
 				if (projectile.ai[0] == 1)
@@ -54,7 +54,7 @@ namespace SunksBossChallenges.Projectiles
 		}
 		public override void Kill(int timeLeft)
 		{
-			if (Main.netMode != NetmodeID.Server && Filters.Scene["SunksBossChallenges:Shockwave"].IsActive())
+			if (!Main.dedServ && Filters.Scene["SunksBossChallenges:Shockwave"].IsActive())
 			{
 				Filters.Scene["SunksBossChallenges:Shockwave"].Deactivate();
 			}

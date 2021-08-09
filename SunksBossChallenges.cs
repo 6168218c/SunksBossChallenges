@@ -27,7 +27,7 @@ namespace SunksBossChallenges
             AddBossHeadTexture("SunksBossChallenges/NPCs/LumiteTwins/LumiteSpazmatism_Head_Boss2");
 
             //Shaders
-            if (Main.netMode != NetmodeID.Server)
+            if (!Main.dedServ)
             {
                 Ref<Effect> screenRef = new Ref<Effect>(GetEffect("Effects/Content/ShockwaveEffect")); // The path to the compiled shader file.
                 Filters.Scene["SunksBossChallenges:Shockwave"] = new Filter(new ScreenShaderData(screenRef, "Shockwave"), EffectPriority.VeryHigh);

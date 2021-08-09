@@ -203,7 +203,7 @@ namespace SunksBossChallenges.Projectiles.LumiteDestroyer
                     projectile.localAI[0] = 0;
                 }
                 Player player = Main.player[(int)projectile.localAI[1]];
-                projectile.WormMovementEx(player.Center, 36f, distLimit: 200, angleLimit: MathHelper.Pi / 6);
+                projectile.WormMovementEx(player.Center, 32f, radiusSpeed:0.04f , distLimit: 300, angleLimit: MathHelper.Pi / 5);
             }
             projectile.localAI[0]++;
             if ((projectile.localAI[0] >= 180 || projectile.ai[0] % 6 <= 3) && hasBeenLaunched)
